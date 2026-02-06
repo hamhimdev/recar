@@ -4,3 +4,6 @@
 [submodule "vencord"]
 	path = vencord
 	url = https://github.com/Vendicated/Vencord
+[submodule "equicord"]
+	path = equicord
+	url = https://github.com/Equicord/Equicord
