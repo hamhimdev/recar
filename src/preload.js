@@ -1,0 +1,41 @@
+const { webFrame, ipcRenderer } = require('electron');
+const fs = require('fs');
+const path = require('path');
+
+(async () => {
+    try {
+        const settings = await ipcRenderer.invoke('get-settings');
+        const selectedMod = settings.mod || 'equicord';
+
+        console.log(`[Preload] Using mod: ${selectedMod}`);
+
+        let modPath, modCssPath;
+        if (selectedMod === 'equicord') {
+            modPath = path.join(__dirname, '..', 'equicord', 'dist', 'browser', 'browser.js');
+            modCssPath = path.join(__dirname, '..', 'equicord', 'dist', 'browser', 'browser.css');
+        } else {
+            modPath = path.join(__dirname, '..', 'vencord', 'dist', 'browser.js');
+            modCssPath = path.join(__dirname, '..', 'vencord', 'dist', 'browser.css');
+        }
+
+        if (!fs.existsSync(modPath)) {
+            console.error(`[Preload] ${selectedMod} build not found at ${modPath}. Please run pnpm build:${selectedMod}!!`);
+            return;
+        }
+
+        const script = fs.readFileSync(modPath, 'utf8');
+        const css = fs.readFileSync(modCssPath, 'utf8');
+
+        webFrame.insertCSS(css);
+
+        webFrame.executeJavaScriptInIsolatedWorld(0, [{ // world 0 = main world
+            code: `window.legcord = { version: "1.0.0" };\n${script}` // to allow WebRichPresence plugin to show up
+        }]).then(() => {
+            console.log(`[Preload] ${selectedMod} injected successfully`);
+        }).catch(e => {
+            console.error(`[Preload] Failed to inject ${selectedMod}:`, e);
+        });
+    } catch (err) {
+        console.error('[Preload] Error during mod injection:', err);
+    }
+})();

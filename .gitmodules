@@ -1,0 +1,6 @@
+[submodule "Equicord"]
+	path = equicord
+	url = https://github.com/Equicord/Equicord
+[submodule "vencord"]
+	path = vencord
+	url = https://github.com/Vendicated/Vencord

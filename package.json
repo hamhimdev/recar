@@ -1,0 +1,31 @@
+{
+  "name": "recar",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:css": "tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify --watch",
+    "install:equicord": "pnpm -C equicord i",
+    "install:vencord": "pnpm -C vencord i",
+    "install:mods": "pnpm install:equicord && pnpm install:vencord",
+    "build:equicord": "EQUICORD_HASH=equicord pnpm -C equicord buildWeb",
+    "build:vencord": "VENCORD_HASH=vencord pnpm -C vencord buildWeb",
+    "build:mods": "pnpm build:equicord && pnpm build:vencord",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "hamhim",
+  "license": "MIT",
+  "packageManager": "pnpm@10.28.2",
+  "devDependencies": {
+    "electron": "^40.1.0",
+    "electron-builder": "^26.7.0",
+    "@tailwindcss/cli": "^4.1.18",
+    "tailwindcss": "^4.1.18"
+  },
+  "dependencies": {
+    "arrpc": "^3.6.0",
+    "ws": "^8.19.0"
+  }
+}
