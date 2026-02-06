@@ -180,7 +180,7 @@
             const originalContent = saveBtn.innerHTML;
             saveBtn.disabled = true;
             await performSave();
-            saveBtn.innerHTML = '<i class="ri-check-line text-lg"></i> Saved!';
+            saveBtn.innerHTML = 'Saved!';
             saveBtn.classList.replace('bg-[#5865F2]', 'bg-[#23a559]');
 
             setTimeout(() => {
