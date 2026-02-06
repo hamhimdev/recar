@@ -1,4 +1,4 @@
-<div style="text-align: center;">
+<div align="center">
 <br>
 <img width=320 src="repository/banner.png">
 
