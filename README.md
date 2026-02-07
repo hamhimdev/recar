@@ -4,7 +4,7 @@
 
 ### A Linux Discord Client
 
-Recar is a Discord client for Linux that is built with Electron and uses the Discord web app as its base. It has client mods such as Vencord built in, Wayland support, and a little bit more.
+Recar is a Discord client for Linux that is built with Electron and uses the Discord web app as its base with client mods built in.  
 https://cutely.strangled.net/recar
 
 <img width=640 src="repository/screenshot.png">

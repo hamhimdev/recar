@@ -12,7 +12,30 @@
     "build:equicord": "EQUICORD_HASH=equicord pnpm -C equicord buildWeb",
     "build:vencord": "VENCORD_HASH=vencord pnpm -C vencord buildWeb",
     "build:mods": "pnpm build:equicord && pnpm build:vencord",
+    "dist": "electron-builder --linux",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.hamhim.recar",
+    "productName": "Recar",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "pnpm-lock.yaml"
+    ],
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb",
+        "rpm",
+        "tar.gz"
+      ],
+      "category": "Network",
+      "icon": "src/img/recar.png"
+    }
   },
   "keywords": [],
   "author": "hamhim",

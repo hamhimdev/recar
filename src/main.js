@@ -7,6 +7,7 @@ app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
 app.userAgentFallback = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36';
 
 let mainWindow;
+let settingsWindow;
 let splashWindow;
 let tray;
 let settings = {
@@ -192,16 +193,22 @@ const createTray = () => {
     ]);
     tray.setToolTip('Recar');
     tray.setContextMenu(contextMenu);
-    tray.on('click', () => mainWindow.show());
+    tray.on('click', () => mainWindow.show() || mainWindow.focus());
 };
 
 const createSettingsWindow = () => {
-    let settingsWindow = new BrowserWindow({
+    if (settingsWindow) {
+        settingsWindow.focus();
+        return;
+    }
+
+    settingsWindow = new BrowserWindow({
         width: 400,
         height: 500,
         title: 'Recar Settings',
         icon: iconPath,
         autoHideMenuBar: true,
+        backgroundColor: '#232323',
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -213,6 +220,7 @@ const createSettingsWindow = () => {
 
     // Auto-save and quit app on close if it's first launch and they haven't saved
     settingsWindow.on('closed', () => {
+        settingsWindow = null;
         if (isFirstLaunch) {
             app.quit();
         }
