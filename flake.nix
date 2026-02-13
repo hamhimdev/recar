@@ -30,11 +30,6 @@
             fetcherVersion = 3;
           };
           
-          preBuild = ''
-            export PNPM_HOME=$PWD/.pnpm-home
-            export npm_config_store_dir=$PWD/.pnpm-store
-          '';
-          
           buildPhase = ''
             runHook preBuild
             
@@ -46,7 +41,7 @@
             if [ -d "equicord" ]; then
               echo "Building Equicord..."
               cd equicord
-              pnpm install --offline --frozen-lockfile
+              pnpm install --frozen-lockfile 
               EQUICORD_HASH=equicord pnpm buildWeb
               if [ ! -d "dist/browser" ] || [ ! -f "dist/browser/browser.js" ]; then
                 echo "dist/browser/browser.js not found"
@@ -60,7 +55,7 @@
             if [ -d "vencord" ]; then
               echo "Building Vencord..."
               cd vencord
-              pnpm install --offline --frozen-lockfile
+              pnpm install --frozen-lockfile 
               VENCORD_HASH=vencord pnpm buildWeb
               if [ ! -f "dist/browser.js" ]; then
                 echo "dist/browser.js not found"
