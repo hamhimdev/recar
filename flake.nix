@@ -36,13 +36,12 @@
             export HOME=$TMPDIR
             
             echo "Building CSS..."
-            ./node_modules/.bin/tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
+            pnpm exec tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
             
             if [ -d "equicord" ]; then
               echo "Building Equicord..."
               cd equicord
-              pnpm install --frozen-lockfile 
-              EQUICORD_HASH=equicord pnpm buildWeb
+              EQUICORD_HASH=equicord pnpm buildWeb --offline
               if [ ! -d "dist/browser" ] || [ ! -f "dist/browser/browser.js" ]; then
                 echo "dist/browser/browser.js not found"
                 exit 1
@@ -55,8 +54,7 @@
             if [ -d "vencord" ]; then
               echo "Building Vencord..."
               cd vencord
-              pnpm install --frozen-lockfile 
-              VENCORD_HASH=vencord pnpm buildWeb
+              VENCORD_HASH=vencord pnpm buildWeb --offline
               if [ ! -f "dist/browser.js" ]; then
                 echo "dist/browser.js not found"
                 exit 1
