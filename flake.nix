@@ -30,6 +30,12 @@
             fetcherVersion = 3;
           };
           
+          postPatch = ''
+            # Remove packageManager field to prevent pnpm from trying to download itself
+            # during the offline build.
+            sed -i '/"packageManager"/d' package.json
+          '';
+
           buildPhase = ''
             runHook preBuild
             
