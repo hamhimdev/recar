@@ -14,7 +14,7 @@
         
         recar = pkgs.stdenv.mkDerivation rec {
           pname = "recar";
-          version = "1.0.1";
+          version = "1.0.0";
           src = ./.;
           
           nativeBuildInputs = [
@@ -41,7 +41,7 @@
             export HOME=$TMPDIR
             
             echo "Building CSS..."
-            pnpm exec tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
+            ./node_modules/.bin/tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
             
             if [ -d "equicord" ]; then
               echo "Building Equicord..."
