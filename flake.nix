@@ -37,7 +37,7 @@
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
             # You will likely need to update this hash if submodules change package.json
-            hash = "sha256-ChtIWDJBQN740GJmVDx0mfK0D5zgkCspWbCLaqdhtHs="; 
+            hash = "sha256-9rHqfafCKtuwAAj3/N2p/em4ddlWQhM07RhQJR9VTYg="; 
             fetcherVersion = 3;
           };
 
