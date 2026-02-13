@@ -40,9 +40,6 @@
       "equicord/dist/browser/browser.js",
       "equicord/dist/browser/browser.css"
     ],
-    "asarUnpack": [
-      "./node_modules/node-notifier/**/*"
-    ],
     "linux": {
       "target": [
         "AppImage",
@@ -53,7 +50,15 @@
       "category": "Network",
       "icon": "src/assets/img/recar.png",
       "desktop": {
-        "StartupWMClass": "Recar"
+        "entry": {
+          "Name": "Recar",
+          "GenericName": "Internet Messenger",
+          "Type": "Application",
+          "Categories": "Network;InstantMessaging;Chat;",
+          "Keywords": "discord;vencord;chat;recar",
+          "MimeType": "x-scheme-handler/discord",
+          "StartupWMClass": "Recar"
+        }
       }
     }
   },

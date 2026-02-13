@@ -2,7 +2,23 @@ const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen } = require('elec
 const path = require('path');
 const fs = require('fs');
 
+// Single instance allowed
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
+} else {
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
+        if (mainWindow) {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+        }
+    });
+}
+
 app.commandLine.appendSwitch('enable-features', 'WebRTCPipeWireCapturer');
+app.commandLine.appendSwitch('disable-features', 'ParserBlockingScriptsIntervention,BlinkParserBlockingScriptsIntervention,AudioServiceOutOfProcess');
 
 app.userAgentFallback = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36';
 
@@ -14,6 +30,7 @@ let tray;
 let settings = {
     branch: 'stable',
     minimizeToTray: true,
+    startMaximized: true,
     mod: 'equicord'
 };
 let isFirstLaunch = false;
@@ -96,14 +113,14 @@ const createCallWindow = () => {
             preload: path.join(__dirname, 'call.js')
         }
     });
-    
+
     callWindow.loadFile(path.join(__dirname, 'call.html'));
-    
-    
+
+
     callWindow.once('ready-to-show', () => {
         callWindow.show();
     });
-    
+
     ipcMain.on('close-window', () => {
         callWindow.close();
     });
@@ -122,6 +139,7 @@ const createMainWindow = () => {
             nodeIntegration: false,
             contextIsolation: true,
             sandbox: false,
+            webSecurity: false,
             preload: path.join(__dirname, 'preload.js')
         }
     })
@@ -136,19 +154,7 @@ const createMainWindow = () => {
     });
 
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-        if (url.startsWith('http')) {
-            shell.openExternal(url);
-        }
-        return { action: 'deny' };
-    });
-
-    mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
-        const responseHeaders = Object.assign({}, details.responseHeaders);
-        delete responseHeaders['content-security-policy'];
-        delete responseHeaders['content-security-policy-report-only'];
-        delete responseHeaders['Content-Security-Policy'];
-        delete responseHeaders['Content-Security-Policy-Report-Only'];
-        callback({ responseHeaders });
+        return { action: 'allow' };
     });
 
     const session = mainWindow.webContents.session;
@@ -175,7 +181,11 @@ const createMainWindow = () => {
                     }
                 }))
             );
-            menu.popup();
+            menu.popup({
+                callback: () => {
+                    callback(null);
+                }
+            });
         }).catch((e) => {
             callback(null);
         });
@@ -184,10 +194,13 @@ const createMainWindow = () => {
     mainWindow.loadURL(getDiscordUrl());
 
     mainWindow.on('page-title-updated', (e, title) => {
-        const matches = title.match(/^\((\d+)\)/);
+        console.log(`[Main] Title updated: ${title}`);
+        const matches = title.match(/^\s*\((\d+)\)/);
         if (matches) {
             const count = parseInt(matches[1], 10);
-            app.setBadgeCount(count);
+            console.log(`[Main] Badge count detected: ${count}`);
+            const success = app.setBadgeCount(count);
+            console.log(`[Main] setBadgeCount(${count}) result: ${success}`);
         } else {
             app.setBadgeCount(0);
         }
@@ -198,6 +211,9 @@ const createMainWindow = () => {
             if (splashWindow) {
                 splashWindow.close();
                 splashWindow = null;
+            }
+            if (settings.startMaximized) {
+                mainWindow.maximize();
             }
             mainWindow.show();
         }, 1500);
@@ -223,8 +239,8 @@ const createTray = () => {
                 app.quit();
             }
         },
-        { type: 'separator' },
-        { label: 'Open Call Window', click: () => createCallWindow() }
+        // { type: 'separator' },
+        // { label: 'Open Call Window', click: () => createCallWindow() }
     ]);
     tray.setToolTip('Recar');
     tray.setContextMenu(contextMenu);
@@ -239,7 +255,7 @@ const createSettingsWindow = () => {
 
     settingsWindow = new BrowserWindow({
         width: 400,
-        height: 500,
+        height: 560,
         title: 'Recar Settings',
         icon: iconPath,
         autoHideMenuBar: true,
@@ -286,8 +302,30 @@ ipcMain.handle('restart-app', () => {
 });
 
 app.whenReady().then(async () => {
-    app.setName("Recar");
+    app.setName("recar");
+    app.desktopName = "recar";
+    app.setAppUserModelId('net.strangled.cutely.recar');
     loadSettings();
+
+    const { session } = require('electron');
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        const responseHeaders = Object.assign({}, details.responseHeaders);
+        const toDelete = [
+            'content-security-policy',
+            'content-security-policy-report-only',
+            'x-frame-options',
+            'x-content-type-options'
+        ];
+
+        for (const header of Object.keys(responseHeaders)) {
+            if (toDelete.includes(header.toLowerCase())) {
+                delete responseHeaders[header];
+            }
+        }
+
+        callback({ responseHeaders });
+    });
+
     if (isFirstLaunch) {
         createSettingsWindow();
         return;

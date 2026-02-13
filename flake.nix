@@ -116,9 +116,9 @@ Comment=A Discord client for Linux
 Exec=recar
 Icon=recar
 Type=Application
-Categories=Network;InstantMessaging;
+Categories=Network;InstantMessaging;Chat;
 Terminal=false
-StartupWMClass=recar
+StartupWMClass=Recar
 EOF
             
             mkdir -p $out/share/icons/hicolor/256x256/apps
