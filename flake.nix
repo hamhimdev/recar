@@ -1,159 +1,108 @@
 {
   description = "Recar - A Discord client for Linux";
-  
+
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
-  
+
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        lib = nixpkgs.lib;
-        
-        recar = pkgs.stdenv.mkDerivation rec {
+      in
+      {
+        packages.default = pkgs.stdenv.mkDerivation rec {
           pname = "recar";
           version = "1.0.0";
+
           src = ./.;
-          
-          nativeBuildInputs = [
-            pkgs.nodejs
-            pkgs.pnpmConfigHook
-            pkgs.makeWrapper
-            pkgs.pnpm
+
+          nativeBuildInputs = with pkgs; [
+            nodejs
+            pnpmConfigHook
+            makeWrapper
           ];
-          
+
+          buildInputs = with pkgs; [
+            electron
+          ];
+
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
-            hash = "sha256-9rHqfafCKtuwAAj3/N2p/em4ddlWQhM07RhQJR9VTYg=";
+            hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Replace with actual hash after first build
             fetcherVersion = 3;
           };
-          
-          postPatch = ''
-            # Remove packageManager field to prevent pnpm from trying to download itself
-            # during the offline build.
-            sed -i '/"packageManager"/d' package.json
-          '';
 
           buildPhase = ''
             runHook preBuild
-            
+
             export HOME=$TMPDIR
-            
-            echo "Building CSS..."
-            pnpm exec tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
-            
-            if [ -d "equicord" ]; then
-              echo "Building Equicord..."
-              cd equicord
-              EQUICORD_HASH=equicord pnpm buildWeb --offline
-              if [ ! -d "dist/browser" ] || [ ! -f "dist/browser/browser.js" ]; then
-                echo "dist/browser/browser.js not found"
-                exit 1
-              fi
-              cd ..
-            else
-              echo "Equicord directory not found"
-            fi
-            
-            if [ -d "vencord" ]; then
-              echo "Building Vencord..."
-              cd vencord
-              VENCORD_HASH=vencord pnpm buildWeb --offline
-              if [ ! -f "dist/browser.js" ]; then
-                echo "dist/browser.js not found"
-                exit 1
-              fi
-              cd ..
-            else
-              echo "Vencord directory not found"
-            fi
-            
+            export PNPM_HOME="$HOME/.pnpm"
+            export PATH="$PNPM_HOME:$PATH"
+
+            # Install dependencies
+            pnpm config set store-dir $TMPDIR/pnpm-store
+            pnpm install --frozen-lockfile --offline
+
+            # Initialize and update submodules
+            git submodule update --init --recursive || true
+
+            # Install and build mods
+            pnpm install:mods
+            pnpm build:mods
+
+            # Build CSS
+            pnpm build:css
+
             runHook postBuild
           '';
-          
+
           installPhase = ''
             runHook preInstall
-            
+
             mkdir -p $out/share/recar
-            cp -r src package.json $out/share/recar/
-            cp -r node_modules $out/share/recar/
-            
-            if [ -d "equicord/dist" ]; then
-              echo "Installing Equicord..."
-              mkdir -p $out/share/recar/equicord/dist/browser
-              cp -r equicord/dist/* $out/share/recar/equicord/dist/
-              if [ -f "$out/share/recar/equicord/dist/browser/browser.js" ]; then
-                echo "Equicord installed successfully"
-              else
-                echo "Equicord browser.js not found"
-              fi
-            fi
-            
-            if [ -d "vencord/dist" ]; then
-              echo "Installing Vencord..."
-              mkdir -p $out/share/recar/vencord/dist
-              cp -r vencord/dist/* $out/share/recar/vencord/dist/
-              if [ -f "$out/share/recar/vencord/dist/browser.js" ]; then
-                echo "Vencord installed successfully"
-              else
-                echo "Vencord browser.js not found"
-              fi
-            fi
-            
             mkdir -p $out/bin
+
+            # Copy application files
+            cp -r src $out/share/recar/
+            cp -r equicord $out/share/recar/
+            cp -r vencord $out/share/recar/
+            cp package.json $out/share/recar/
+            cp -r node_modules $out/share/recar/
+
+            # Create wrapper script
             makeWrapper ${pkgs.electron}/bin/electron $out/bin/recar \
               --add-flags "$out/share/recar/src/main.js" \
-              --set NODE_ENV production \
-              --prefix PATH : ${lib.makeBinPath [ pkgs.nodejs ]} \
-              --add-flags "--no-sandbox"
-            
+              --set ELECTRON_IS_DEV 0
+
+            # Install desktop file
             mkdir -p $out/share/applications
             cat > $out/share/applications/recar.desktop <<EOF
-[Desktop Entry]
-Name=Recar
-Comment=A Discord client for Linux with client mods
-Exec=recar
-Icon=recar
-Type=Application
-Categories=Network;InstantMessaging;
-Terminal=false
-StartupWMClass=recar
-EOF
-            
+            [Desktop Entry]
+            Name=Recar
+            Comment=A Discord client for Linux
+            Exec=$out/bin/recar
+            Icon=recar
+            Type=Application
+            Categories=Network;InstantMessaging;
+            EOF
+
+            # Install icon
             mkdir -p $out/share/icons/hicolor/256x256/apps
-            if [ -f "src/assets/img/recar.png" ]; then
-              cp src/assets/img/recar.png $out/share/icons/hicolor/256x256/apps/recar.png
-            elif [ -f "src/img/recar.png" ]; then
-              cp src/img/recar.png $out/share/icons/hicolor/256x256/apps/recar.png
-            fi
-            
+            cp src/img/recar.png $out/share/icons/hicolor/256x256/apps/recar.png
+
             runHook postInstall
           '';
-          
-          meta = with lib; {
-            description = "A Discord client for Linux with client mods and extra functionality";
-            homepage = "https://cutely.strangled.net/recar";
+
+          meta = with pkgs.lib; {
+            description = "A Discord client for Linux";
+            homepage = "https://codeberg.org/hamhim/recar";
             license = licenses.mit;
+            maintainers = [ ];
             platforms = platforms.linux;
-            maintainers = [ "hamhim" ];
             mainProgram = "recar";
           };
-        };
-      in
-      {
-        packages = {
-          recar = recar;
-          default = recar;
-        };
-        
-        devShells.default = pkgs.mkShell {
-          buildInputs = [
-            pkgs.nodejs
-            pkgs.pnpm
-            pkgs.electron
-          ];
         };
       }
     );
