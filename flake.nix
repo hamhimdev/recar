@@ -14,40 +14,60 @@
           pname = "recar";
           version = "1.0.0";
           src = ./.;
+          
           nativeBuildInputs = [
             pkgs.nodejs
             pkgs.pnpm
             pkgs.pnpmConfigHook
             pkgs.makeWrapper
+            pkgs.git
           ];
+          
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
             hash = "sha256-9rHqfafCKtuwAAj3/N2p/em4ddlWQhM07RhQJR9VTYg=";
-            fetcherVersion = 3;
           };
+          
           buildPhase = ''
             runHook preBuild
             
+            export HOME=$TMPDIR
+            export PNPM_HOME=$TMPDIR/.pnpm
+            
+            echo "Building CSS..."
             pnpm exec tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
             
             if [ -d "equicord" ]; then
               echo "Building Equicord..."
               cd equicord
-              pnpm install --offline --frozen-lockfile || true
-              EQUICORD_HASH=equicord pnpm buildWeb || true
+              pnpm install --offline --frozen-lockfile
+              pnpm buildWeb
+              if [ ! -d "dist/browser" ] || [ ! -f "dist/browser/browser.js" ]; then
+                echo "dist/browser/browser.js not found"
+                exit 1
+              fi
               cd ..
+            else
+              echo "equicord directory not found"
             fi
             
             if [ -d "vencord" ]; then
               echo "Building Vencord..."
               cd vencord
-              pnpm install --offline --frozen-lockfile || true
-              VENCORD_HASH=vencord pnpm buildWeb || true
+              pnpm install --offline --frozen-lockfile
+              pnpm buildWeb
+              if [ ! -f "dist/browser.js" ]; then
+                echo "dist/browser.js not found"
+                exit 1
+              fi
               cd ..
+            else
+              echo "vencord directory not found"
             fi
             
             runHook postBuild
           '';
+          
           installPhase = ''
             runHook preInstall
             
@@ -57,10 +77,17 @@
             cp -r node_modules $out/share/recar/
             
             if [ -d "equicord/dist" ]; then
-              cp -r equicord/dist $out/share/recar/equicord/dist
+              echo "Installing Equicord..."
+              mkdir -p $out/share/recar/equicord/dist/browser
+              cp -r equicord/dist/* $out/share/recar/equicord/dist/
+              ls -la $out/share/recar/equicord/dist/browser/ || echo "Equicord dist empty"
             fi
+            
             if [ -d "vencord/dist" ]; then
-              cp -r vencord/dist $out/share/recar/vencord/dist
+              echo "Installing Vencord..."
+              mkdir -p $out/share/recar/vencord/dist
+              cp -r vencord/dist/* $out/share/recar/vencord/dist/
+              ls -la $out/share/recar/vencord/dist/ || echo "Vencord dist empty"
             fi
             
             mkdir -p $out/bin
@@ -90,12 +117,13 @@ EOF
             
             runHook postInstall
           '';
+          
           meta = with lib; {
             description = "A Discord client for Linux";
             homepage = "https://cutely.strangled.net/recar";
             license = licenses.mit;
             platforms = platforms.linux;
-            maintainers = ["hamhim"];
+            maintainers = [ "hamhim" ];
             mainProgram = "recar";
           };
         };
@@ -105,11 +133,13 @@ EOF
           recar = recar;
           default = recar;
         };
+        
         devShells.default = pkgs.mkShell {
           buildInputs = [
             pkgs.nodejs
             pkgs.pnpm
             pkgs.electron
+            pkgs.git
           ];
         };
       }
