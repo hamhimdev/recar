@@ -37,6 +37,7 @@
             pkgs.pnpmConfigHook
             pkgs.makeWrapper
             pkgs.pnpm
+            pkgs.git
           ];
 
           pnpmDeps = pkgs.fetchPnpmDeps {
@@ -50,8 +51,31 @@
             chmod -R +w .
           '';
 
+          preBuild = ''
+            git init
+            git remote add origin https://github.com/hamhim/discordwebapp
+            
+            mkdir -p equicord/.git
+            pushd equicord
+            git init
+            git remote add origin https://github.com/Equicord/Equicord
+            popd
+
+            mkdir -p vencord/.git
+            pushd vencord
+            git init
+            git remote add origin https://github.com/Vendicated/Vencord
+            popd
+            
+            #git add .
+            #git -c user.email="nix@build" -c user.name="Nix" commit -m "nix-build-dummy"
+          '';
+
           buildPhase = ''
             runHook preBuild
+            
+            export VENCORD_REMOTE="Vendicated/Vencord"
+            export EQUICORD_REMOTE="Equicord/Equicord"
             
             pnpm exec tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify
             
