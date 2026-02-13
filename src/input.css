@@ -5,7 +5,7 @@
     font-style: normal;
     font-display: swap;
     font-weight: 100 900;
-    src: url("/font/InterVariable.woff2") format("woff2");
+    src: url("/assets/font/InterVariable.woff2") format("woff2");
 }
 
 @font-face {
@@ -13,7 +13,7 @@
     font-style: italic;
     font-display: swap;
     font-weight: 100 900;
-    src: url("/font/InterVariable-Italic.woff2") format("woff2");
+    src: url("/assets/font/InterVariable-Italic.woff2") format("woff2");
 }
 
 :root {
@@ -79,4 +79,26 @@ body {
     100% {
         transform: translateX(200%);
     }
+}
+
+.nodrag {
+    -webkit-app-region: no-drag;
+}
+
+/* call.html */
+@keyframes borderPulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 1;
+        filter: blur(0)
+    }
+    100% {
+        transform: scale(1.1);
+        opacity: 0;
+        filter: blur(1)
+    }
+}
+
+.border-pulse {
+    animation: borderPulse 1.5s ease-out infinite;
 }

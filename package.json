@@ -1,14 +1,23 @@
 {
   "name": "recar",
-  "version": "1.0.0",
-  "description": "",
+  "version": "1.0.1",
+  "description": "A Discord client for Linux with client mods and extra functionality.",
   "main": "src/main.js",
+  "keywords": [],
+  "author": {
+    "name": "hamhim",
+    "email": "hamhimdev@proton.me",
+    "url": "https://cutely.strangled.net/"
+  },
+  "homepage": "https://cutely.strangled.net/recar",
+  "repository": {
+    "type": "git",
+    "url": "git+https://codeberg.org/hamhim/recar.git"
+  },
+  "license": "MIT",
   "scripts": {
     "start": "electron .",
     "build:css": "tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify --watch",
-    "install:equicord": "pnpm -C equicord i",
-    "install:vencord": "pnpm -C vencord i",
-    "install:mods": "pnpm install:equicord && pnpm install:vencord",
     "build:equicord": "EQUICORD_HASH=equicord pnpm -C equicord buildWeb",
     "build:vencord": "VENCORD_HASH=vencord pnpm -C vencord buildWeb",
     "build:mods": "pnpm build:equicord && pnpm build:vencord",
@@ -16,7 +25,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "build": {
-    "appId": "com.hamhim.recar",
+    "appId": "net.strangled.cutely.recar",
     "productName": "Recar",
     "directories": {
       "output": "dist"
@@ -24,7 +33,15 @@
     "files": [
       "src/**/*",
       "package.json",
-      "pnpm-lock.yaml"
+      "pnpm-lock.yaml",
+      "equicord/dist/**/*",
+      "vencord/dist/browser.js",
+      "vencord/dist/browser.css",
+      "equicord/dist/browser/browser.js",
+      "equicord/dist/browser/browser.css"
+    ],
+    "asarUnpack": [
+      "./node_modules/node-notifier/**/*"
     ],
     "linux": {
       "target": [
@@ -34,17 +51,14 @@
         "tar.gz"
       ],
       "category": "Network",
-      "icon": "src/img/recar.png"
+      "icon": "src/assets/img/recar.png"
     }
   },
-  "keywords": [],
-  "author": "hamhim",
-  "license": "MIT",
   "packageManager": "pnpm@10.28.2",
   "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
     "electron": "^40.1.0",
     "electron-builder": "^26.7.0",
-    "@tailwindcss/cli": "^4.1.18",
     "tailwindcss": "^4.1.18"
   },
   "dependencies": {

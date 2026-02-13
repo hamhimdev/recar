@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Tray, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -9,6 +9,7 @@ app.userAgentFallback = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHT
 let mainWindow;
 let settingsWindow;
 let splashWindow;
+let callWindow;
 let tray;
 let settings = {
     branch: 'stable',
@@ -18,7 +19,7 @@ let settings = {
 let isFirstLaunch = false;
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json');
-const iconPath = path.join(__dirname, 'img', 'recar.png');
+const iconPath = path.join(__dirname, 'assets', 'img', 'recar.png');
 
 const loadSettings = () => {
     if (process.argv.includes('--reset-config')) {
@@ -77,6 +78,37 @@ const createSplashWindow = () => {
     splashWindow.loadFile(path.join(__dirname, 'splash.html'));
 };
 
+const createCallWindow = () => {
+    callWindow = new BrowserWindow({
+        width: 232,
+        height: 276,
+        transparent: true,
+        backgroundColor: '#111214',
+        title: 'Recar',
+        frame: false,
+        alwaysOnTop: true,
+        resizable: false,
+        show: false,
+        icon: iconPath,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'call.js')
+        }
+    });
+    
+    callWindow.loadFile(path.join(__dirname, 'call.html'));
+    
+    
+    callWindow.once('ready-to-show', () => {
+        callWindow.show();
+    });
+    
+    ipcMain.on('close-window', () => {
+        callWindow.close();
+    });
+};
+
 const createMainWindow = () => {
     mainWindow = new BrowserWindow({
         width: 1200,
@@ -96,6 +128,7 @@ const createMainWindow = () => {
 
     app.isQuiting = false;
     mainWindow.on('close', (event) => {
+        clearTimeout(splashTimeout)
         if (settings.minimizeToTray && !app.isQuiting) {
             event.preventDefault();
             mainWindow.hide();
@@ -161,7 +194,7 @@ const createMainWindow = () => {
     });
 
     mainWindow.once('ready-to-show', () => {
-        setTimeout(() => {
+        splashTimeout = setTimeout(() => {
             if (splashWindow) {
                 splashWindow.close();
                 splashWindow = null;
@@ -189,7 +222,9 @@ const createTray = () => {
                 app.isQuiting = true;
                 app.quit();
             }
-        }
+        },
+        { type: 'separator' },
+        { label: 'Open Call Window', click: () => createCallWindow() }
     ]);
     tray.setToolTip('Recar');
     tray.setContextMenu(contextMenu);
@@ -209,6 +244,7 @@ const createSettingsWindow = () => {
         icon: iconPath,
         autoHideMenuBar: true,
         backgroundColor: '#232323',
+        show: false,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -217,6 +253,10 @@ const createSettingsWindow = () => {
     });
 
     settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+
+    settingsWindow.once('ready-to-show', () => {
+        settingsWindow.show();
+    });
 
     // Auto-save and quit app on close if it's first launch and they haven't saved
     settingsWindow.on('closed', () => {
@@ -247,46 +287,51 @@ ipcMain.handle('restart-app', () => {
 
 app.whenReady().then(async () => {
     loadSettings();
-
     if (isFirstLaunch) {
         createSettingsWindow();
         return;
     }
-
     createSplashWindow();
     createTray();
-
     setTimeout(async () => {
         createMainWindow();
-
         try {
             const { default: Server } = await import('arrpc');
             const { WebSocketServer } = await import('ws');
 
-            const wss = new WebSocketServer({ port: 1337 });
-            const clients = new Set();
+            const portAvailable = await isPortUsed(1337);
 
-            wss.on('connection', (ws) => {
-                console.log('[arRPC Bridge] Client connected');
-                clients.add(ws);
-                ws.on('close', () => {
-                    console.log('[arRPC Bridge] Client disconnected');
-                    clients.delete(ws);
+            if (portAvailable) {
+                const wss = new WebSocketServer({ port: 1337 });
+                const clients = new Set();
+                wss.on('connection', (ws) => {
+                    console.log('[arRPC Bridge] Client connected');
+                    clients.add(ws);
+                    ws.on('close', () => {
+                        console.log('[arRPC Bridge] Client disconnected');
+                        clients.delete(ws);
+                    });
                 });
-            });
+                console.log('[arRPC Bridge] WebSocket server started on port 1337');
 
-            console.log('[arRPC Bridge] WebSocket server started on port 1337');
-
-            const arrpc = await new Server();
-            arrpc.on('activity', data => {
-                console.log('[arRPC] Activity received:', data);
-                const message = JSON.stringify(data);
-                for (const client of clients) {
-                    client.send(message);
-                }
-                console.log('[arRPC] Activity broadcasted to', clients.size, 'clients');
-            });
-            console.log('[arRPC] Rich Presence server started');
+                const arrpc = await new Server();
+                arrpc.on('activity', data => {
+                    console.log('[arRPC] Activity received:', data);
+                    const message = JSON.stringify(data);
+                    for (const client of clients) {
+                        client.send(message);
+                    }
+                    console.log('[arRPC] Activity broadcasted to', clients.size, 'clients');
+                });
+                console.log('[arRPC] Rich Presence server started');
+            } else {
+                console.log('[arRPC Bridge] Port 1337 is already in use, skipping websocket');
+                const arrpc = await new Server();
+                arrpc.on('activity', data => {
+                    console.log('[arRPC] Activity received:', data);
+                });
+                console.log('[arRPC] Rich Presence server started (without websocket)');
+            }
         } catch (e) {
             console.error('[arRPC] Failed to start:', e);
         }
@@ -296,3 +341,21 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
     app.quit();
 });
+
+function isPortUsed(port) {
+    return new Promise((resolve) => {
+        const server = require('net').createServer();
+        server.once('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                resolve(false);
+            } else {
+                resolve(false);
+            }
+        });
+        server.once('listening', () => {
+            server.close();
+            resolve(true);
+        });
+        server.listen(port);
+    });
+}

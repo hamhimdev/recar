@@ -2,3 +2,7 @@ onlyBuiltDependencies:
   - '@parcel/watcher'
   - electron
   - electron-winstaller
+
+packages:
+  - 'vencord'
+  - 'equicord'
