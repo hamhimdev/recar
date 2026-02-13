@@ -41,6 +41,7 @@
             pkgs.nodejs
             pkgs.pnpmConfigHook
             pkgs.makeWrapper
+            pkgs.pnpm
           ];
 
           pnpmDeps = pkgs.fetchPnpmDeps {
