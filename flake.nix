@@ -16,18 +16,13 @@
           pname = "recar";
           version = "1.0.0";
 
-          # IMPORTANT: Tell Nix to fetch submodules
-          src = pkgs.fetchgit {
-            url = "https://github.com/hamhimdev/recar"; # Update to your actual repo URL
-            rev = "b6fd1ba19b"; # Use the latest commit hash
-            fetchSubmodules = true;
-            sha256 = "sha256-ChtIWDJBQN740GJmVDx0mfK0D5zgkCspWbCLaqdhtHs="; # Run once, get the error, and paste the real hash here
-          };
+          src = self;
 
           nativeBuildInputs = with pkgs; [
             nodejs
             pnpmConfigHook
             makeWrapper
+            pnpm
           ];
 
           buildInputs = with pkgs; [
@@ -36,7 +31,6 @@
 
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
-            # You will likely need to update this hash if submodules change package.json
             hash = "sha256-9rHqfafCKtuwAAj3/N2p/em4ddlWQhM07RhQJR9VTYg="; 
             fetcherVersion = 3;
           };
