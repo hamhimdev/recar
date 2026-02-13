@@ -286,6 +286,7 @@ ipcMain.handle('restart-app', () => {
 });
 
 app.whenReady().then(async () => {
+    app.setName("Recar");
     loadSettings();
     if (isFirstLaunch) {
         createSettingsWindow();
