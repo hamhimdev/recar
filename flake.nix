@@ -22,20 +22,15 @@
           pname = "recar";
           version = "1.0.1";
           
-          src = pkgs.symlinkJoin {
-            name = "recar-src-combined";
-            paths = [
-              (pkgs.runCommand "recar-src" { } ''
-                mkdir -p $out
-                cp -r ${./.}/* $out/
-                chmod -R +w $out
-                rm -rf $out/vencord $out/equicord
-                cp -r ${vencord-src} $out/vencord
-                cp -r ${equicord-src} $out/equicord
-                chmod -R +w $out/vencord $out/equicord
-              '')
-            ];
-          };
+          src = pkgs.runCommand "recar-src" { } ''
+            mkdir -p $out
+            cp -r ${./.}/* $out/
+            chmod -R +w $out
+            rm -rf $out/vencord $out/equicord
+            cp -r ${vencord-src} $out/vencord
+            cp -r ${equicord-src} $out/equicord
+            chmod -R +w $out/vencord $out/equicord
+          '';
 
           nativeBuildInputs = [
             pkgs.nodejs
@@ -49,6 +44,12 @@
             hash = "sha256-CRiyTxPfCr84c3NMznruT6UNhKW37kn+zm+NsZMszjg=";
             fetcherVersion = 3;
           };
+
+          unpackPhase = ''
+            cp -r $src/. .
+            chmod -R +w .
+          '';
+
           buildPhase = ''
             runHook preBuild
             
