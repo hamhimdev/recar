@@ -16,13 +16,18 @@
           pname = "recar";
           version = "1.0.0";
 
-          src = ./.;
+          # IMPORTANT: Tell Nix to fetch submodules
+          src = pkgs.fetchgit {
+            url = "https://github.com/hamhimdev/recar"; # Update to your actual repo URL
+            rev = "b6fd1ba19b"; # Use the latest commit hash
+            fetchSubmodules = true;
+            sha256 = "sha256-ChtIWDJBQN740GJmVDx0mfK0D5zgkCspWbCLaqdhtHs="; # Run once, get the error, and paste the real hash here
+          };
 
           nativeBuildInputs = with pkgs; [
             nodejs
             pnpmConfigHook
             makeWrapper
-            pnpm
           ];
 
           buildInputs = with pkgs; [
@@ -31,30 +36,23 @@
 
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
-            hash = "sha256-9rHqfafCKtuwAAj3/N2p/em4ddlWQhM07RhQJR9VTYg=";
+            # You will likely need to update this hash if submodules change package.json
+            hash = "sha256-ChtIWDJBQN740GJmVDx0mfK0D5zgkCspWbCLaqdhtHs="; 
             fetcherVersion = 3;
           };
 
           buildPhase = ''
             runHook preBuild
 
-            export HOME=$TMPDIR
-            export PNPM_HOME="$HOME/.pnpm"
-            export PATH="$PNPM_HOME:$PATH"
-
-            # Install dependencies
-            pnpm config set store-dir $TMPDIR/pnpm-store
+            # pnpm.configHook handles PNPM_HOME and store-dir automatically.
+            # We just need to trigger the install and build.
+            
             pnpm install --frozen-lockfile --offline
-
-            # Initialize and update submodules
-            git submodule update --init --recursive || true
-
-            # Install and build mods
-            pnpm install:mods
-            pnpm build:mods
-
-            # Build CSS
-            pnpm build:css
+            
+            # Build the internal mods and tailwind
+            pnpm run install:mods --offline
+            pnpm run build:mods
+            pnpm run build:css
 
             runHook postBuild
           '';
@@ -65,19 +63,16 @@
             mkdir -p $out/share/recar
             mkdir -p $out/bin
 
-            # Copy application files
-            cp -r src $out/share/recar/
-            cp -r equicord $out/share/recar/
-            cp -r vencord $out/share/recar/
-            cp package.json $out/share/recar/
-            cp -r node_modules $out/share/recar/
+            # Copy relevant files (excluding dev junk)
+            cp -r src equicord vencord package.json node_modules $out/share/recar/
 
-            # Create wrapper script
+            # Create wrapper script using Nixpkgs Electron
             makeWrapper ${pkgs.electron}/bin/electron $out/bin/recar \
               --add-flags "$out/share/recar/src/main.js" \
-              --set ELECTRON_IS_DEV 0
+              --set ELECTRON_IS_DEV 0 \
+              --set NODE_ENV production
 
-            # Install desktop file
+            # Desktop Item
             mkdir -p $out/share/applications
             cat > $out/share/applications/recar.desktop <<EOF
             [Desktop Entry]
@@ -89,21 +84,14 @@
             Categories=Network;InstantMessaging;
             EOF
 
-            # Install icon
+            # Icon
             mkdir -p $out/share/icons/hicolor/256x256/apps
-            cp src/img/recar.png $out/share/icons/hicolor/256x256/apps/recar.png
+            if [ -f "src/img/recar.png" ]; then
+              cp src/img/recar.png $out/share/icons/hicolor/256x256/apps/recar.png
+            fi
 
             runHook postInstall
           '';
-
-          meta = with pkgs.lib; {
-            description = "A Discord client for Linux";
-            homepage = "https://codeberg.org/hamhim/recar";
-            license = licenses.mit;
-            maintainers = [ ];
-            platforms = platforms.linux;
-            mainProgram = "recar";
-          };
         };
       }
     );
