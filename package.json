@@ -51,7 +51,10 @@
         "tar.gz"
       ],
       "category": "Network",
-      "icon": "src/assets/img/recar.png"
+      "icon": "src/assets/img/recar.png",
+      "desktop": {
+        "StartupWMClass": "Recar"
+      }
     }
   },
   "packageManager": "pnpm@10.28.2",
