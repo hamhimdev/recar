@@ -57,10 +57,10 @@
             cp -r node_modules $out/share/recar/
             
             if [ -d "equicord/dist" ]; then
-              cp -r equicord/dist $out/share/recar/equicord-dist
+              cp -r equicord/dist $out/share/recar/equicord/dist
             fi
             if [ -d "vencord/dist" ]; then
-              cp -r vencord/dist $out/share/recar/vencord-dist
+              cp -r vencord/dist $out/share/recar/vencord/dist
             fi
             
             mkdir -p $out/bin
