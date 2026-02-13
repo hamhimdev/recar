@@ -22,6 +22,7 @@
             nodejs
             pnpmConfigHook
             makeWrapper
+            pnpm
           ];
 
           buildInputs = with pkgs; [
