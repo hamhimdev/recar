@@ -3,8 +3,16 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    vencord-src = {
+      url = "github:Vendicated/Vencord";
+      flake = false;
+    };
+    equicord-src = {
+      url = "github:Equicord/Equicord";
+      flake = false;
+    };
   };
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, vencord-src, equicord-src }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -13,16 +21,31 @@
         recar = pkgs.stdenv.mkDerivation rec {
           pname = "recar";
           version = "1.0.1";
-          src = ./.;
+          
+          src = pkgs.symlinkJoin {
+            name = "recar-src-combined";
+            paths = [
+              (pkgs.runCommand "recar-src" { } ''
+                mkdir -p $out
+                cp -r ${./.}/* $out/
+                chmod -R +w $out
+                rm -rf $out/vencord $out/equicord
+                cp -r ${vencord-src} $out/vencord
+                cp -r ${equicord-src} $out/equicord
+                chmod -R +w $out/vencord $out/equicord
+              '')
+            ];
+          };
+
           nativeBuildInputs = [
             pkgs.nodejs
-            pkgs.pnpm
             pkgs.pnpmConfigHook
             pkgs.makeWrapper
           ];
+
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
-            hash = "sha256-txEbMhNYiGk3qck6IgIzowajfvyArTTInAzruhTUBmU=";
+            hash = lib.fakeHash;
             fetcherVersion = 3;
           };
           buildPhase = ''
@@ -44,10 +67,12 @@
             cp -r node_modules $out/share/recar/
             
             if [ -d "equicord/dist" ]; then
-              cp -r equicord/dist $out/share/recar/equicord-dist
+              mkdir -p $out/share/recar/equicord
+              cp -r equicord/dist $out/share/recar/equicord/
             fi
             if [ -d "vencord/dist" ]; then
-              cp -r vencord/dist $out/share/recar/vencord-dist
+              mkdir -p $out/share/recar/vencord
+              cp -r vencord/dist $out/share/recar/vencord/
             fi
             
             mkdir -p $out/bin
