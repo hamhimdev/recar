@@ -1,73 +1,161 @@
-<!DOCTYPE html>
-<html lang="en" class="bg-[#111214]" style="-webkit-app-region: drag;">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!doctype html>
+<html lang="en" class="bg-[#111214]" style="-webkit-app-region: drag">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Incoming Call</title>
-    <link rel="stylesheet" href="tailwind.css">
-</head>
+    <link rel="stylesheet" href="tailwind.css" />
+  </head>
 
-<body class="bg-[#111214] overflow-hidden select-none" style="-webkit-app-region: drag;">
-    <div id="incomingClose"
-        class="absolute right-0 top-0 p-2 text-[#AAABAD] transition-all duration-100 hover:text-white active:scale-90 cursor-pointer nodrag">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+  <body
+    class="bg-[#111214] overflow-hidden select-none"
+    style="-webkit-app-region: drag"
+  >
+    <div
+      id="incomingClose"
+      class="top-0 right-0 absolute p-2 text-[#AAABAD] hover:text-white active:scale-90 transition-all duration-100 cursor-pointer nodrag"
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g>
+          <g transform="translate(4 4)">
+            <path
+              d="M15.3107 13.3143L9.99633 8L15.5864 2.40993C15.8621 2.13419 16 1.80147 16 1.41177C16 1.02206 15.8621 0.689338 15.5864 0.413603C15.3107 0.137868 14.9779 0 14.5882 0C14.1985 0 13.8658 0.137868 13.5901 0.413603L8 6.00368L2.40993 0.413603C2.13419 0.137868 1.80147 0 1.41177 0C1.02206 0 0.689338 0.137868 0.413603 0.413603C0.137868 0.689338 0 1.02206 0 1.41177C0 1.80147 0.137868 2.13419 0.413603 2.40993L6.00368 8L0.413603 13.5901C0.137868 13.8658 0 14.1985 0 14.5882C0 14.9779 0.137868 15.3107 0.413603 15.5864C0.689338 15.8621 1.02206 16 1.41177 16C1.80147 16 2.13419 15.8621 2.40993 15.5864L8 9.99633L13.3143 15.3107C13.5901 15.5864 13.9228 15.7243 14.3125 15.7243C14.7022 15.7243 15.0349 15.5864 15.3107 15.3107C15.5864 15.0349 15.7243 14.7022 15.7243 14.3125C15.7243 13.9228 15.5864 13.5901 15.3107 13.3143L15.3107 13.3143Z"
+              fill="currentColor"
+              fill-rule="evenodd"
+            />
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="grid-rows-3 bg-[#111214] px-3 w-full h-full">
+      <div class="relative flex justify-center items-center mt-8 mb-3">
+        <div
+          class="z-0 absolute border-[#AAABAD] border-3 border-pulse rounded-full w-24 h-24"
+        ></div>
+        <img
+          id="incomingPfp"
+          class="z-10 relative rounded-full h-22"
+          src="assets/img/recar.png"
+        />
+      </div>
+      <div class="flex flex-col justify-center items-center">
+        <p
+          id="incomingUsername"
+          class="px-2 w-full overflow-hidden font-semibold text-white text-xl text-center"
+          style="
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+          "
+        >
+          Username
+        </p>
+        <p class="font-medium text-[#AAABAD] text-sm">Incoming Call...</p>
+      </div>
+      <div class="flex justify-center items-center space-x-5 mt-6">
+        <div
+          id="incomingDecline"
+          class="flex justify-center items-center bg-[#D22D39] hover:bg-[#D22D39]/80 rounded-full w-14 h-14 text-white active:scale-95 transition-all duration-100 cursor-pointer nodrag"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <g>
-                <g transform="translate(4 4)">
-                    <path
-                        d="M15.3107 13.3143L9.99633 8L15.5864 2.40993C15.8621 2.13419 16 1.80147 16 1.41177C16 1.02206 15.8621 0.689338 15.5864 0.413603C15.3107 0.137868 14.9779 0 14.5882 0C14.1985 0 13.8658 0.137868 13.5901 0.413603L8 6.00368L2.40993 0.413603C2.13419 0.137868 1.80147 0 1.41177 0C1.02206 0 0.689338 0.137868 0.413603 0.413603C0.137868 0.689338 0 1.02206 0 1.41177C0 1.80147 0.137868 2.13419 0.413603 2.40993L6.00368 8L0.413603 13.5901C0.137868 13.8658 0 14.1985 0 14.5882C0 14.9779 0.137868 15.3107 0.413603 15.5864C0.689338 15.8621 1.02206 16 1.41177 16C1.80147 16 2.13419 15.8621 2.40993 15.5864L8 9.99633L13.3143 15.3107C13.5901 15.5864 13.9228 15.7243 14.3125 15.7243C14.7022 15.7243 15.0349 15.5864 15.3107 15.3107C15.5864 15.0349 15.7243 14.7022 15.7243 14.3125C15.7243 13.9228 15.5864 13.5901 15.3107 13.3143L15.3107 13.3143Z"
-                        fill="currentColor" fill-rule="evenodd" />
-                </g>
+              <g transform="translate(4 4)">
+                <path
+                  d="M15.3107 13.3143L9.99633 8L15.5864 2.40993C15.8621 2.13419 16 1.80147 16 1.41177C16 1.02206 15.8621 0.689338 15.5864 0.413603C15.3107 0.137868 14.9779 0 14.5882 0C14.1985 0 13.8658 0.137868 13.5901 0.413603L8 6.00368L2.40993 0.413603C2.13419 0.137868 1.80147 0 1.41177 0C1.02206 0 0.689338 0.137868 0.413603 0.413603C0.137868 0.689338 0 1.02206 0 1.41177C0 1.80147 0.137868 2.13419 0.413603 2.40993L6.00368 8L0.413603 13.5901C0.137868 13.8658 0 14.1985 0 14.5882C0 14.9779 0.137868 15.3107 0.413603 15.5864C0.689338 15.8621 1.02206 16 1.41177 16C1.80147 16 2.13419 15.8621 2.40993 15.5864L8 9.99633L13.3143 15.3107C13.5901 15.5864 13.9228 15.7243 14.3125 15.7243C14.7022 15.7243 15.0349 15.5864 15.3107 15.3107C15.5864 15.0349 15.7243 14.7022 15.7243 14.3125C15.7243 13.9228 15.5864 13.5901 15.3107 13.3143L15.3107 13.3143Z"
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                />
+              </g>
             </g>
-        </svg>
+          </svg>
+        </div>
+        <div
+          id="incomingAnswer"
+          class="flex justify-center items-center bg-[#3D9E60] hover:bg-[#3D9E60]/80 rounded-full w-14 h-14 text-white active:scale-95 transition-all duration-100 cursor-pointer nodrag"
+        >
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <g>
+              <path
+                d="M0 5.4C0 2.41766 2.41766 0 5.4 0C5.76 0 6.1 0.22 6.23 0.55C6.23 0.55 8.16 5.19 8.16 5.19C8.35176 5.6555 8.16756 6.19098 7.73 6.44C7.73 6.44 5 8 5 8C5.59938 11.5886 8.41139 14.4006 12 15C12 15 13.12 12.76 13.12 12.76C13.3382 12.3215 13.842 12.1056 14.31 12.25C14.31 12.25 19.37 13.81 19.37 13.81C19.75 13.92 20 14.27 20 14.66C20 17.6 17.6 20 14.66 20C14.66 20 14.29 20 14.29 20C6.39 20 0 13.6 0 5.71C0 5.71 0 5.4 0 5.4ZM11 1C11 0.447716 11.4477 4.76837e-07 12 4.76837e-07C16.4183 4.76837e-07 20 3.58172 20 8C20 8.55229 19.5523 9 19 9C18.4477 9 18 8.55228 18 8C18 4.68629 15.3137 2 12 2C11.4477 2 11 1.55229 11 1C11 1 11 1 11 1Z"
+                fill="currentColor"
+                transform="translate(2 2)"
+              />
+              <path
+                d="M0 1C0 0.447715 0.447715 0 1 0C3.20914 0 5 1.79086 5 4C5 4.55229 4.55228 5 4 5C3.44772 5 3 4.55228 3 4C3 2.89543 2.10457 2 1 2C0.447715 2 0 1.55228 0 1C0 1 0 1 0 1Z"
+                fill="currentColor"
+                transform="translate(13 6)"
+              />
+            </g>
+          </svg>
+        </div>
+      </div>
     </div>
-    <div class="bg-[#111214] grid-rows-3 h-full w-full">
-        <div class="flex items-center justify-center mt-8 mb-3 relative">
-            <div class="h-24 w-24 border-3 absolute z-0 rounded-full border-[#AAABAD] border-pulse"></div>
-            <img id="incomingPfp" class="h-22 rounded-full relative z-10" src="assets/img/recar.png">
-        </div>
-        <div class="flex flex-col items-center justify-center">
-            <p id="incomingUsername" class="font-semibold text-white text-xl">
-                Username
-            </p>
-            <p class="text-sm font-medium text-[#AAABAD]">
-                Incoming Call...
-            </p>
-        </div>
-        <div class="flex items-center justify-center space-x-5 mt-6">
-            <div
-                class="flex bg-[#D22D39] transition-all duration-100 hover:bg-[#D22D39]/80 active:scale-95 cursor-pointer h-14 w-14 rounded-full items-center justify-center text-white nodrag">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <g>
-                        <g transform="translate(4 4)">
-                            <path
-                                d="M15.3107 13.3143L9.99633 8L15.5864 2.40993C15.8621 2.13419 16 1.80147 16 1.41177C16 1.02206 15.8621 0.689338 15.5864 0.413603C15.3107 0.137868 14.9779 0 14.5882 0C14.1985 0 13.8658 0.137868 13.5901 0.413603L8 6.00368L2.40993 0.413603C2.13419 0.137868 1.80147 0 1.41177 0C1.02206 0 0.689338 0.137868 0.413603 0.413603C0.137868 0.689338 0 1.02206 0 1.41177C0 1.80147 0.137868 2.13419 0.413603 2.40993L6.00368 8L0.413603 13.5901C0.137868 13.8658 0 14.1985 0 14.5882C0 14.9779 0.137868 15.3107 0.413603 15.5864C0.689338 15.8621 1.02206 16 1.41177 16C1.80147 16 2.13419 15.8621 2.40993 15.5864L8 9.99633L13.3143 15.3107C13.5901 15.5864 13.9228 15.7243 14.3125 15.7243C14.7022 15.7243 15.0349 15.5864 15.3107 15.3107C15.5864 15.0349 15.7243 14.7022 15.7243 14.3125C15.7243 13.9228 15.5864 13.5901 15.3107 13.3143L15.3107 13.3143Z"
-                                fill="currentColor" fill-rule="evenodd" />
-                        </g>
-                    </g>
-                </svg>
-            </div>
-            <div
-                class="flex bg-[#3D9E60] transition-all duration-100 hover:bg-[#3D9E60]/80 active:scale-95 cursor-pointer h-14 w-14 rounded-full items-center justify-center text-white nodrag">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                    <g>
-                        <path
-                            d="M0 5.4C0 2.41766 2.41766 0 5.4 0C5.76 0 6.1 0.22 6.23 0.55C6.23 0.55 8.16 5.19 8.16 5.19C8.35176 5.6555 8.16756 6.19098 7.73 6.44C7.73 6.44 5 8 5 8C5.59938 11.5886 8.41139 14.4006 12 15C12 15 13.12 12.76 13.12 12.76C13.3382 12.3215 13.842 12.1056 14.31 12.25C14.31 12.25 19.37 13.81 19.37 13.81C19.75 13.92 20 14.27 20 14.66C20 17.6 17.6 20 14.66 20C14.66 20 14.29 20 14.29 20C6.39 20 0 13.6 0 5.71C0 5.71 0 5.4 0 5.4ZM11 1C11 0.447716 11.4477 4.76837e-07 12 4.76837e-07C16.4183 4.76837e-07 20 3.58172 20 8C20 8.55229 19.5523 9 19 9C18.4477 9 18 8.55228 18 8C18 4.68629 15.3137 2 12 2C11.4477 2 11 1.55229 11 1C11 1 11 1 11 1Z"
-                            fill="currentColor" transform="translate(2 2)" />
-                        <path
-                            d="M0 1C0 0.447715 0.447715 0 1 0C3.20914 0 5 1.79086 5 4C5 4.55229 4.55228 5 4 5C3.44772 5 3 4.55228 3 4C3 2.89543 2.10457 2 1 2C0.447715 2 0 1.55228 0 1C0 1 0 1 0 1Z"
-                            fill="currentColor" transform="translate(13 6)" />
-                    </g>
-                </svg>
-            </div>
-        </div>
-    </div>
-</body>
+  </body>
 
-<script>
-    document.getElementById('incomingClose').onclick = () => {
-        window.electron.closeWindow();
+  <script>
+    function adjustCallHeightForName() {
+      const el = document.getElementById("incomingUsername");
+      if (!el) return;
+      const originalClamp = el.style.webkitLineClamp;
+      // remove clamp temporarily to measure natural height
+      el.style.webkitLineClamp = "";
+      const fullHeight = el.scrollHeight;
+      // restore clamp
+      el.style.webkitLineClamp = originalClamp;
+      const computed = getComputedStyle(el);
+      const lineHeight = parseFloat(computed.lineHeight) || 20;
+      const lines = Math.round(fullHeight / lineHeight);
+      const extra = lines >= 2 ? 28 : 0;
+      if (
+        window.electron &&
+        typeof window.electron.adjustCallHeight === "function"
+      ) {
+        window.electron.adjustCallHeight(extra);
+      }
+    }
+
+    window.electron.onCallData((data) => {
+      const el = document.getElementById("incomingUsername");
+      if (data.username && el) {
+        el.textContent = data.username;
+        requestAnimationFrame(adjustCallHeightForName);
+      }
+      if (data.iconUrl)
+        document.getElementById("incomingPfp").src = data.iconUrl;
+    });
+
+    document.getElementById("incomingClose").onclick = () => {
+      window.electron.dismissCall();
     };
-</script>
 
+    document.getElementById("incomingDecline").onclick = () => {
+      window.electron.dismissCall();
+    };
+
+    document.getElementById("incomingAnswer").onclick = () => {
+      window.electron.answerCall();
+    };
+
+    window.addEventListener("DOMContentLoaded", () => {
+      requestAnimationFrame(adjustCallHeightForName);
+    });
+  </script>
 </html>

@@ -1,233 +1,291 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="bg-[#232323] text-[#dbdee1]">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Recar Settings</title>
-    <link rel="stylesheet" href="tailwind.css">
-</head>
+    <link rel="stylesheet" href="tailwind.css" />
+  </head>
 
-<body class="p-6 flex flex-col gap-6 select-none overflow-x-hidden">
+  <body class="p-6 flex flex-col gap-6 select-none overflow-x-hidden">
     <header class="flex items-center gap-3">
-        <h1 id="headerTitle" class="text-xl font-bold text-white tracking-tight">Settings</h1>
+      <h1 id="headerTitle" class="text-xl font-bold text-white tracking-tight">
+        Settings
+      </h1>
     </header>
 
     <main class="flex flex-col gap-5">
-        <section class="flex flex-col gap-2">
-            <div class="relative group">
-                <select id="branch"
-                    class="w-full bg-[#111214] border-none text-[#dbdee1] p-3 pr-10 rounded-lg text-sm appearance-none outline-none transition-all cursor-pointer">
-                    <option value="stable">Stable (discord.com) (Recommended)</option>
-                    <option value="ptb">PTB (ptb.discord.com)</option>
-                    <option value="canary">Canary (canary.discord.com)</option>
-                </select>
-                <svg xmlns="http://www.w3.org/2000/svg"
-                    class="absolute right-3 top-1/2 h-6 -translate-y-1/2 text-[#949ba4] pointer-events-none group-hover:text-white transition-colors"
-                    viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z">
-                    </path>
-                </svg>
+      <section class="flex flex-col gap-2">
+        <div class="relative group">
+          <select
+            id="branch"
+            class="w-full bg-[#111214] border-none text-[#dbdee1] p-3 pr-10 rounded-lg text-sm appearance-none outline-none transition-all cursor-pointer"
+          >
+            <option value="stable">Stable (discord.com) (Recommended)</option>
+            <option value="ptb">PTB (ptb.discord.com)</option>
+            <option value="canary">Canary (canary.discord.com)</option>
+          </select>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="absolute right-3 top-1/2 h-6 -translate-y-1/2 text-[#949ba4] pointer-events-none group-hover:text-white transition-colors"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M11.9999 13.1714L16.9497 8.22168L18.3639 9.63589L11.9999 15.9999L5.63599 9.63589L7.0502 8.22168L11.9999 13.1714Z"
+            ></path>
+          </svg>
+        </div>
+        <p class="text-xs text-[#949ba4] italic">
+          Switching branches requires an app restart.
+        </p>
+      </section>
+
+      <section class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-semibold text-[#f2f3f5]"
+              >Minimize to Tray</span
+            >
+            <span class="text-xs text-[#949ba4]"
+              >Keep app running when closed</span
+            >
+          </div>
+          <div class="relative inline-block w-10 h-5 align-middle select-none">
+            <input
+              type="checkbox"
+              id="trayToggle"
+              class="switch-checkbox absolute block w-0 h-0 opacity-0"
+            />
+            <label
+              for="trayToggle"
+              class="switch-label block overflow-hidden h-5 rounded-full bg-[#72767d] cursor-pointer transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:w-[14px] after:h-[14px] after:rounded-full after:transition-transform after:duration-200 shadow-inner"
+            ></label>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between mt-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm font-semibold text-[#f2f3f5]"
+              >Start Maximized</span
+            >
+            <span class="text-xs text-[#949ba4]"
+              >Launch with a maximized window</span
+            >
+          </div>
+          <div class="relative inline-block w-10 h-5 align-middle select-none">
+            <input
+              type="checkbox"
+              id="maximizedToggle"
+              class="switch-checkbox absolute block w-0 h-0 opacity-0"
+            />
+            <label
+              for="maximizedToggle"
+              class="switch-label block overflow-hidden h-5 rounded-full bg-[#72767d] cursor-pointer transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:w-[14px] after:h-[14px] after:rounded-full after:transition-transform after:duration-200 shadow-inner"
+            ></label>
+          </div>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-3">
+        <header class="flex flex-col gap-0.5">
+          <span class="text-sm font-semibold text-[#f2f3f5]">Mod Client</span>
+          <span class="text-xs text-[#949ba4]"
+            >Choose your preferred client modification</span
+          >
+          <p class="text-xs text-[#949ba4] italic">
+            Switching mods requires an app restart.
+          </p>
+        </header>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div
+            id="mod-equicord"
+            class="mod-option relative overflow-hidden bg-[#111214] border-2 border-transparent p-4 rounded-xl cursor-pointer transition-all hover:bg-[#1e1f22] group"
+          >
+            <div class="flex flex-col items-center gap-3 relative z-10">
+              <img
+                src="assets/img/equicord.png"
+                class="w-12 h-12 object-contain"
+                alt="Equicord"
+              />
+              <span
+                class="text-xs font-bold text-[#dbdee1] group-hover:text-white transition-colors"
+                >Equicord</span
+              >
             </div>
-            <p class="text-xs text-[#949ba4] italic">Switching branches requires an app restart.</p>
-        </section>
-
-        <section class="flex flex-col gap-2">
-            <div class="flex items-center justify-between">
-                <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-semibold text-[#f2f3f5]">Minimize to Tray</span>
-                    <span class="text-xs text-[#949ba4]">Keep app running when closed</span>
-                </div>
-                <div class="relative inline-block w-10 h-5 align-middle select-none">
-                    <input type="checkbox" id="trayToggle" class="switch-checkbox absolute block w-0 h-0 opacity-0" />
-                    <label for="trayToggle"
-                        class="switch-label block overflow-hidden h-5 rounded-full bg-[#72767d] cursor-pointer transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:w-[14px] after:h-[14px] after:rounded-full after:transition-transform after:duration-200 shadow-inner"></label>
-                </div>
+            <div
+              class="selection-indicator absolute top-2 right-2 opacity-0 transition-opacity"
+            >
+              <i class="ri-checkbox-circle-fill text-[#5865F2] text-lg"></i>
             </div>
+          </div>
 
-            <div class="flex items-center justify-between mt-3">
-                <div class="flex flex-col gap-0.5">
-                    <span class="text-sm font-semibold text-[#f2f3f5]">Start Maximized</span>
-                    <span class="text-xs text-[#949ba4]">Launch with a maximized window</span>
-                </div>
-                <div class="relative inline-block w-10 h-5 align-middle select-none">
-                    <input type="checkbox" id="maximizedToggle"
-                        class="switch-checkbox absolute block w-0 h-0 opacity-0" />
-                    <label for="maximizedToggle"
-                        class="switch-label block overflow-hidden h-5 rounded-full bg-[#72767d] cursor-pointer transition-colors after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:w-[14px] after:h-[14px] after:rounded-full after:transition-transform after:duration-200 shadow-inner"></label>
-                </div>
+          <div
+            id="mod-vencord"
+            class="mod-option relative overflow-hidden bg-[#111214] border-2 border-transparent p-4 rounded-xl cursor-pointer transition-all hover:bg-[#1e1f22] group"
+          >
+            <div class="flex flex-col items-center gap-3 relative z-10">
+              <img
+                src="assets/img/vencord.png"
+                class="w-12 h-12 object-contain"
+                alt="Vencord"
+              />
+              <span
+                class="text-xs font-bold text-[#dbdee1] group-hover:text-white transition-colors"
+                >Vencord</span
+              >
             </div>
-        </section>
-
-        <section class="flex flex-col gap-3">
-            <header class="flex flex-col gap-0.5">
-                <span class="text-sm font-semibold text-[#f2f3f5]">Mod Client</span>
-                <span class="text-xs text-[#949ba4]">Choose your preferred client modification</span>
-                <p class="text-xs text-[#949ba4] italic">Switching mods requires an app restart.</p>
-            </header>
-
-            <div class="grid grid-cols-2 gap-3">
-                <div id="mod-equicord"
-                    class="mod-option relative overflow-hidden bg-[#111214] border-2 border-transparent p-4 rounded-xl cursor-pointer transition-all hover:bg-[#1e1f22] group">
-                    <div class="flex flex-col items-center gap-3 relative z-10">
-                        <img src="assets/img/equicord.png" class="w-12 h-12 object-contain" alt="Equicord">
-                        <span
-                            class="text-xs font-bold text-[#dbdee1] group-hover:text-white transition-colors">Equicord</span>
-                    </div>
-                    <div class="selection-indicator absolute top-2 right-2 opacity-0 transition-opacity">
-                        <i class="ri-checkbox-circle-fill text-[#5865F2] text-lg"></i>
-                    </div>
-                </div>
-
-                <div id="mod-vencord"
-                    class="mod-option relative overflow-hidden bg-[#111214] border-2 border-transparent p-4 rounded-xl cursor-pointer transition-all hover:bg-[#1e1f22] group">
-                    <div class="flex flex-col items-center gap-3 relative z-10">
-                        <img src="assets/img/vencord.png" class="w-12 h-12 object-contain" alt="Vencord">
-                        <span
-                            class="text-xs font-bold text-[#dbdee1] group-hover:text-white transition-colors">Vencord</span>
-                    </div>
-                    <div class="selection-indicator absolute top-2 right-2 opacity-0 transition-opacity">
-                        <i class="ri-checkbox-circle-fill text-[#5865F2] text-lg"></i>
-                    </div>
-                </div>
+            <div
+              class="selection-indicator absolute top-2 right-2 opacity-0 transition-opacity"
+            >
+              <i class="ri-checkbox-circle-fill text-[#5865F2] text-lg"></i>
             </div>
-        </section>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="mt-auto pt-3">
-        <div id="normalFooter" class="flex gap-2">
-            <button id="saveBtn"
-                class="flex-1 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-2 rounded-lg text-sm transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
-                Save Settings
-            </button>
-            <button id="restartBtn" disabled
-                class="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-[#313338] disabled:text-[#4e5058] disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg text-sm transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
-                Save & Restart
-            </button>
-        </div>
-        <div id="setupFooter" class="hidden">
-            <button id="setupBtn"
-                class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-2 rounded-lg text-sm transition-all transform active:scale-[0.98] flex items-center justify-center gap-2">
-                Save & Start Recar
-            </button>
-        </div>
+      <div id="normalFooter" class="flex gap-2">
+        <button
+          id="saveBtn"
+          class="flex-1 bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-2 rounded-lg text-sm transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          Save Settings
+        </button>
+        <button
+          id="restartBtn"
+          disabled
+          class="flex-1 bg-red-500 hover:bg-red-600 disabled:bg-[#313338] disabled:text-[#4e5058] disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg text-sm transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          Save & Restart
+        </button>
+      </div>
+      <div id="setupFooter" class="hidden">
+        <button
+          id="setupBtn"
+          class="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold py-2 rounded-lg text-sm transition-all transform active:scale-[0.98] flex items-center justify-center gap-2"
+        >
+          Save & Start Recar
+        </button>
+      </div>
     </footer>
 
     <script>
-        const headerTitle = document.getElementById('headerTitle');
-        const branchSelect = document.getElementById('branch');
-        const trayToggle = document.getElementById('trayToggle');
-        const maximizedToggle = document.getElementById('maximizedToggle');
-        const saveBtn = document.getElementById('saveBtn');
-        const restartBtn = document.getElementById('restartBtn');
-        const setupBtn = document.getElementById('setupBtn');
-        const normalFooter = document.getElementById('normalFooter');
-        const setupFooter = document.getElementById('setupFooter');
+      const headerTitle = document.getElementById("headerTitle");
+      const branchSelect = document.getElementById("branch");
+      const trayToggle = document.getElementById("trayToggle");
+      const maximizedToggle = document.getElementById("maximizedToggle");
+      const saveBtn = document.getElementById("saveBtn");
+      const restartBtn = document.getElementById("restartBtn");
+      const setupBtn = document.getElementById("setupBtn");
+      const normalFooter = document.getElementById("normalFooter");
+      const setupFooter = document.getElementById("setupFooter");
 
-        const modOptions = {
-            equicord: document.getElementById('mod-equicord'),
-            vencord: document.getElementById('mod-vencord')
-        };
+      const modOptions = {
+        equicord: document.getElementById("mod-equicord"),
+        vencord: document.getElementById("mod-vencord"),
+      };
 
-        let initialBranch = '';
-        let initialToggle = false;
-        let initialMaximized = true;
-        let initialMod = 'equicord';
-        let currentMod = 'equicord';
-        let setupMode = false;
+      let initialBranch = "";
+      let initialToggle = false;
+      let initialMaximized = true;
+      let initialMod = "equicord";
+      let currentMod = "equicord";
+      let setupMode = false;
 
-        const updateModUI = (selected) => {
-            currentMod = selected;
-            Object.keys(modOptions).forEach(mod => {
-                const el = modOptions[mod];
-                const indicator = el.querySelector('.selection-indicator');
-                if (mod === selected) {
-                    el.classList.add('border-[#5865F2]', 'bg-[#1e1f22]');
-                    el.classList.remove('border-transparent', 'bg-[#111214]');
-                    indicator.classList.remove('opacity-0');
-                } else {
-                    el.classList.remove('border-[#5865F2]', 'bg-[#1e1f22]');
-                    el.classList.add('border-transparent', 'bg-[#111214]');
-                    indicator.classList.add('opacity-0');
-                }
-            });
-            checkChanges();
-        };
-
-        Object.keys(modOptions).forEach(mod => {
-            modOptions[mod].onclick = () => updateModUI(mod);
+      const updateModUI = (selected) => {
+        currentMod = selected;
+        Object.keys(modOptions).forEach((mod) => {
+          const el = modOptions[mod];
+          const indicator = el.querySelector(".selection-indicator");
+          if (mod === selected) {
+            el.classList.add("border-[#5865F2]", "bg-[#1e1f22]");
+            el.classList.remove("border-transparent", "bg-[#111214]");
+            indicator.classList.remove("opacity-0");
+          } else {
+            el.classList.remove("border-[#5865F2]", "bg-[#1e1f22]");
+            el.classList.add("border-transparent", "bg-[#111214]");
+            indicator.classList.add("opacity-0");
+          }
         });
+        checkChanges();
+      };
 
-        window.settingsAPI.getSettings().then(settings => {
-            branchSelect.value = settings.branch;
-            trayToggle.checked = settings.minimizeToTray;
-            maximizedToggle.checked = settings.startMaximized;
-            initialBranch = settings.branch;
-            initialToggle = settings.minimizeToTray;
-            initialMaximized = settings.startMaximized;
-            initialMod = settings.mod || 'equicord';
-            setupMode = settings.isFirstLaunch;
+      Object.keys(modOptions).forEach((mod) => {
+        modOptions[mod].onclick = () => updateModUI(mod);
+      });
 
-            if (setupMode) {
-                headerTitle.innerText = "Setup";
-                normalFooter.classList.add('hidden');
-                setupFooter.classList.remove('hidden');
-            }
+      window.settingsAPI.getSettings().then((settings) => {
+        branchSelect.value = settings.branch;
+        trayToggle.checked = settings.minimizeToTray;
+        maximizedToggle.checked = settings.startMaximized;
+        initialBranch = settings.branch;
+        initialToggle = settings.minimizeToTray;
+        initialMaximized = settings.startMaximized;
+        initialMod = settings.mod || "equicord";
+        setupMode = settings.isFirstLaunch;
 
-            updateModUI(initialMod);
+        if (setupMode) {
+          headerTitle.innerText = "Setup";
+          normalFooter.classList.add("hidden");
+          setupFooter.classList.remove("hidden");
+        }
+
+        updateModUI(initialMod);
+      });
+
+      const checkChanges = () => {
+        const hasChanged =
+          branchSelect.value !== initialBranch ||
+          trayToggle.checked !== initialToggle ||
+          maximizedToggle.checked !== initialMaximized ||
+          currentMod !== initialMod;
+        restartBtn.disabled = !hasChanged;
+      };
+
+      branchSelect.onchange = checkChanges;
+      trayToggle.onchange = checkChanges;
+      maximizedToggle.onchange = checkChanges;
+
+      const performSave = async () => {
+        await window.settingsAPI.saveSettings({
+          branch: branchSelect.value,
+          minimizeToTray: trayToggle.checked,
+          startMaximized: maximizedToggle.checked,
+          mod: currentMod,
         });
+        initialBranch = branchSelect.value;
+        initialToggle = trayToggle.checked;
+        initialMaximized = maximizedToggle.checked;
+        initialMod = currentMod;
+      };
 
-        const checkChanges = () => {
-            const hasChanged = branchSelect.value !== initialBranch ||
-                trayToggle.checked !== initialToggle ||
-                maximizedToggle.checked !== initialMaximized ||
-                currentMod !== initialMod;
-            restartBtn.disabled = !hasChanged;
-        };
+      saveBtn.onclick = async () => {
+        const originalContent = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        await performSave();
+        saveBtn.innerHTML = "Saved!";
+        saveBtn.classList.replace("bg-[#5865F2]", "bg-[#23a559]");
 
-        branchSelect.onchange = checkChanges;
-        trayToggle.onchange = checkChanges;
-        maximizedToggle.onchange = checkChanges;
+        setTimeout(() => {
+          saveBtn.innerHTML = originalContent;
+          saveBtn.classList.replace("bg-[#23a559]", "bg-[#5865F2]");
+          saveBtn.disabled = false;
+          checkChanges();
+        }, 1000);
+      };
 
-        const performSave = async () => {
-            await window.settingsAPI.saveSettings({
-                branch: branchSelect.value,
-                minimizeToTray: trayToggle.checked,
-                startMaximized: maximizedToggle.checked,
-                mod: currentMod
-            });
-            initialBranch = branchSelect.value;
-            initialToggle = trayToggle.checked;
-            initialMaximized = maximizedToggle.checked;
-            initialMod = currentMod;
-        };
+      restartBtn.onclick = async () => {
+        await performSave();
+        window.settingsAPI.restartApp();
+      };
 
-        saveBtn.onclick = async () => {
-            const originalContent = saveBtn.innerHTML;
-            saveBtn.disabled = true;
-            await performSave();
-            saveBtn.innerHTML = 'Saved!';
-            saveBtn.classList.replace('bg-[#5865F2]', 'bg-[#23a559]');
-
-            setTimeout(() => {
-                saveBtn.innerHTML = originalContent;
-                saveBtn.classList.replace('bg-[#23a559]', 'bg-[#5865F2]');
-                saveBtn.disabled = false;
-                checkChanges();
-            }, 1000);
-        };
-
-        restartBtn.onclick = async () => {
-            await performSave();
-            window.settingsAPI.restartApp();
-        };
-
-        setupBtn.onclick = async () => {
-            await performSave();
-            window.settingsAPI.restartApp();
-        };
+      setupBtn.onclick = async () => {
+        await performSave();
+        window.settingsAPI.restartApp();
+      };
     </script>
-</body>
-
+  </body>
 </html>

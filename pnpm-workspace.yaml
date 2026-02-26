@@ -1,8 +1,9 @@
+packages:
+  - vencord
+  - equicord
+
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - electron
   - electron-winstaller
-
-packages:
-  - 'vencord'
-  - 'equicord'
+  - esbuild
