@@ -67,26 +67,22 @@ waitForDiscord(({ US, CS, GS, PS, DS }) => {
 
 		for (const [ringerId, ringData] of Object.entries(currentRings)) {
 			if (!previousRings[ringerId]) {
-				if (ringerId === me.id && PS.getStatus(me.id) !== "dnd") {
-					if (window.callBridge) {
-						const displayName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
-						window.callBridge.ringStarted({
-							username: displayName,
-							iconUrl,
-							channelName,
-							channelId: event.channelId,
-						});
-					}
+				if (ringerId === me.id && !document.hasFocus() && PS.getStatus(me.id) !== "dnd" && window.callBridge) {
+					const displayName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
+					window.callBridge.ringStarted({
+						username: displayName,
+						iconUrl,
+						channelName,
+						channelId: event.channelId,
+					});
 				}
 			}
 		}
 
 		for (const [ringerId] of Object.entries(previousRings)) {
-			if (!currentRings[ringerId]) {
-				if (ringerId === me.id && window.callBridge) {
-					const callerName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
-					window.callBridge.ringStopped({ username: callerName, channelName });
-				}
+			if (!currentRings[ringerId] && ringerId === me.id && window.callBridge) {
+				const callerName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
+				window.callBridge.ringStopped({ username: callerName, channelName });
 			}
 		}
 
