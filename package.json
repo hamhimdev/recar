@@ -1,6 +1,6 @@
 {
   "name": "recar",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A Discord client for Linux with client mods and extra functionality.",
   "main": "src/main.js",
   "keywords": [],
@@ -9,7 +9,7 @@
     "email": "hamhimdev@proton.me",
     "url": "https://cutely.strangled.net/"
   },
-  "homepage": "https://cutely.strangled.net/recar",
+  "homepage": "https://recar.loxodrome.app/",
   "repository": {
     "type": "git",
     "url": "git+https://codeberg.org/hamhim/recar.git"

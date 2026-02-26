@@ -45,8 +45,8 @@ let settings = {
     branch: "stable",
     minimizeToTray: true,
     startMaximized: true,
-    mod: "equicord",
     autoEnableWebRPC: true,
+    enableCallPopup: true,
 };
 let isFirstLaunch = false;
 let discordCSS = null;
@@ -80,10 +80,6 @@ const extractCSS = async () => {
         return ':root{' + pairs.join(';') + '}';
       })()
     `);
-
-        if (settingsWindow && !settingsWindow.isDestroyed()) {
-            settingsWindow.webContents.insertCSS(discordCSS);
-        }
         if (callWindow && !callWindow.isDestroyed()) {
             callWindow.webContents.insertCSS(discordCSS);
         }
@@ -351,8 +347,8 @@ const createSettingsWindow = () => {
     }
 
     settingsWindow = new BrowserWindow({
-        width: 400,
-        height: 620,
+        width: 800,
+        height: 600,
         title: "Recar Settings",
         icon: iconPath,
         autoHideMenuBar: true,
@@ -380,6 +376,11 @@ const createSettingsWindow = () => {
     });
 };
 
+ipcMain.handle('get-versions', () => ({
+  app: app.getVersion(),
+  electron: process.versions.electron,
+}))
+
 ipcMain.handle("get-settings", () => ({ ...settings, isFirstLaunch }));
 ipcMain.handle("save-settings", (event, newSettings) => {
     settings = { ...settings, ...newSettings };
@@ -389,6 +390,7 @@ ipcMain.handle("save-settings", (event, newSettings) => {
 });
 
 ipcMain.on("call-ring-started", (event, data) => {
+    if (!settings.enableCallPopup) return;
     pendingCallData = data;
     if (!callWindow || callWindow.isDestroyed()) {
         createCallWindow();
@@ -450,7 +452,7 @@ ipcMain.handle("restart-app", () => {
 app.whenReady().then(async () => {
     app.setName("recar");
     app.desktopName = "recar";
-    app.setAppUserModelId("net.strangled.cutely.recar");
+    app.setAppUserModelId("app.loxodrome.recar");
     loadSettings();
 
     const { session } = require("electron");
