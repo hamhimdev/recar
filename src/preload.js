@@ -58,7 +58,7 @@ contextBridge.exposeInMainWorld("recarBridge", {
             try {
               const config = JSON.parse(localStorage.getItem(modName) || "{}");
               config.plugins = config.plugins || {};
-              ["arRPC.web", "WebRichPresence", "WebRichPresence (arRPC)"].forEach(id => {
+              ["arRPC.web", "WebRichPresence", "WebRichPresence (arRPC)", "WebContextMenus", "WebScreenShareFixes"].forEach(id => {
                 config.plugins[id] = config.plugins[id] || {};
                 config.plugins[id].enabled = rpcEnabled;
               });

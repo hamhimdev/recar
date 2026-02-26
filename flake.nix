@@ -20,7 +20,7 @@
         
         recar = pkgs.stdenv.mkDerivation rec {
           pname = "recar";
-          version = "1.1.3";
+          version = "1.1.4";
           
           src = pkgs.runCommand "recar-src" { } ''
             mkdir -p $out
