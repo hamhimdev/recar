@@ -13,13 +13,14 @@ https://cutely.strangled.net/recar
 
 ## Features
 - arRPC server built in (for Rich Presence)
+- Custom call popup when ringing
 - Switch between Vencord & Equicord
-- Wayland Streaming
-- Desktop Notifications (kind of...)
+- Wayland Streaming (kind of...)
+- Desktop Notifications
 
 ## Installing Recar
 
-https://cutely.strangled.net/recar/install
+https://recar.loxodrome.app/install
 
 todo
 

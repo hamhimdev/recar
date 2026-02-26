@@ -20,7 +20,7 @@
         
         recar = pkgs.stdenv.mkDerivation rec {
           pname = "recar";
-          version = "1.0.1";
+          version = "1.1.1";
           
           src = pkgs.runCommand "recar-src" { } ''
             mkdir -p $out
@@ -42,7 +42,7 @@
 
           pnpmDeps = pkgs.fetchPnpmDeps {
             inherit pname version src;
-            hash = "sha256-CRiyTxPfCr84c3NMznruT6UNhKW37kn+zm+NsZMszjg=";
+            hash = "sha256-MYffu4C5KxtaYlXrq0JtmXhSjusZXVvP/nuFcurOibU=";
             fetcherVersion = 3;
           };
 
@@ -53,7 +53,7 @@
 
           preBuild = ''
             git init
-            git remote add origin https://github.com/hamhim/discordwebapp
+            git remote add origin https://github.com/hamhimdev/recar
             
             mkdir -p equicord/.git
             pushd equicord
@@ -130,7 +130,7 @@ EOF
           '';
           meta = with lib; {
             description = "A Discord client for Linux";
-            homepage = "https://cutely.strangled.net/recar";
+            homepage = "https://recar.loxodrome.app";
             license = licenses.mit;
             platforms = platforms.linux;
             maintainers = ["hamhim"];

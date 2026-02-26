@@ -1,11 +1,15 @@
 const { webFrame, ipcRenderer, contextBridge } = require("electron");
+const path = require("path");
+const fs = require("fs");
 
 contextBridge.exposeInMainWorld("callBridge", {
   ringStarted: (data) => ipcRenderer.send("call-ring-started", data),
   ringStopped: (data) => ipcRenderer.send("call-ring-stopped", data),
 });
-const fs = require("fs");
-const path = require("path");
+
+contextBridge.exposeInMainWorld("recarBridge", {
+  themeChanged: () => ipcRenderer.send("discord-theme-changed"),
+});
 
 (async () => {
   try {
@@ -60,13 +64,40 @@ const path = require("path");
       );
     }
 
-    webFrame
-      .executeJavaScriptInIsolatedWorld(0, [
-        {
-          // world 0 = main world
-          code: `window.legcord = { version: "1.0.0" };\n${script}`, // to allow WebRichPresence plugin to show up
-        },
-      ])
+    webFrame.executeJavaScriptInIsolatedWorld(0, [
+      {
+        // world 0 = main world
+        code: `
+            //window.legcord = { version: "1.0.0" };
+            const modName = "${selectedMod === "equicord" ? "Equicord" : "Vencord"}Settings";
+            const rpcEnabled = ${settings.autoEnableWebRPC ?? true};
+            try {
+              const config = JSON.parse(localStorage.getItem(modName) || "{}");
+              config.plugins = config.plugins || {};
+              ["arRPC.web", "WebRichPresence", "WebRichPresence (arRPC)"].forEach(id => {
+                config.plugins[id] = config.plugins[id] || {};
+                config.plugins[id].enabled = rpcEnabled;
+              });
+              localStorage.setItem(modName, JSON.stringify(config));
+              console.log("[Preload] arRPC.web enabled: " + rpcEnabled + " for " + modName);
+            } catch (e) {
+              console.error("[Preload] Failed to update arRPC settings:", e);
+            }
+
+            (function observeTheme() {
+              if (document.documentElement) {
+                new MutationObserver(() => {
+                  if (window.recarBridge) window.recarBridge.themeChanged();
+                }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+              } else {
+                setTimeout(observeTheme, 100);
+              }
+            })();
+
+            ${script}
+          `,
+      },
+    ])
       .then(() => {
         console.log(`[Preload] ${selectedMod} injected successfully`);
       })

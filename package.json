@@ -1,6 +1,6 @@
 {
   "name": "recar",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A Discord client for Linux with client mods and extra functionality.",
   "main": "src/main.js",
   "keywords": [],
@@ -64,10 +64,10 @@
   },
   "packageManager": "pnpm@10.28.2",
   "devDependencies": {
-    "@tailwindcss/cli": "^4.1.18",
-    "electron": "^40.1.0",
-    "electron-builder": "^26.7.0",
-    "tailwindcss": "^4.1.18"
+    "@tailwindcss/cli": "^4.2.1",
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1",
+    "tailwindcss": "^4.2.1"
   },
   "dependencies": {
     "arrpc": "^3.6.0",
