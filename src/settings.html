@@ -1,755 +1,789 @@
 <!doctype html>
 <html lang="en" class="h-full">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recar Settings</title>
-  <link href="tailwind.css" rel="stylesheet">
-  <style>
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-      background: #0f1012;
-    }
-
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: #2a2d34;
-      border-radius: 2px;
-    }
-
-    .sw input {
-      display: none;
-    }
-
-    .sw-track {
-      width: 44px;
-      height: 24px;
-      border-radius: 12px;
-      background: #252830;
-      border: 1px solid #2a2d34;
-      position: relative;
-      cursor: pointer;
-      transition: background .2s, border-color .2s;
-      flex-shrink: 0;
-    }
-
-    .sw-thumb {
-      position: absolute;
-      top: 4px;
-      left: 4px;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #8b909a;
-      transition: transform .2s ease, background .2s;
-      pointer-events: none;
-    }
-
-    .sw input:checked~.sw-track {
-      background: #5764F2;
-      border-color: #5764F2;
-    }
-
-    .sw input:checked~.sw-track .sw-thumb {
-      transform: translateX(20px);
-      background: #fff;
-    }
-
-    .page {
-      display: none;
-      opacity: 0;
-      transform: translateY(4px);
-      transition: opacity .1s ease, transform .1s ease;
-    }
-
-    .page.active {
-      display: block;
-    }
-
-    .page.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .nav-sub {
-      overflow: hidden;
-      transition: max-height .22s ease, opacity .18s ease;
-      max-height: 0;
-      opacity: 0;
-    }
-
-    .nav-sub.open {
-      opacity: 1;
-
-    }
-
-    .mod-card {
-      border: 1.5px solid #2a2d34;
-      transition: border-color .15s, background .15s, box-shadow .15s;
-    }
-
-    .mod-card:hover {
-      background: #202328;
-    }
-
-    .mod-card.selected {
-      border-color: #5764F2;
-      background: rgba(88, 101, 242, 0.09);
-      box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
-    }
-
-    .mod-check {
-      opacity: 0;
-      transform: scale(0.5);
-      transition: opacity .15s, transform .15s;
-    }
-
-    .mod-card.selected .mod-check {
-      opacity: 1;
-      transform: scale(1);
-    }
-
-    .popup-overlay {
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity .18s;
-    }
-
-    .popup-overlay.open {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .popup-box {
-      transform: scale(1.1);
-      transition: transform .26s cubic-bezier(.34, 1.56, .64, 1);
-    }
-
-    .popup-overlay.open .popup-box {
-      transform: scale(1) translateY(0);
-    }
-
-    .chevron {
-      transition: transform .2s ease;
-    }
-
-    .nav-parent.open .chevron {
-      transform: rotate(-90deg);
-    }
-
-    .nav-item {
-      margin-bottom: 4px;
-    }
-
-    .nav-item.final {
-      margin-bottom: 2px;
-    }
-
-    .nav-item.is-active {
-      color: #a2a8ee !important;
-      background: #212446;
-    }
-  </style>
-</head>
-
-<body class="h-full">
-
-  <div class="flex h-full overflow-hidden">
-
-    <aside
-      class="flex flex-col w-48 min-w-[200px] bg-sidebar border-r border-border-sub py-4 px-2.5 overflow-y-auto overflow-x-hidden">
-
-      <div class="flex items-center gap-2.5 px-2 pb-4 mb-3 border-b border-border-sub">
-        <img class="h-8" src="assets/img/recarsymbol.webp">
-      </div>
-
-      <nav class="flex flex-col gap-0.5">
-
-        <div id="nav-settings-toggle"
-          class="nav-parent open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none">
-          <span class="material-symbols-rounded font-normal">settings</span>
-          Settings
-          <span class="material-symbols-rounded chevron ml-auto font-normal">
-            arrow_drop_down
-          </span>
-        </div>
-
-        <div class="nav-sub" id="nav-sub-settings">
-          <div data-page="general"
-            class="nav-item is-active flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
-            onclick="navigateTo('general')">
-            <span class="material-symbols-rounded font-thin text-secondary/50">
-              chevron_right
-            </span>
-            <span class="material-symbols-rounded font-normal">
-              build
-            </span>
-            General
-          </div>
-          <div data-page="client"
-            class="nav-item final flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
-            onclick="navigateTo('client')">
-            <span class="material-symbols-rounded font-thin text-secondary/50">
-              chevron_right
-            </span>
-            <span class="material-symbols-rounded font-normal">
-              service_toolbox
-            </span>
-            Client Mod
-          </div>
-        </div>
-
-        <div data-page="about"
-          class="nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
-          onclick="navigateTo('about')">
-          <span class="material-symbols-rounded font-normal">
-            info
-          </span> About Recar
-        </div>
-
-      </nav>
-
-      <div class="mt-auto pt-3 border-t border-border-sub px-2 flex flex-col gap-1">
-        <div class="font-sans text-sm text-muted leading-relaxed">Electron <span class="text-secondary"
-            id="footer-electron">-</span></div>
-        <div class="font-sans text-sm text-muted leading-relaxed">Recar <span class="text-secondary"
-            id="footer-recar">-</span></div>
-      </div>
-    </aside>
-
-    <div class="flex flex-col flex-1 min-w-0 overflow-hidden bg-base">
-      <div class="px-7 pt-3 pb-0 border-b border-border-sub shrink-0 shadow-md">
-        <div class="text-[18px] font-bold text-primary tracking-tight" id="page-title">General</div>
-        <div class="text-[13px] text-muted mt-0.5 pb-3.5" id="page-subtitle">App behavior and preferences</div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto px-7 py-5">
-        <div class="page active" id="page-general">
-          <div class="mb-7">
-            <div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Discord Branch</div>
-            <div class="relative">
-              <select id="branch"
-                class="w-full bg-surface border border-border text-primary text-[13.5px] px-3.5 py-2.5 pr-10 rounded-lg appearance-none outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans">
-                <option value="stable">Stable (discord.com) — Recommended</option>
-                <option value="ptb">PTB (ptb.discord.com)</option>
-                <option value="canary">Canary (canary.discord.com)</option>
-              </select>
-              <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none"
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </div>
-            <p class="text-[12px] text-muted italic mt-2">Switching branches requires an app restart.</p>
-          </div>
-
-          <div class="mb-7">
-            <div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Window</div>
-            <div class="bg-surface border border-border rounded-xl overflow-hidden">
-              <div
-                class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors border-b border-border-sub">
-                <div>
-                  <div class="text-[14px] font-semibold text-primary">Minimize to Tray</div>
-                  <div class="text-[12.5px] text-secondary mt-0.5">Keep app running when closed</div>
-                </div>
-                <label class="sw flex items-center ml-4 cursor-pointer">
-                  <input type="checkbox" id="trayToggle">
-                  <div class="sw-track">
-                    <div class="sw-thumb"></div>
-                  </div>
-                </label>
-              </div>
-              <div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors">
-                <div>
-                  <div class="text-[14px] font-semibold text-primary">Start Maximized</div>
-                  <div class="text-[12.5px] text-secondary mt-0.5">Launch with a maximized window</div>
-                </div>
-                <label class="sw flex items-center ml-4 cursor-pointer">
-                  <input type="checkbox" id="maximizedToggle">
-                  <div class="sw-track">
-                    <div class="sw-thumb"></div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div class="mb-7">
-            <div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Features</div>
-            <div class="bg-surface border border-border rounded-xl overflow-hidden">
-              <div
-                class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors border-b border-border-sub">
-                <div>
-                  <div class="text-[14px] font-semibold text-primary">Enable arRPC</div>
-                  <div class="text-[12.5px] text-secondary mt-0.5">Discord Rich Presence support</div>
-                </div>
-                <label class="sw flex items-center ml-4 cursor-pointer">
-                  <input type="checkbox" id="rpcToggle">
-                  <div class="sw-track">
-                    <div class="sw-thumb"></div>
-                  </div>
-                </label>
-              </div>
-              <div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors">
-                <div>
-                  <div class="text-[14px] font-semibold text-primary">Call Popup</div>
-                  <div class="text-[12.5px] text-secondary mt-0.5">Show popup for incoming calls</div>
-                </div>
-                <label class="sw flex items-center ml-4 cursor-pointer">
-                  <input type="checkbox" id="callPopupToggle">
-                  <div class="sw-track">
-                    <div class="sw-thumb"></div>
-                  </div>
-                </label>
-              </div>
-            </div>
-          </div>
-
-        </div><!-- /general -->
-
-        <!-- client mods -->
-        <div class="page" id="page-client">
-          <div class="mb-7">
-            <div class="text-xs font-semibold uppercase tracking-wide text-muted mb-1">Mod Client</div>
-            <p class="text-[13px] text-secondary mb-4">Choose your preferred client modification. Switching mods
-              requires an app restart.</p>
-            <div class="grid grid-cols-2 gap-3">
-              <div
-                class="mod-card bg-surface rounded-xl p-5 cursor-pointer relative flex flex-col items-center gap-3 text-center"
-                id="mod-equicord" data-mod="equicord" onclick="selectMod('equicord')">
-                <img src="assets/img/equicord.png" class="w-12 h-12 object-contain" alt="Equicord"
-                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div style="display:none"
-                  class="w-12 h-12 rounded-xl bg-elevated items-center justify-center font-bold text-accent">N/A</div>
-                <span class="text-md font-semibold text-primary">Equicord</span>
-                <div
-                  class="mod-check absolute top-3 right-3 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                  <span class="material-symbols-rounded text-white font-lg font-semibold">
-                    check
-                  </span>
-                </div>
-              </div>
-              <div
-                class="mod-card bg-surface rounded-xl p-5 cursor-pointer relative flex flex-col items-center gap-3 text-center"
-                id="mod-vencord" data-mod="vencord" onclick="selectMod('vencord')">
-                <img src="assets/img/vencord.png" class="w-12 h-12 object-contain" alt="Vencord"
-                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div style="display:none"
-                  class="w-12 h-12 rounded-xl bg-elevated items-center justify-center font-bold text-accent">VC</div>
-                <span class="text-md font-semibold text-primary">Vencord</span>
-                <div
-                  class="mod-check absolute top-3 right-3 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-                  <span class="material-symbols-rounded text-white font-lg font-semibold">
-                    check
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div><!-- /client mods -->
-
-        <!-- about -->
-        <div class="page" id="page-about">
-          <div class="flex flex-col items-center text-center py-8 mb-6">
-            <img src="assets/img/banner.png" class="w-64 mb-2">
-            <div class="text-md text-secondary mt-1.5">A Discord client for Linux with client mods and extra
-              functionality.</div>
-            <div class="flex gap-2 mt-4">
-              <a href="https://codeberg.org/hamhim/recar/"
-                class="text-md flex gap-2 bg-accent px-2 py-1 text-white font-medium rounded-md hover:bg-accent-dim transition-all items-center justify-center cursor-pointer">
-                <span class="material-symbols-rounded">rebase</span> Codeberg Repository
-              </a>
-              <a href="https://recar.loxodrome.app/"
-                class="text-md flex gap-2 bg-accent px-2 py-1 text-white font-medium rounded-md hover:bg-accent-dim transition-all items-center justify-center cursor-pointer">
-                <span class="material-symbols-rounded">captive_portal</span> Website
-              </a>
-            </div>
-
-          </div>
-          <div class="grid grid-cols-2 gap-3 mb-4">
-            <div class="bg-surface border border-border rounded-xl p-4">
-              <div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Recar Version</div>
-              <div class="text-sm font-semibold font-sans text-primary" id="about-recar-ver">-</div>
-            </div>
-            <div class="bg-surface border border-border rounded-xl p-4">
-              <div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Electron</div>
-              <div class="text-sm font-semibold font-sans text-primary" id="about-electron-ver">-</div>
-            </div>
-            <div class="bg-surface border border-border rounded-xl p-4">
-              <div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Platform</div>
-              <div class="text-sm font-semibold font-sans text-primary" id="about-platform">-</div>
-            </div>
-            <div class="bg-surface border border-border rounded-xl p-4">
-              <div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Branch</div>
-              <div class="text-sm font-semibold font-sans text-primary" id="about-branch">-</div>
-            </div>
-          </div>
-          <div class="text-sm text-muted text-center py-2">© hamhim. All rights reserved.</div>
-        </div><!-- /about -->
-
-      </div>
-
-      <div class="px-7 py-4 border-t border-border-sub bg-base flex gap-3 shrink-0" id="normalFooter">
-        <button id="saveBtn"
-          class="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dim text-white text-md font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed">
-          <span class="material-symbols-rounded font-thin">
-            save
-          </span>
-          Save Settings
-        </button>
-        <button id="restartBtn" disabled
-          class="flex-1 flex items-center justify-center gap-2 bg-danger hover:bg-danger-dim text-white text-md font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:bg-elevated disabled:text-muted disabled:cursor-not-allowed">
-          <span class="material-symbols-rounded font-thin">
-            restart_alt
-          </span>
-          Save & Restart
-        </button>
-      </div>
-      <div class="px-7 py-4 border-t border-border-sub bg-base hidden shrink-0" id="setupFooter">
-        <button id="setupBtn"
-          class="w-full flex items-center justify-center bg-accent hover:bg-accent-dim text-white text-md font-semibold py-2.5 rounded-lg transition-all active:scale-[0.98]">
-          Save &amp; Start Recar
-        </button>
-      </div>
-
-    </div><!-- /content -->
-  </div><!-- /app -->
-
-  <div class="popup-overlay fixed inset-0 bg-black/60 flex items-center justify-center text-center z-50"
-    id="popupOverlay">
-    <div
-      class="popup-box flex flex-col bg-elevated border border-border rounded-2xl p-6 w-86 items-center justify-center text-center">
-      <img class="mb-2" src="assets/img/warn.svg">
-      <div class="text-lg font-bold text-primary mb-1.5">Are you sure you want to restart?</div>
-      <div class="text-md text-secondary leading-relaxed mb-5">Recar will restart to apply your changes.
-        Continue?</div>
-      <div class="flex gap-2.5 w-full">
-        <button onclick="closePopup()"
-          class="flex-1 py-2 rounded-lg text-sm font-semibold bg-surface text-secondary hover:text-primary hover:bg-hover transition-colors items-center">
-          Cancel</button>
-        <button id="confirmRestartBtn"
-          class="flex-1 py-2 rounded-lg text-sm font-semibold bg-danger hover:bg-danger-dim text-white transition-colors items-center">
-          Restart</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const popupOverlay = document.getElementById('popupOverlay');
-
-    function showPopup() {
-      popupOverlay.classList.add('open');
-    }
-
-    function closePopup() {
-      popupOverlay.classList.remove('open');
-    }
-
-    popupOverlay.addEventListener('click', (e) => {
-      if (e.target === popupOverlay) closePopup();
-    });
-
-    const pageMeta = {
-      general: { title: 'General', subtitle: 'App behavior and preferences' },
-      client: { title: 'Client Mods', subtitle: 'Manage your client modification' },
-      about: { title: 'About Recar', subtitle: 'Version information and credits' },
-    };
-
-    let currentPage = 'general';
-
-    function navigateTo(pageId) {
-      if (pageId === currentPage) return;
-
-      const prev = document.getElementById(`page-${currentPage}`);
-      prev.classList.remove('visible');
-
-      setTimeout(() => {
-        prev.classList.remove('active');
-        const next = document.getElementById(`page-${pageId}`);
-        next.classList.add('active');
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => next.classList.add('visible'))
-        );
-      }, 150);
-
-      currentPage = pageId;
-      document.getElementById('page-title').textContent = pageMeta[pageId].title;
-      document.getElementById('page-subtitle').textContent = pageMeta[pageId].subtitle;
-
-      document.querySelectorAll('.nav-item').forEach((el) => {
-        const active = el.dataset.page === pageId;
-        el.classList.toggle('is-active', active);
-        el.classList.toggle('text-secondary', !active);
-        el.classList.toggle('hover:bg-hover', !active);
-        el.classList.toggle('hover:text-primary', !active);
-      });
-
-      const showFooter = pageId !== 'about';
-      document.getElementById('normalFooter').classList.toggle('hidden', !showFooter || setupMode);
-      document.getElementById('setupFooter').classList.toggle('hidden', !showFooter || !setupMode);
-    }
-
-    const settingsToggle = document.getElementById('nav-settings-toggle');
-    const settingsSub = document.getElementById('nav-sub-settings');
-    let subOpen = true;
-
-    function updateSub() {
-      settingsSub.style.maxHeight = subOpen ? settingsSub.scrollHeight + 'px' : '0';
-      settingsSub.classList.toggle('open', subOpen);
-      settingsToggle.classList.toggle('open', subOpen);
-    }
-
-    settingsSub.style.maxHeight = settingsSub.scrollHeight + 'px';
-    settingsSub.classList.add('open');
-    settingsToggle.addEventListener('click', () => {
-      subOpen = !subOpen;
-      updateSub();
-    });
-
-    let currentMod = 'equicord';
-    let initialMod = 'equicord';
-
-    function selectMod(mod) {
-      currentMod = mod;
-      document.querySelectorAll('.mod-card').forEach((el) => {
-        el.classList.toggle('selected', el.dataset.mod === mod);
-      });
-      checkChanges();
-    }
-
-    let initialBranch = 'stable';
-    let initialTray = false;
-    let initialMaximized = true;
-    let initialRPC = true;
-    let initialCallPopup = true;
-    let setupMode = false;
-
-    const branchSel = document.getElementById('branch');
-    const trayTog = document.getElementById('trayToggle');
-    const maxTog = document.getElementById('maximizedToggle');
-    const rpcTog = document.getElementById('rpcToggle');
-    const callTog = document.getElementById('callPopupToggle');
-    const saveBtn = document.getElementById('saveBtn');
-    const restartBtn = document.getElementById('restartBtn');
-    const setupBtn = document.getElementById('setupBtn');
-
-    function checkChanges() {
-      const changed =
-        branchSel.value !== initialBranch ||
-        trayTog.checked !== initialTray ||
-        maxTog.checked !== initialMaximized ||
-        rpcTog.checked !== initialRPC ||
-        callTog.checked !== initialCallPopup ||
-        currentMod !== initialMod;
-
-      restartBtn.disabled = !changed;
-    }
-
-    [branchSel, trayTog, maxTog, rpcTog, callTog].forEach((el) => {
-      el.addEventListener('change', checkChanges);
-    });
-
-    async function loadSettings() {
-      if (typeof window.settingsAPI !== 'undefined') {
-        try {
-          const [settings, versions] = await Promise.all([
-            window.settingsAPI.getSettings(),
-            window.settingsAPI.getVersions(),
-          ]);
-          return { ...settings, _appVer: versions.app, _elecVer: versions.electron };
-        } catch (error) {
-          console.error('Failed to load settings:', error);
-          return getDefaultSettings();
-        }
-      }
-      return getDefaultSettings();
-    }
-
-    function getDefaultSettings() {
-      return {
-        branch: 'stable',
-        minimizeToTray: false,
-        startMaximized: true,
-        autoEnableWebRPC: true,
-        enableCallPopup: true,
-        mod: 'equicord',
-        isFirstLaunch: false,
-        _appVer: 'N/A',
-        _elecVer: 'N/A',
-      };
-    }
-
-    function applySettingsToUI(settings) {
-      branchSel.value = settings.branch;
-      trayTog.checked = settings.minimizeToTray;
-      maxTog.checked = settings.startMaximized;
-      rpcTog.checked = settings.autoEnableWebRPC ?? true;
-      callTog.checked = settings.enableCallPopup ?? true;
-
-      initialBranch = settings.branch;
-      initialTray = settings.minimizeToTray;
-      initialMaximized = settings.startMaximized;
-      initialRPC = settings.autoEnableWebRPC ?? true;
-      initialCallPopup = settings.enableCallPopup ?? true;
-      initialMod = settings.mod || 'equicord';
-      setupMode = settings.isFirstLaunch || false;
-
-      selectMod(initialMod);
-
-      updateVersionInfo(settings);
-      updateFooter(settings);
-
-      if (setupMode) {
-        document.getElementById('normalFooter').classList.add('hidden');
-        document.getElementById('setupFooter').classList.remove('hidden');
-        document.getElementById('page-title').textContent = 'Setup';
-        document.getElementById('page-subtitle').textContent = 'Configure Recar before first launch';
-      }
-    }
-
-    function updateVersionInfo(settings) {
-      const electronVer = settings._elecVer || '—';
-      const recarVer = settings._appVer || '—';
-
-      document.getElementById('about-recar-ver').textContent = recarVer;
-      document.getElementById('about-electron-ver').textContent = electronVer;
-      document.getElementById('about-platform').textContent =
-        (typeof process !== 'undefined' ? process.platform : navigator.platform) || '—';
-      document.getElementById('about-branch').textContent = settings.branch;
-    }
-
-    function updateFooter(settings) {
-      const electronVer = settings._elecVer || '—';
-      const recarVer = settings._appVer || '—';
-
-      document.getElementById('footer-electron').textContent = `v${electronVer}`;
-      document.getElementById('footer-recar').textContent = `v${recarVer}`;
-    }
-
-    loadSettings().then((settings) => {
-      applySettingsToUI(settings);
-    });
-
-    function gatherSettings() {
-      return {
-        branch: branchSel.value,
-        minimizeToTray: trayTog.checked,
-        startMaximized: maxTog.checked,
-        autoEnableWebRPC: rpcTog.checked,
-        enableCallPopup: callTog.checked,
-        mod: currentMod,
-      };
-    }
-
-    async function performSave() {
-      const settings = gatherSettings();
-
-      if (window.settingsAPI) {
-        try {
-          await window.settingsAPI.saveSettings(settings);
-        } catch (error) {
-          console.error('Failed to save settings:', error);
-          return false;
-        }
-      }
-
-      initialBranch = settings.branch;
-      initialTray = settings.minimizeToTray;
-      initialMaximized = settings.startMaximized;
-      initialRPC = settings.autoEnableWebRPC;
-      initialCallPopup = settings.enableCallPopup;
-      initialMod = settings.mod;
-
-      document.getElementById('about-branch').textContent = settings.branch;
-      return true;
-    }
-
-    const SAVE_ICON = `<span class="material-symbols-rounded font-thin">save</span> Save Settings`;
-    const CHECK_ICON = `<span class="material-symbols-rounded font-thin">check</span> Saved!`;
-
-    saveBtn.addEventListener('click', async () => {
-      saveBtn.disabled = true;
-      const success = await performSave();
-
-      if (success) {
-        saveBtn.innerHTML = CHECK_ICON;
-        saveBtn.classList.add('bg-success', 'hover:bg-success');
-        saveBtn.classList.remove('bg-accent', 'hover:bg-accent-dim');
-
-        setTimeout(() => {
-          saveBtn.innerHTML = SAVE_ICON;
-          saveBtn.classList.remove('bg-success', 'hover:bg-success');
-          saveBtn.classList.add('bg-accent', 'hover:bg-accent-dim');
-          saveBtn.disabled = false;
-          checkChanges();
-        }, 1500);
-      } else {
-        saveBtn.disabled = false;
-        checkChanges();
-      }
-    });
-
-    restartBtn.addEventListener('click', () => {
-      showPopup();
-    });
-
-    document.getElementById('confirmRestartBtn').addEventListener('click', async () => {
-      closePopup();
-      await performSave();
-      if (window.settingsAPI) {
-        try {
-          window.settingsAPI.restartApp();
-        } catch (error) {
-          console.error('Failed to restart app:', error);
-        }
-      }
-    });
-
-    setupBtn.addEventListener('click', async () => {
-      await performSave();
-      if (window.settingsAPI) {
-        try {
-          window.settingsAPI.restartApp();
-        } catch (error) {
-          console.error('Failed to restart app:', error);
-        }
-      }
-    });
-
-    function openExternalLink(url) {
-      if (window.settingsAPI && window.settingsAPI.openExternal) {
-        window.settingsAPI.openExternal(url);
-      } else {
-        window.open(url, '_blank');
-      }
-    }
-
-    document.querySelectorAll('a[href*="codeberg"], a[href*="recar.loxodrome"]').forEach((link) => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        openExternalLink(link.href);
-      });
-    });
-
-    setTimeout(() => {
-      document.getElementById('page-general').classList.add('visible');
-    }, 30);
-  </script>
-</body>
-
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Recar Settings</title>
+		<link href="tailwind.css" rel="stylesheet" />
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				height: 100%;
+				overflow: hidden;
+				background: #0f1012;
+			}
+
+			::-webkit-scrollbar {
+				width: 4px;
+			}
+
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+
+			::-webkit-scrollbar-thumb {
+				background: #2a2d34;
+				border-radius: 2px;
+			}
+
+			.sw input {
+				display: none;
+			}
+
+			.sw-track {
+				width: 44px;
+				height: 24px;
+				border-radius: 12px;
+				background: #252830;
+				border: 1px solid #2a2d34;
+				position: relative;
+				cursor: pointer;
+				transition:
+					background 0.2s,
+					border-color 0.2s;
+				flex-shrink: 0;
+			}
+
+			.sw-thumb {
+				position: absolute;
+				top: 4px;
+				left: 4px;
+				width: 14px;
+				height: 14px;
+				border-radius: 50%;
+				background: #8b909a;
+				transition:
+					transform 0.2s ease,
+					background 0.2s;
+				pointer-events: none;
+			}
+
+			.sw input:checked ~ .sw-track {
+				background: #5764f2;
+				border-color: #5764f2;
+			}
+
+			.sw input:checked ~ .sw-track .sw-thumb {
+				transform: translateX(20px);
+				background: #fff;
+			}
+
+			.page {
+				display: none;
+				opacity: 0;
+				transform: translateY(4px);
+				transition:
+					opacity 0.1s ease,
+					transform 0.1s ease;
+			}
+
+			.page.active {
+				display: block;
+			}
+
+			.page.visible {
+				opacity: 1;
+				transform: translateY(0);
+			}
+
+			.nav-sub {
+				overflow: hidden;
+				transition:
+					max-height 0.22s ease,
+					opacity 0.18s ease;
+				max-height: 0;
+				opacity: 0;
+			}
+
+			.nav-sub.open {
+				opacity: 1;
+			}
+
+			.mod-card {
+				border: 1.5px solid #2a2d34;
+				transition:
+					border-color 0.15s,
+					background 0.15s,
+					box-shadow 0.15s;
+			}
+
+			.mod-card:hover {
+				background: #202328;
+			}
+
+			.mod-card.selected {
+				border-color: #5764f2;
+				background: rgba(88, 101, 242, 0.09);
+				box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.1);
+			}
+
+			.mod-check {
+				opacity: 0;
+				transform: scale(0.5);
+				transition:
+					opacity 0.15s,
+					transform 0.15s;
+			}
+
+			.mod-card.selected .mod-check {
+				opacity: 1;
+				transform: scale(1);
+			}
+
+			.popup-overlay {
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.18s;
+			}
+
+			.popup-overlay.open {
+				opacity: 1;
+				pointer-events: all;
+			}
+
+			.popup-box {
+				transform: scale(1.1);
+				transition: transform 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+			}
+
+			.popup-overlay.open .popup-box {
+				transform: scale(1) translateY(0);
+			}
+
+			.chevron {
+				transition: transform 0.2s ease;
+			}
+
+			.nav-parent.open .chevron {
+				transform: rotate(-90deg);
+			}
+
+			.nav-item {
+				margin-bottom: 4px;
+			}
+
+			.nav-item.final {
+				margin-bottom: 2px;
+			}
+
+			.nav-item.is-active {
+				color: #a2a8ee !important;
+				background: #212446;
+			}
+		</style>
+	</head>
+
+	<body class="h-full">
+		<div class="flex h-full overflow-hidden">
+			<aside class="flex flex-col w-48 min-w-[200px] bg-sidebar border-r border-border-sub py-4 px-2.5 overflow-y-auto overflow-x-hidden">
+				<div class="flex items-center gap-2.5 px-2 pb-4 mb-3 border-b border-border-sub">
+					<img class="h-8" src="assets/img/recarsymbol.webp" />
+				</div>
+
+				<nav class="flex flex-col gap-0.5">
+					<div
+						id="nav-settings-toggle"
+						class="nav-parent open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
+					>
+						<span class="material-symbols-rounded font-normal">settings</span>
+						Settings
+						<span class="material-symbols-rounded chevron ml-auto font-normal"> arrow_drop_down </span>
+					</div>
+
+					<div class="nav-sub" id="nav-sub-settings">
+						<div
+							data-page="general"
+							class="nav-item is-active flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
+							onclick="navigateTo('general')"
+						>
+							<span class="material-symbols-rounded font-thin text-secondary/50"> chevron_right </span>
+							<span class="material-symbols-rounded font-normal"> build </span>
+							General
+						</div>
+						<div
+							data-page="client"
+							class="nav-item final flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
+							onclick="navigateTo('client')"
+						>
+							<span class="material-symbols-rounded font-thin text-secondary/50"> chevron_right </span>
+							<span class="material-symbols-rounded font-normal"> service_toolbox </span>
+							Client Mod
+						</div>
+					</div>
+
+					<div
+						data-page="about"
+						class="nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-semibold hover:bg-hover hover:text-primary transition-colors select-none"
+						onclick="navigateTo('about')"
+					>
+						<span class="material-symbols-rounded font-normal"> info </span>
+						About Recar
+					</div>
+				</nav>
+
+				<div class="mt-auto pt-3 border-t border-border-sub px-2 flex flex-col gap-1">
+					<div class="font-sans text-sm text-muted leading-relaxed">Electron <span class="text-secondary" id="footer-electron">-</span></div>
+					<div class="font-sans text-sm text-muted leading-relaxed">Recar <span class="text-secondary" id="footer-recar">-</span></div>
+				</div>
+			</aside>
+
+			<div class="flex flex-col flex-1 min-w-0 overflow-hidden bg-base">
+				<div class="px-7 pt-3 pb-0 border-b border-border-sub shrink-0 shadow-md">
+					<div class="text-[18px] font-bold text-primary tracking-tight" id="page-title">General</div>
+					<div class="text-[13px] text-muted mt-0.5 pb-3.5" id="page-subtitle">App behavior and preferences</div>
+				</div>
+
+				<div class="flex-1 overflow-y-auto px-7 py-5">
+					<div class="page active" id="page-general">
+						<div class="mb-7">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Discord Branch</div>
+							<div class="relative">
+								<select
+									id="branch"
+									class="w-full bg-surface border border-border text-primary text-[13.5px] px-3.5 py-2.5 pr-10 rounded-lg appearance-none outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+								>
+									<option value="stable">Stable (discord.com) — Recommended</option>
+									<option value="ptb">PTB (ptb.discord.com)</option>
+									<option value="canary">Canary (canary.discord.com)</option>
+								</select>
+								<svg
+									class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+								>
+									<polyline points="6 9 12 15 18 9" />
+								</svg>
+							</div>
+							<p class="text-[12px] text-muted italic mt-2">Switching branches requires an app restart.</p>
+						</div>
+
+						<div class="mb-7">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Window</div>
+							<div class="bg-surface border border-border rounded-xl overflow-hidden">
+								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors border-b border-border-sub">
+									<div>
+										<div class="text-[14px] font-semibold text-primary">Minimize to Tray</div>
+										<div class="text-[12.5px] text-secondary mt-0.5">Keep app running when closed</div>
+									</div>
+									<label class="sw flex items-center ml-4 cursor-pointer">
+										<input type="checkbox" id="trayToggle" />
+										<div class="sw-track">
+											<div class="sw-thumb"></div>
+										</div>
+									</label>
+								</div>
+								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors">
+									<div>
+										<div class="text-[14px] font-semibold text-primary">Start Maximized</div>
+										<div class="text-[12.5px] text-secondary mt-0.5">Launch with a maximized window</div>
+									</div>
+									<label class="sw flex items-center ml-4 cursor-pointer">
+										<input type="checkbox" id="maximizedToggle" />
+										<div class="sw-track">
+											<div class="sw-thumb"></div>
+										</div>
+									</label>
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-7">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Features</div>
+							<div class="bg-surface border border-border rounded-xl overflow-hidden">
+								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors border-b border-border-sub">
+									<div>
+										<div class="text-[14px] font-semibold text-primary">Enable arRPC</div>
+										<div class="text-[12.5px] text-secondary mt-0.5">Discord Rich Presence support</div>
+									</div>
+									<label class="sw flex items-center ml-4 cursor-pointer">
+										<input type="checkbox" id="rpcToggle" />
+										<div class="sw-track">
+											<div class="sw-thumb"></div>
+										</div>
+									</label>
+								</div>
+								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors">
+									<div>
+										<div class="text-[14px] font-semibold text-primary">Call Popup</div>
+										<div class="text-[12.5px] text-secondary mt-0.5">Show popup for incoming calls</div>
+									</div>
+									<label class="sw flex items-center ml-4 cursor-pointer">
+										<input type="checkbox" id="callPopupToggle" />
+										<div class="sw-track">
+											<div class="sw-thumb"></div>
+										</div>
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /general -->
+
+					<!-- client mods -->
+					<div class="page" id="page-client">
+						<div class="mb-7">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-1">Mod Client</div>
+							<p class="text-[13px] text-secondary mb-4">Choose your preferred client modification. Switching mods requires an app restart.</p>
+							<div class="grid grid-cols-2 gap-3">
+								<div
+									class="mod-card bg-surface rounded-xl p-5 cursor-pointer relative flex flex-col items-center gap-3 text-center"
+									id="mod-equicord"
+									data-mod="equicord"
+									onclick="selectMod('equicord')"
+								>
+									<img
+										src="assets/img/equicord.png"
+										class="w-12 h-12 object-contain"
+										alt="Equicord"
+										onerror="
+											this.style.display = 'none';
+											this.nextElementSibling.style.display = 'flex';
+										"
+									/>
+									<div style="display: none" class="w-12 h-12 rounded-xl bg-elevated items-center justify-center font-bold text-accent">
+										N/A
+									</div>
+									<span class="text-md font-semibold text-primary">Equicord</span>
+									<div class="mod-check absolute top-3 right-3 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+										<span class="material-symbols-rounded text-white font-lg font-semibold"> check </span>
+									</div>
+								</div>
+								<div
+									class="mod-card bg-surface rounded-xl p-5 cursor-pointer relative flex flex-col items-center gap-3 text-center"
+									id="mod-vencord"
+									data-mod="vencord"
+									onclick="selectMod('vencord')"
+								>
+									<img
+										src="assets/img/vencord.png"
+										class="w-12 h-12 object-contain"
+										alt="Vencord"
+										onerror="
+											this.style.display = 'none';
+											this.nextElementSibling.style.display = 'flex';
+										"
+									/>
+									<div style="display: none" class="w-12 h-12 rounded-xl bg-elevated items-center justify-center font-bold text-accent">
+										VC
+									</div>
+									<span class="text-md font-semibold text-primary">Vencord</span>
+									<div class="mod-check absolute top-3 right-3 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+										<span class="material-symbols-rounded text-white font-lg font-semibold"> check </span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /client mods -->
+
+					<!-- about -->
+					<div class="page" id="page-about">
+						<div class="flex flex-col items-center text-center py-8 mb-6">
+							<img src="assets/img/banner.png" class="w-64 mb-2" />
+							<div class="text-md text-secondary mt-1.5">A Discord client for Linux with client mods and extra functionality.</div>
+							<div class="flex gap-2 mt-4">
+								<a
+									href="https://codeberg.org/hamhim/recar/"
+									class="text-md flex gap-2 bg-accent px-2 py-1 text-white font-medium rounded-md hover:bg-accent-dim transition-all items-center justify-center cursor-pointer"
+								>
+									<span class="material-symbols-rounded">rebase</span> Codeberg Repository
+								</a>
+								<a
+									href="https://recar.loxodrome.app/"
+									class="text-md flex gap-2 bg-accent px-2 py-1 text-white font-medium rounded-md hover:bg-accent-dim transition-all items-center justify-center cursor-pointer"
+								>
+									<span class="material-symbols-rounded">captive_portal</span>
+									Website
+								</a>
+							</div>
+						</div>
+						<div class="grid grid-cols-2 gap-3 mb-4">
+							<div class="bg-surface border border-border rounded-xl p-4">
+								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Recar Version</div>
+								<div class="text-sm font-semibold font-sans text-primary" id="about-recar-ver">-</div>
+							</div>
+							<div class="bg-surface border border-border rounded-xl p-4">
+								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Electron</div>
+								<div class="text-sm font-semibold font-sans text-primary" id="about-electron-ver">-</div>
+							</div>
+							<div class="bg-surface border border-border rounded-xl p-4">
+								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Platform</div>
+								<div class="text-sm font-semibold font-sans text-primary" id="about-platform">-</div>
+							</div>
+							<div class="bg-surface border border-border rounded-xl p-4">
+								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Branch</div>
+								<div class="text-sm font-semibold font-sans text-primary" id="about-branch">-</div>
+							</div>
+						</div>
+						<div class="text-sm text-muted text-center py-2">© hamhim. All rights reserved.</div>
+					</div>
+					<!-- /about -->
+				</div>
+
+				<div class="px-7 py-4 border-t border-border-sub bg-base flex gap-3 shrink-0" id="normalFooter">
+					<button
+						id="saveBtn"
+						class="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dim text-white text-md font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+					>
+						<span class="material-symbols-rounded font-thin"> save </span>
+						Save Settings
+					</button>
+					<button
+						id="restartBtn"
+						disabled
+						class="flex-1 flex items-center justify-center gap-2 bg-danger hover:bg-danger-dim text-white text-md font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:bg-elevated disabled:text-muted disabled:cursor-not-allowed"
+					>
+						<span class="material-symbols-rounded font-thin"> restart_alt </span>
+						Save & Restart
+					</button>
+				</div>
+				<div class="px-7 py-4 border-t border-border-sub bg-base hidden shrink-0" id="setupFooter">
+					<button
+						id="setupBtn"
+						class="w-full flex items-center justify-center bg-accent hover:bg-accent-dim text-white text-md font-semibold py-2.5 rounded-lg transition-all active:scale-[0.98]"
+					>
+						Save &amp; Start Recar
+					</button>
+				</div>
+			</div>
+			<!-- /content -->
+		</div>
+		<!-- /app -->
+
+		<div class="popup-overlay fixed inset-0 bg-black/60 flex items-center justify-center text-center z-50" id="popupOverlay">
+			<div class="popup-box flex flex-col bg-elevated border border-border rounded-2xl p-6 w-86 items-center justify-center text-center">
+				<img class="mb-2" src="assets/img/warn.svg" />
+				<div class="text-lg font-bold text-primary mb-1.5">Are you sure you want to restart?</div>
+				<div class="text-md text-secondary leading-relaxed mb-5">Recar will restart to apply your changes. Continue?</div>
+				<div class="flex gap-2.5 w-full">
+					<button
+						onclick="closePopup()"
+						class="flex-1 py-2 rounded-lg text-sm font-semibold bg-surface text-secondary hover:text-primary hover:bg-hover transition-colors items-center"
+					>
+						Cancel
+					</button>
+					<button
+						id="confirmRestartBtn"
+						class="flex-1 py-2 rounded-lg text-sm font-semibold bg-danger hover:bg-danger-dim text-white transition-colors items-center"
+					>
+						Restart
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			const popupOverlay = document.getElementById("popupOverlay");
+
+			function showPopup() {
+				popupOverlay.classList.add("open");
+			}
+
+			function closePopup() {
+				popupOverlay.classList.remove("open");
+			}
+
+			popupOverlay.addEventListener("click", (e) => {
+				if (e.target === popupOverlay) closePopup();
+			});
+
+			const pageMeta = {
+				general: { title: "General", subtitle: "App behavior and preferences" },
+				client: {
+					title: "Client Mods",
+					subtitle: "Manage your client modification",
+				},
+				about: {
+					title: "About Recar",
+					subtitle: "Version information and credits",
+				},
+			};
+
+			let currentPage = "general";
+
+			function navigateTo(pageId) {
+				if (pageId === currentPage) return;
+
+				const prev = document.getElementById(`page-${currentPage}`);
+				prev.classList.remove("visible");
+
+				setTimeout(() => {
+					prev.classList.remove("active");
+					const next = document.getElementById(`page-${pageId}`);
+					next.classList.add("active");
+					requestAnimationFrame(() => requestAnimationFrame(() => next.classList.add("visible")));
+				}, 150);
+
+				currentPage = pageId;
+				document.getElementById("page-title").textContent = pageMeta[pageId].title;
+				document.getElementById("page-subtitle").textContent = pageMeta[pageId].subtitle;
+
+				document.querySelectorAll(".nav-item").forEach((el) => {
+					const active = el.dataset.page === pageId;
+					el.classList.toggle("is-active", active);
+					el.classList.toggle("text-secondary", !active);
+					el.classList.toggle("hover:bg-hover", !active);
+					el.classList.toggle("hover:text-primary", !active);
+				});
+
+				const showFooter = pageId !== "about";
+				document.getElementById("normalFooter").classList.toggle("hidden", !showFooter || setupMode);
+				document.getElementById("setupFooter").classList.toggle("hidden", !showFooter || !setupMode);
+			}
+
+			const settingsToggle = document.getElementById("nav-settings-toggle");
+			const settingsSub = document.getElementById("nav-sub-settings");
+			let subOpen = true;
+
+			function updateSub() {
+				settingsSub.style.maxHeight = subOpen ? settingsSub.scrollHeight + "px" : "0";
+				settingsSub.classList.toggle("open", subOpen);
+				settingsToggle.classList.toggle("open", subOpen);
+			}
+
+			settingsSub.style.maxHeight = settingsSub.scrollHeight + "px";
+			settingsSub.classList.add("open");
+			settingsToggle.addEventListener("click", () => {
+				subOpen = !subOpen;
+				updateSub();
+			});
+
+			let currentMod = "equicord";
+			let initialMod = "equicord";
+
+			function selectMod(mod) {
+				currentMod = mod;
+				document.querySelectorAll(".mod-card").forEach((el) => {
+					el.classList.toggle("selected", el.dataset.mod === mod);
+				});
+				checkChanges();
+			}
+
+			let initialBranch = "stable";
+			let initialTray = false;
+			let initialMaximized = true;
+			let initialRPC = true;
+			let initialCallPopup = true;
+			let setupMode = false;
+
+			const branchSel = document.getElementById("branch");
+			const trayTog = document.getElementById("trayToggle");
+			const maxTog = document.getElementById("maximizedToggle");
+			const rpcTog = document.getElementById("rpcToggle");
+			const callTog = document.getElementById("callPopupToggle");
+			const saveBtn = document.getElementById("saveBtn");
+			const restartBtn = document.getElementById("restartBtn");
+			const setupBtn = document.getElementById("setupBtn");
+
+			function checkChanges() {
+				const changed =
+					branchSel.value !== initialBranch ||
+					trayTog.checked !== initialTray ||
+					maxTog.checked !== initialMaximized ||
+					rpcTog.checked !== initialRPC ||
+					callTog.checked !== initialCallPopup ||
+					currentMod !== initialMod;
+
+				restartBtn.disabled = !changed;
+			}
+
+			[branchSel, trayTog, maxTog, rpcTog, callTog].forEach((el) => {
+				el.addEventListener("change", checkChanges);
+			});
+
+			async function loadSettings() {
+				if (typeof window.settingsAPI !== "undefined") {
+					try {
+						const [settings, versions] = await Promise.all([window.settingsAPI.getSettings(), window.settingsAPI.getVersions()]);
+						return {
+							...settings,
+							_appVer: versions.app,
+							_elecVer: versions.electron,
+						};
+					} catch (error) {
+						console.error("Failed to load settings:", error);
+						return getDefaultSettings();
+					}
+				}
+				return getDefaultSettings();
+			}
+
+			function getDefaultSettings() {
+				return {
+					branch: "stable",
+					minimizeToTray: false,
+					startMaximized: true,
+					autoEnableWebRPC: true,
+					enableCallPopup: true,
+					mod: "equicord",
+					isFirstLaunch: false,
+					_appVer: "N/A",
+					_elecVer: "N/A",
+				};
+			}
+
+			function applySettingsToUI(settings) {
+				branchSel.value = settings.branch;
+				trayTog.checked = settings.minimizeToTray;
+				maxTog.checked = settings.startMaximized;
+				rpcTog.checked = settings.autoEnableWebRPC ?? true;
+				callTog.checked = settings.enableCallPopup ?? true;
+
+				initialBranch = settings.branch;
+				initialTray = settings.minimizeToTray;
+				initialMaximized = settings.startMaximized;
+				initialRPC = settings.autoEnableWebRPC ?? true;
+				initialCallPopup = settings.enableCallPopup ?? true;
+				initialMod = settings.mod || "equicord";
+				setupMode = settings.isFirstLaunch || false;
+
+				selectMod(initialMod);
+
+				updateVersionInfo(settings);
+				updateFooter(settings);
+
+				if (setupMode) {
+					document.getElementById("normalFooter").classList.add("hidden");
+					document.getElementById("setupFooter").classList.remove("hidden");
+					document.getElementById("page-title").textContent = "Setup";
+					document.getElementById("page-subtitle").textContent = "Configure Recar before first launch";
+				}
+			}
+
+			function updateVersionInfo(settings) {
+				const electronVer = settings._elecVer || "—";
+				const recarVer = settings._appVer || "—";
+
+				document.getElementById("about-recar-ver").textContent = recarVer;
+				document.getElementById("about-electron-ver").textContent = electronVer;
+				document.getElementById("about-platform").textContent = (typeof process !== "undefined" ? process.platform : navigator.platform) || "—";
+				document.getElementById("about-branch").textContent = settings.branch;
+			}
+
+			function updateFooter(settings) {
+				const electronVer = settings._elecVer || "—";
+				const recarVer = settings._appVer || "—";
+
+				document.getElementById("footer-electron").textContent = `v${electronVer}`;
+				document.getElementById("footer-recar").textContent = `v${recarVer}`;
+			}
+
+			loadSettings().then((settings) => {
+				applySettingsToUI(settings);
+			});
+
+			function gatherSettings() {
+				return {
+					branch: branchSel.value,
+					minimizeToTray: trayTog.checked,
+					startMaximized: maxTog.checked,
+					autoEnableWebRPC: rpcTog.checked,
+					enableCallPopup: callTog.checked,
+					mod: currentMod,
+				};
+			}
+
+			async function performSave() {
+				const settings = gatherSettings();
+
+				if (window.settingsAPI) {
+					try {
+						await window.settingsAPI.saveSettings(settings);
+					} catch (error) {
+						console.error("Failed to save settings:", error);
+						return false;
+					}
+				}
+
+				initialBranch = settings.branch;
+				initialTray = settings.minimizeToTray;
+				initialMaximized = settings.startMaximized;
+				initialRPC = settings.autoEnableWebRPC;
+				initialCallPopup = settings.enableCallPopup;
+				initialMod = settings.mod;
+
+				document.getElementById("about-branch").textContent = settings.branch;
+				return true;
+			}
+
+			const SAVE_ICON = `<span class="material-symbols-rounded font-thin">save</span> Save Settings`;
+			const CHECK_ICON = `<span class="material-symbols-rounded font-thin">check</span> Saved!`;
+
+			saveBtn.addEventListener("click", async () => {
+				saveBtn.disabled = true;
+				const success = await performSave();
+
+				if (success) {
+					saveBtn.innerHTML = CHECK_ICON;
+					saveBtn.classList.add("bg-success", "hover:bg-success");
+					saveBtn.classList.remove("bg-accent", "hover:bg-accent-dim");
+
+					setTimeout(() => {
+						saveBtn.innerHTML = SAVE_ICON;
+						saveBtn.classList.remove("bg-success", "hover:bg-success");
+						saveBtn.classList.add("bg-accent", "hover:bg-accent-dim");
+						saveBtn.disabled = false;
+						checkChanges();
+					}, 1500);
+				} else {
+					saveBtn.disabled = false;
+					checkChanges();
+				}
+			});
+
+			restartBtn.addEventListener("click", () => {
+				showPopup();
+			});
+
+			document.getElementById("confirmRestartBtn").addEventListener("click", async () => {
+				closePopup();
+				await performSave();
+				if (window.settingsAPI) {
+					try {
+						window.settingsAPI.restartApp();
+					} catch (error) {
+						console.error("Failed to restart app:", error);
+					}
+				}
+			});
+
+			setupBtn.addEventListener("click", async () => {
+				await performSave();
+				if (window.settingsAPI) {
+					try {
+						window.settingsAPI.restartApp();
+					} catch (error) {
+						console.error("Failed to restart app:", error);
+					}
+				}
+			});
+
+			function openExternalLink(url) {
+				if (window.settingsAPI && window.settingsAPI.openExternal) {
+					window.settingsAPI.openExternal(url);
+				} else {
+					window.open(url, "_blank");
+				}
+			}
+
+			document.querySelectorAll('a[href*="codeberg"], a[href*="recar.loxodrome"]').forEach((link) => {
+				link.addEventListener("click", (e) => {
+					e.preventDefault();
+					openExternalLink(link.href);
+				});
+			});
+
+			setTimeout(() => {
+				document.getElementById("page-general").classList.add("visible");
+			}, 30);
+		</script>
+	</body>
 </html>
