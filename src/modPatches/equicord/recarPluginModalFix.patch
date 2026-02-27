@@ -1,0 +1,11 @@
+--- a/src/components/settings/tabs/plugins/PluginModal.tsx
++++ b/src/components/settings/tabs/plugins/PluginModal.tsx
+@@ -233,7 +233,7 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
+                                 )}
+                             </Tooltip>
+                         ) : <div />}
+-                        {!pluginMeta.userPlugin && (
++                        {!(pluginMeta.userPlugin || pluginMeta.folderName.endsWith("recar")) && (
+                             <div className={cl("links")}>
+                                 <WebsiteButton
+                                     text="Website"

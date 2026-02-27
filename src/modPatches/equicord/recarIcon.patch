@@ -1,0 +1,15 @@
+--- a/src/components/settings/tabs/plugins/PluginCard.tsx
++++ b/src/components/settings/tabs/plugins/PluginCard.tsx
+@@ -90,6 +90,12 @@ export function PluginCard({ plugin, disabled, onRestartNeeded, onMouseEnter, on
+     }
+ 
+     const pluginInfo = [
++        {
++            condition: pluginMeta.folderName.endsWith("recar"),
++            src: "https://raw.githubusercontent.com/hamhimdev/recar/refs/heads/main/build/icons/icon.png",
++            alt: "Recar",
++            title: "Recar Plugin"
++        },
+         {
+             condition: isModifiedPlugin,
+             src: "https://equicord.org/assets/icons/equicord/modified.png",

@@ -1,0 +1,11 @@
+--- a/src/components/settings/tabs/plugins/PluginModal.tsx
++++ b/src/components/settings/tabs/plugins/PluginModal.tsx
+@@ -163,7 +163,7 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
+                 <section>
+                     <Flex className={cl("info")}>
+                         <Forms.FormText className={cl("description")}>{plugin.description}</Forms.FormText>
+-                        {!pluginMeta.userPlugin && (
++                        {!(pluginMeta.userPlugin || pluginMeta.folderName.endsWith("recar")) && (
+                             <div className="vc-settings-modal-links">
+                                 <WebsiteButton
+                                     text="View more info"
