@@ -124,7 +124,7 @@ function syncArRPCSettings() {
         const rpcEnabled: boolean = (window as any).__recarRpcEnabled ?? true;
         const config = JSON.parse(localStorage.getItem(modName) || "{}");
         config.plugins = config.plugins || {};
-        ["arRPC.web", "WebRichPresence", "WebRichPresence (arRPC)", "WebContextMenus", "WebScreenShareFixes"].forEach(id => {
+        ["arRPC.web", "WebRichPresence", "WebRichPresence (arRPC)"].forEach(id => {
             config.plugins[id] = config.plugins[id] || {};
             config.plugins[id].enabled = rpcEnabled;
         });
