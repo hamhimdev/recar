@@ -15,7 +15,7 @@ https://recar.loxodrome.app/
 - arRPC server built in (for Rich Presence)
 - Custom call popup when ringing
 - Switch between Vencord & Equicord
-- Wayland Streaming (shit right now)
+- Wayland Streaming
 - Desktop Notifications
 
 ## Installing Recar
