@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { execFile } = require("child_process");
 
 let venmic = null;
 try {
@@ -25,6 +26,47 @@ function getAudioServicePid() {
 	}
 }
 
+// register this app as the handler for discord:// links
+// uses xdg-mime instead of xdg-settings to avoid a long-standing ubuntu bug where xdg-settings would also register the app as the default browser
+function registerDiscordProtocol() {
+	if (process.platform !== "linux") return;
+
+	const desktopFile = process.env.CHROME_DESKTOP || "recar.desktop";
+
+	execFile("xdg-mime", ["default", desktopFile, "x-scheme-handler/discord"], (err) => {
+		if (err) {
+			console.error("[discord://] Failed to register protocol handler:", err.message);
+		} else {
+			console.log(`[discord://] Registered as handler via ${desktopFile}`);
+		}
+	});
+}
+
+// parse a discord:// uri and navigate mainWindow to the equivalent https://discord.com/... url, respecting the configured branch.
+function handleDiscordUrl(uri) {
+	if (!uri || !uri.startsWith("discord://")) return;
+	if (!mainWindow || mainWindow.isDestroyed()) return;
+
+	try {
+		const parsed = new URL(uri);
+		// parsed.pathname is e.g. "/channels/123/456" - slice off the leading slash.
+		const discordPath = parsed.pathname.slice(1) || "app";
+
+		const subdomain = settings.branch === "canary" || settings.branch === "ptb"
+			? `${settings.branch}.`
+			: "";
+
+		const target = `https://${subdomain}discord.com/${discordPath}`;
+		console.log(`[discord://] Navigating to ${target}`);
+
+		mainWindow.loadURL(target);
+		mainWindow.show();
+		mainWindow.focus();
+	} catch (e) {
+		console.error("[discord://] Failed to parse URI:", uri, e);
+	}
+}
+
 // Single instance allowed
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -32,6 +74,14 @@ if (!gotTheLock) {
 	app.quit();
 } else {
 	app.on("second-instance", (event, commandLine, workingDirectory) => {
+		// on linux/windows, the os re-launches the app and passes
+		// the discord:// url as a command-line argument when already running.
+		const discordUrl = commandLine.find((arg) => arg.startsWith("discord://"));
+		if (discordUrl) {
+			handleDiscordUrl(discordUrl);
+			return;
+		}
+
 		if (mainWindow) {
 			if (mainWindow.isMinimized()) mainWindow.restore();
 			mainWindow.show();
@@ -298,7 +348,23 @@ const createMainWindow = () => {
 		createStreamWindow();
 	});
 
-	mainWindow.loadURL(getDiscordUrl());
+	// if the app was cold-launched via a discord:// link (Linux/Windows pass it as a cli arg), load that url instead of the default /app page
+	const startUrl = process.argv.find((arg) => arg.startsWith("discord://"));
+	if (startUrl) {
+		try {
+			const parsed = new URL(startUrl);
+			const discordPath = parsed.pathname.slice(1) || "app";
+			const subdomain = settings.branch === "canary" || settings.branch === "ptb"
+				? `${settings.branch}.`
+				: "";
+			mainWindow.loadURL(`https://${subdomain}discord.com/${discordPath}`);
+			console.log(`[discord://] Cold-launched with ${startUrl}`);
+		} catch {
+			mainWindow.loadURL(getDiscordUrl());
+		}
+	} else {
+		mainWindow.loadURL(getDiscordUrl());
+	}
 
 	mainWindow.on("page-title-updated", (e, title) => {
 		console.log(`[Main] Title updated: ${title}`);
@@ -352,8 +418,6 @@ const createTray = () => {
 				app.quit();
 			},
 		},
-		// { type: 'separator' },
-		// { label: 'Open Call Window', click: () => createCallWindow() }
 	]);
 	tray.setToolTip("Recar");
 	tray.setContextMenu(contextMenu);
@@ -622,6 +686,8 @@ app.whenReady().then(async () => {
 	app.desktopName = "recar";
 	app.setAppUserModelId("app.loxodrome.recar");
 	loadSettings();
+
+	registerDiscordProtocol();
 
 	const { session } = require("electron");
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
