@@ -90,7 +90,7 @@ waitForDiscord(({ US, CS, GS, PS, DS }) => {
 	}
 
 	DS.subscribe("CALL_UPDATE", handleCallUpdate);
-	console.log(`✅ Subscribed to CALL_UPDATE (logged in as ${me.username})`);
+	console.log(`[Inject] Subscribed to CALL_UPDATE (logged in as ${me.username})`);
 
 	const { VesktopSettingsIcon } = Vencord.Components;
 	const { React } = Vencord.Webpack.Common;
@@ -110,4 +110,66 @@ waitForDiscord(({ US, CS, GS, PS, DS }) => {
 			return null;
 		},
 	});
+
+	const origGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
+
+	async function getVirtmicDeviceId() {
+		try {
+			const devices = await navigator.mediaDevices.enumerateDevices();
+			const audioDevice = devices.find(({ label }) => label === "vencord-screen-share");
+			return audioDevice?.deviceId ?? null;
+		} catch {
+			return null;
+		}
+	}
+
+	navigator.mediaDevices.getDisplayMedia = async function (opts) {
+		const stream = await origGetDisplayMedia.call(this, opts);
+
+		if (window.recarInternalBridge && typeof window.recarInternalBridge.getSyncStreamSettings === "function") {
+			const settings = window.recarInternalBridge.getSyncStreamSettings();
+			if (settings && settings.fps && settings.resolution) {
+				const { fps, resolution, contentHint } = settings;
+				const width = Math.round(resolution.height * (16 / 9));
+				const track = stream.getVideoTracks()[0];
+				if (track) {
+					if (contentHint) track.contentHint = contentHint;
+					const constraints = {
+						...track.getConstraints(),
+						frameRate: { min: fps, ideal: fps },
+						width: { min: 640, ideal: width, max: width },
+						height: { min: 480, ideal: resolution.height, max: resolution.height },
+						advanced: [{ width, height: resolution.height }],
+						resizeMode: "none"
+					};
+					track.applyConstraints(constraints)
+						.then(() => console.log(`[Inject] Applied constraints: ${resolution.height}p @ ${fps}fps`))
+						.catch(e => console.error("[Inject] Failed to apply constraints:", e));
+				}
+			}
+		}
+
+		const virtmicId = await getVirtmicDeviceId();
+		if (virtmicId) {
+			try {
+				const audioStream = await navigator.mediaDevices.getUserMedia({
+					audio: {
+						deviceId: { exact: virtmicId },
+						autoGainControl: false,
+						echoCancellation: false,
+						noiseSuppression: false,
+						channelCount: 2,
+						sampleRate: 48000,
+					}
+				});
+				stream.getAudioTracks().forEach(t => stream.removeTrack(t));
+				stream.addTrack(audioStream.getAudioTracks()[0]);
+				console.log("[Inject] Attached virtual mic");
+			} catch (e) {
+				console.error("[Inject] Failed to attach virtual mic:", e);
+			}
+		}
+
+		return stream;
+	};
 });
