@@ -193,9 +193,9 @@
 						<button
 							id="share-btn"
 							disabled
-							class="w-full flex items-center justify-center gap-2 bg-success text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
+							class="w-full flex items-center justify-center gap-2 bg-accent text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
 						>
-							<span class="material-symbols-rounded font-thin text-xl"> cast </span>
+							<span class="material-symbols-rounded font-thin text-2xl"> cast </span>
 							Start
 						</button>
 					</div>
@@ -431,6 +431,7 @@
 							document.getElementById("preview-change").classList.add("hidden");
 
 							allSources = await window.streamAPI.getSources();
+							await window.streamAPI.resizeWindow(400, 720);
 							const source = allSources[0];
 							if (!source) return;
 
@@ -443,7 +444,6 @@
 							document.getElementById("preview-name").textContent = source.name;
 							document.getElementById("preview-name").classList.remove("hidden");
 							document.getElementById("preview-change").classList.remove("hidden");
-							window.streamAPI.resizeWindow(400, 720);
 						};
 
 						document.getElementById("wayland-preview").onclick = () => pickSource();
