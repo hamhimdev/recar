@@ -19,7 +19,7 @@ ipcRenderer.on("stream-settings-update", (e, settings) => {
 });
 
 contextBridge.exposeInMainWorld("recarInternalBridge", {
-	getSyncStreamSettings: () => cachedStreamSettings
+	getSyncStreamSettings: () => cachedStreamSettings,
 });
 
 (async () => {
