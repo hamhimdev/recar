@@ -53,6 +53,7 @@ function getUserDisplayName(userId: string): string {
 
 let previousRings: Record<string, unknown> = {};
 let themeObserver: MutationObserver | null = null;
+let origGetDisplayMedia: any = null;
 
 function handleCallUpdate(event: any) {
     if (event.type !== "CALL_UPDATE") return;
@@ -135,6 +136,16 @@ function syncArRPCSettings() {
     }
 }
 
+async function getVirtmicDeviceId() {
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioDevice = devices.find(({ label }) => label === "vencord-screen-share");
+        return audioDevice?.deviceId ?? null;
+    } catch {
+        return null;
+    }
+}
+
 // Settings entry component - opens Recar settings via the native bridge
 function RecarSettingsEntry() {
     React.useEffect(() => {
@@ -168,6 +179,63 @@ export default definePlugin({
         syncArRPCSettings();
         startThemeObserver();
 
+        try {
+            if (navigator?.mediaDevices) {
+                origGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
+                navigator.mediaDevices.getDisplayMedia = async function (opts: any) {
+                    const stream = await origGetDisplayMedia.call(this, opts);
+
+                    if (window.recarInternalBridge && typeof window.recarInternalBridge.getSyncStreamSettings === "function") {
+                        const settings = window.recarInternalBridge.getSyncStreamSettings();
+                        if (settings && settings.fps && settings.resolution) {
+                            const { fps, resolution, contentHint } = settings;
+                            const width = Math.round(resolution.height * (16 / 9));
+                            const track = stream.getVideoTracks()[0];
+                            if (track) {
+                                if (contentHint) track.contentHint = contentHint;
+                                const constraints = {
+                                    ...track.getConstraints(),
+                                    frameRate: { min: fps, ideal: fps },
+                                    width: { min: 640, ideal: width, max: width },
+                                    height: { min: 480, ideal: resolution.height, max: resolution.height },
+                                    advanced: [{ width, height: resolution.height }],
+                                    resizeMode: "none"
+                                };
+                                track.applyConstraints(constraints)
+                                    .then(() => console.log(`[Recar Inject] Applied constraints: ${resolution.height}p @ ${fps}fps`))
+                                    .catch(e => console.error("[Recar Inject] Failed to apply constraints:", e));
+                            }
+                        }
+                    }
+
+                    const virtmicId = await getVirtmicDeviceId();
+                    if (virtmicId) {
+                        try {
+                            const audioStream = await navigator.mediaDevices.getUserMedia({
+                                audio: {
+                                    deviceId: { exact: virtmicId },
+                                    autoGainControl: false,
+                                    echoCancellation: false,
+                                    noiseSuppression: false,
+                                    channelCount: 2,
+                                    sampleRate: 48000,
+                                }
+                            });
+                            stream.getAudioTracks().forEach(t => stream.removeTrack(t));
+                            stream.addTrack(audioStream.getAudioTracks()[0]);
+                            console.log("[Recar Inject] Attached virtual mic");
+                        } catch (e) {
+                            console.error("[Recar Inject] Failed to attach virtual mic:", e);
+                        }
+                    }
+
+                    return stream;
+                };
+            }
+        } catch (e) {
+            console.error("[Recar] Failed to override getDisplayMedia:", e);
+        }
+
         // add a settings entry so users can open recar settings from the discord settings ui
         const settingsPlugin = Vencord.Plugins.plugins.Settings as any;
         if (settingsPlugin?.customEntries) {
@@ -183,6 +251,14 @@ export default definePlugin({
     stop() {
         FluxDispatcher.unsubscribe("CALL_UPDATE", handleCallUpdate);
         previousRings = {};
+        try {
+            if (origGetDisplayMedia && navigator?.mediaDevices) {
+                navigator.mediaDevices.getDisplayMedia = origGetDisplayMedia;
+                origGetDisplayMedia = null;
+            }
+        } catch (e) {
+            console.error("[Recar] Failed to restore getDisplayMedia:", e);
+        }
 
         themeObserver?.disconnect();
         themeObserver = null;
