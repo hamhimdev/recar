@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en" class="h-full">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Share Your Screen</title>
+		<link href="tailwind.css" rel="stylesheet" />
+		<style>
+			*,
+			*::before,
+			*::after {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				height: 100%;
+				overflow: hidden;
+			}
+
+			::-webkit-scrollbar {
+				width: 4px;
+			}
+
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+
+			::-webkit-scrollbar-thumb {
+				background: #2a2d34;
+				border-radius: 2px;
+			}
+
+			.source-card {
+				border: 1.5px solid var(--color-border);
+				transition:
+					border-color 0.15s,
+					background 0.15s,
+					box-shadow 0.15s;
+			}
+
+			.source-card:hover {
+				background: var(--color-elevated);
+				border-color: #3a3d44;
+			}
+
+			.source-card.selected {
+				border-color: var(--color-accent);
+				background: rgba(87, 100, 242, 0.09);
+				box-shadow: 0 0 0 3px rgba(87, 100, 242, 0.1);
+			}
+
+			select {
+				appearance: none;
+				-webkit-appearance: none;
+			}
+
+			.select-wrap {
+				position: relative;
+			}
+
+			.select-wrap .chevron {
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+				pointer-events: none;
+			}
+
+			.tab-btn {
+				color: var(--color-muted);
+			}
+
+			.tab-btn.active-tab {
+				background: var(--color-border);
+				color: var(--color-primary);
+			}
+
+			#share-btn:disabled {
+				background: var(--color-elevated);
+				color: var(--color-muted);
+				cursor: not-allowed;
+			}
+
+			#share-btn:not(:disabled):hover {
+				background: var(--color-accent-dim);
+			}
+		</style>
+	</head>
+
+	<body class="h-full bg-base text-primary">
+		<div class="flex flex-col h-full overflow-hidden">
+			<div class="px-6 pt-5 pb-4 border-b border-border-sub shrink-0 hidden">
+				<div class="flex items-center justify-between">
+					<div>
+						<div class="text-[18px] font-bold text-primary">Share Your Screen</div>
+						<div class="text-[13px] text-muted mt-0.5">Select a window or screen to broadcast</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="flex flex-1 min-h-0">
+				<div id="sources-panel" class="flex flex-col flex-1 min-w-0 overflow-hidden p-5">
+					<div class="flex gap-1 mb-4 shrink-0 p-1 rounded-lg bg-sidebar">
+						<button id="tab-screen" class="tab-btn active-tab flex-1 py-1.5 text-sm font-semibold rounded-md transition-all cursor-pointer">
+							Screens
+						</button>
+						<button id="tab-window" class="tab-btn flex-1 py-1.5 text-sm font-semibold rounded-md transition-all cursor-pointer">
+							Applications
+						</button>
+					</div>
+
+					<div class="flex-1 overflow-y-auto pr-1">
+						<div id="grid-container" class="grid grid-cols-2 gap-3 pb-4">
+							<div class="text-center col-span-2 py-10 text-sm text-muted">Loading sources...</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="panel-divider" class="w-px shrink-0 my-4 bg-border-sub"></div>
+
+				<div class="w-70 shrink-0 flex flex-col p-5 gap-5 overflow-y-auto">
+					<div class="flex gap-3">
+						<div class="flex-1">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Resolution</div>
+							<div class="select-wrap">
+								<select
+									id="res-select"
+									class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+								>
+									<option value="480">480p</option>
+									<option value="720" selected>720p</option>
+									<option value="1080">1080p</option>
+									<option value="1440">1440p (2K)</option>
+									<option value="2160">2160p (4K)</option>
+								</select>
+								<span class="material-symbols-rounded chevron ml-auto font-normal"> arrow_drop_down </span>
+							</div>
+						</div>
+
+						<div class="flex-1">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Frame Rate</div>
+							<div class="select-wrap">
+								<select
+									id="fps-select"
+									class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+								>
+									<option value="15">15 FPS</option>
+									<option value="30" selected>30 FPS</option>
+									<option value="60">60 FPS</option>
+								</select>
+								<span class="material-symbols-rounded chevron ml-auto font-normal"> arrow_drop_down </span>
+							</div>
+						</div>
+					</div>
+
+					<div>
+						<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Stream Mode</div>
+						<div class="select-wrap">
+							<select
+								id="mode-select"
+								class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+							>
+								<option value="motion">Prefer Smoothness</option>
+								<option value="detail">Prefer Clarity</option>
+							</select>
+							<span class="material-symbols-rounded chevron ml-auto font-normal"> arrow_drop_down </span>
+						</div>
+					</div>
+
+					<div>
+						<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2 flex justify-between">
+							<span>Include Audio</span>
+							<span id="inc-count" class="text-accent hidden">0</span>
+						</div>
+						<div id="audio-include" class="w-full bg-surface border border-border rounded-lg overflow-y-auto flex flex-col h-full p-1">
+							<div class="text-center text-sm text-muted mt-5">Loading...</div>
+						</div>
+					</div>
+
+					<div id="exclude-container" class="opacity-50 pointer-events-none transition-opacity duration-200 hidden">
+						<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2 flex justify-between">
+							<span>Exclude Audio</span>
+							<span id="exc-count" class="text-accent hidden">0</span>
+						</div>
+						<div id="audio-exclude" class="w-full bg-surface border border-border rounded-lg overflow-y-auto flex flex-col h-32 p-1">
+							<div class="text-center text-sm text-muted mt-5">Loading...</div>
+						</div>
+						<div class="text-[11px] text-muted mt-1.5 leading-snug">Only applied when sharing Entire System.</div>
+					</div>
+
+					<div class="mt-auto pt-2">
+						<button
+							id="share-btn"
+							disabled
+							class="w-full flex items-center justify-center gap-2 bg-success text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
+						>
+							<span class="material-symbols-rounded font-thin text-xl"> cast </span>
+							Start
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			let allSources = [];
+			let currentType = "screen";
+			let selectedSourceId = null;
+
+			let includeAudioList = [{ "node.name": "entire-system" }];
+			let excludeAudioList = [];
+
+			const sourcesContainer = document.getElementById("grid-container");
+			const sourcesPanel = document.getElementById("sources-panel");
+			const tabScreen = document.getElementById("tab-screen");
+			const tabWindow = document.getElementById("tab-window");
+			const shareBtn = document.getElementById("share-btn");
+
+			function setTab(type) {
+				currentType = type;
+				tabScreen.classList.toggle("active-tab", type === "screen");
+				tabScreen.classList.toggle("text-muted", type !== "screen");
+				tabWindow.classList.toggle("active-tab", type === "window");
+				tabWindow.classList.toggle("text-muted", type !== "window");
+				selectedSourceId = null;
+				shareBtn.disabled = true;
+				renderSources();
+			}
+
+			function renderSources() {
+				sourcesContainer.innerHTML = "";
+				const filtered = allSources.filter((s) => s.id.startsWith(`${currentType}:`));
+
+				if (filtered.length === 0) {
+					sourcesContainer.innerHTML = `<div class="text-center col-span-2 py-10 text-sm text-muted">No ${currentType}s found</div>`;
+					return;
+				}
+
+				filtered.forEach((source) => {
+					const div = document.createElement("div");
+					div.className = `source-card rounded-lg overflow-hidden cursor-pointer transition-all duration-300 bg-surface${selectedSourceId === source.id ? " selected" : ""}`;
+					div.onclick = () => selectSource(source.id);
+					div.innerHTML = `
+            <div class="aspect-video bg-black flex items-center justify-center relative border-b border-border">
+                <img src="${source.thumbnail}" class="max-w-full max-h-full object-contain">
+                ${source.appIcon && currentType === "window" ? `<img src="${source.appIcon}" class="absolute bottom-2 right-2 w-6 h-6 rounded bg-black/50 p-0.5">` : ""}
+            </div>
+            <div class="px-3 py-2 text-sm font-medium text-primary truncate" title="${source.name}">${source.name}</div>
+        `;
+					sourcesContainer.appendChild(div);
+				});
+			}
+
+			function selectSource(id) {
+				selectedSourceId = id;
+				renderSources();
+				shareBtn.disabled = false;
+			}
+
+			function updateAudioState() {
+				const excContainer = document.getElementById("exclude-container");
+				const isEntireSystem = includeAudioList.some((a) => a["node.name"] === "entire-system");
+				const isNone = includeAudioList.length === 0;
+
+				if (isEntireSystem) {
+					excContainer.classList.remove("opacity-50", "pointer-events-none");
+				} else {
+					excContainer.classList.add("opacity-50", "pointer-events-none");
+					excludeAudioList = [];
+				}
+
+				const incCount = document.getElementById("inc-count");
+				if (!isEntireSystem && !isNone) {
+					incCount.textContent = includeAudioList.length;
+					incCount.classList.remove("hidden");
+				} else {
+					incCount.classList.add("hidden");
+				}
+
+				const excCount = document.getElementById("exc-count");
+				if (excludeAudioList.length > 0) {
+					excCount.textContent = excludeAudioList.length;
+					excCount.classList.remove("hidden");
+				} else {
+					excCount.classList.add("hidden");
+				}
+
+				document.querySelectorAll(".audio-opt").forEach((el) => el._updateUI?.());
+			}
+
+			function renderAudioLists(audioSources) {
+				const incContainer = document.getElementById("audio-include");
+				const excContainer = document.getElementById("audio-exclude");
+
+				incContainer.innerHTML = "";
+				excContainer.innerHTML = "";
+
+				const createOption = (source, isInclude) => {
+					const div = document.createElement("div");
+					div.className = "audio-opt px-2.5 py-1.5 text-sm rounded cursor-pointer mb-0.5 flex items-center justify-between transition-colors";
+
+					const nodeName = source["node.name"];
+					const serial = source["object.serial"];
+					const appName =
+						nodeName === "entire-system" ? "Entire System" : nodeName === "none" ? "Don't Share Audio" : source["application.name"] || nodeName;
+
+					div._updateUI = () => {
+						const list = isInclude ? includeAudioList : excludeAudioList;
+						let isSelected;
+						if (nodeName === "none") {
+							isSelected = isInclude && includeAudioList.length === 0;
+						} else {
+							isSelected = list.some((a) => (serial && a["object.serial"] === serial) || a["node.name"] === nodeName);
+						}
+						div.className = `audio-opt px-2.5 py-1.5 text-sm rounded cursor-pointer mb-0.5 flex items-center justify-between transition-colors ${isSelected ? "bg-accent text-white font-medium" : "text-primary hover:bg-hover"}`;
+						div.querySelector(".audio-check").className =
+							`audio-check shrink-0 w-4 h-4 rounded border-2 border-current flex items-center justify-center transition-colors`;
+						div.querySelector(".audio-check").style.backgroundColor = isSelected ? "white" : "transparent";
+						div.querySelector(".material-symbols-rounded").classList.toggle("hidden", !isSelected);
+					};
+
+					div.onclick = () => {
+						if (isInclude) {
+							if (nodeName === "none") {
+								includeAudioList = [];
+							} else if (nodeName === "entire-system") {
+								includeAudioList = [source];
+							} else {
+								includeAudioList = includeAudioList.filter((a) => a["node.name"] !== "entire-system" && a["node.name"] !== "none");
+								const index = includeAudioList.findIndex((a) => (serial && a["object.serial"] === serial) || a["node.name"] === nodeName);
+								if (index > -1) {
+									includeAudioList.splice(index, 1);
+								} else {
+									includeAudioList.push(source);
+								}
+							}
+						} else {
+							const index = excludeAudioList.findIndex((a) => (serial && a["object.serial"] === serial) || a["node.name"] === nodeName);
+							if (index > -1) {
+								excludeAudioList.splice(index, 1);
+							} else {
+								excludeAudioList.push(source);
+							}
+						}
+						updateAudioState();
+					};
+					div.innerHTML = `
+    <span class="truncate pr-2">${appName}</span>
+    <span class="audio-check shrink-0 w-4 h-4 rounded border-2 bg-transparent border-current flex items-center justify-center">
+        <span class="material-symbols-rounded text-sm font-semibold hidden text-accent mt-0.5">check</span>
+    </span>
+`;
+					div._updateUI();
+					return div;
+				};
+
+				incContainer.appendChild(createOption({ "node.name": "none" }, true));
+				incContainer.appendChild(createOption({ "node.name": "entire-system" }, true));
+
+				audioSources.forEach((s) => {
+					incContainer.appendChild(createOption(s, true));
+					excContainer.appendChild(createOption(s, false));
+				});
+
+				updateAudioState();
+			}
+
+			window.addEventListener("DOMContentLoaded", async () => {
+				tabScreen.onclick = () => setTab("screen");
+				tabWindow.onclick = () => setTab("window");
+
+				shareBtn.onclick = async () => {
+					if (!selectedSourceId) return;
+					const resValue = document.getElementById("res-select").value;
+					const fpsValue = parseInt(document.getElementById("fps-select").value, 10);
+					const contentHint = document.getElementById("mode-select").value;
+
+					const includeAudio = includeAudioList;
+					const excludeAudio = excludeAudioList;
+
+					let resolution = { width: 1920, height: 1080 };
+					switch (resValue) {
+						case "480":
+							resolution = { width: 854, height: 480 };
+							break;
+						case "720":
+							resolution = { width: 1280, height: 720 };
+							break;
+						case "1080":
+							resolution = { width: 1920, height: 1080 };
+							break;
+						case "1440":
+							resolution = { width: 2560, height: 1440 };
+							break;
+						case "2160":
+							resolution = { width: 3840, height: 2160 };
+							break;
+					}
+					window.streamAPI.selectSource({ sourceId: selectedSourceId, fps: fpsValue, resolution, includeAudio, excludeAudio, contentHint });
+				};
+
+				try {
+					const sessionInfo = await window.streamAPI.getSessionType();
+
+					if (sessionInfo.isWayland) {
+						sourcesPanel.classList.add("hidden");
+						document.getElementById("panel-divider").classList.add("hidden");
+						document.querySelector(".w-70").classList.replace("w-70", "w-full");
+
+						const settingsPanel = document.querySelector(".flex.flex-col.p-5.gap-5");
+						const previewEl = document.createElement("div");
+						previewEl.innerHTML = `
+            <div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Selected Source</div>
+            <div id="wayland-preview" class="relative rounded-lg overflow-hidden border border-border bg-black group cursor-pointer" style="aspect-ratio:16/9">
+                <div id="preview-loading" class="absolute inset-0 flex items-center justify-center text-sm text-muted">Waiting for selection...</div>
+                <img id="preview-thumb" class="w-full h-full object-contain hidden">
+                <div id="preview-name" class="absolute bottom-0 left-0 right-0 px-3 py-2 text-xs font-medium text-white bg-black/60 truncate hidden"></div>
+                <div id="preview-change" class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity hidden">
+                    <span class="text-sm font-semibold text-white">Click to change</span>
+                </div>
+            </div>
+        `;
+						settingsPanel.prepend(previewEl);
+
+						const pickSource = async () => {
+							document.getElementById("preview-loading").textContent = "Opening picker...";
+							document.getElementById("preview-loading").classList.remove("hidden");
+							document.getElementById("preview-thumb").classList.add("hidden");
+							document.getElementById("preview-name").classList.add("hidden");
+							document.getElementById("preview-change").classList.add("hidden");
+
+							allSources = await window.streamAPI.getSources();
+							const source = allSources[0];
+							if (!source) return;
+
+							selectedSourceId = source.id;
+							shareBtn.disabled = false;
+
+							document.getElementById("preview-loading").classList.add("hidden");
+							document.getElementById("preview-thumb").src = source.thumbnail;
+							document.getElementById("preview-thumb").classList.remove("hidden");
+							document.getElementById("preview-name").textContent = source.name;
+							document.getElementById("preview-name").classList.remove("hidden");
+							document.getElementById("preview-change").classList.remove("hidden");
+							window.streamAPI.resizeWindow(400, 720);
+						};
+
+						document.getElementById("wayland-preview").onclick = () => pickSource();
+						await pickSource();
+					} else {
+						// x11 (and others)
+						allSources = await window.streamAPI.getSources();
+						if (allSources.find((s) => s.id.startsWith("screen:"))) {
+							setTab("screen");
+						} else {
+							setTab("window");
+						}
+					}
+				} catch (e) {
+					sourcesContainer.innerHTML = `<div class="text-center col-span-2 py-10 text-sm" style="color: var(--color-danger)">Error loading sources</div>`;
+				}
+
+				try {
+					const audioSources = await window.streamAPI.getAudioSources();
+					if (audioSources && audioSources.length > 0) {
+						renderAudioLists(audioSources);
+					} else {
+						document.getElementById("audio-include").innerHTML = `<div class="text-center text-xs text-muted mt-5">No apps found</div>`;
+						document.getElementById("audio-exclude").innerHTML = `<div class="text-center text-xs text-muted mt-5">No apps found</div>`;
+					}
+				} catch (e) {}
+			});
+		</script>
+	</body>
+</html>

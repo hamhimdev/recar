@@ -1,6 +1,6 @@
 {
   "name": "recar",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "A Discord client for Linux with client mods and extra functionality.",
   "main": "src/main.js",
   "keywords": [],
@@ -70,6 +70,7 @@
     "tailwindcss": "^4.2.1"
   },
   "dependencies": {
+    "@vencord/venmic": "^6.1.0",
     "arrpc": "^3.6.0",
     "ws": "^8.19.0"
   }

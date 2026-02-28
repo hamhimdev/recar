@@ -5,9 +5,9 @@
 ### A Linux Discord Client
 
 Recar is a Discord client for Linux with client mods and extra functionality.  
-https://cutely.strangled.net/recar
+https://recar.loxodrome.app/
 
-<img width=640 src="repository/screenshot.png">
+<img width=640 src="repository/recarshowcase.png">
 
 </div>
 
@@ -15,7 +15,7 @@ https://cutely.strangled.net/recar
 - arRPC server built in (for Rich Presence)
 - Custom call popup when ringing
 - Switch between Vencord & Equicord
-- Wayland Streaming (kind of...)
+- Wayland Streaming (shit right now)
 - Desktop Notifications
 
 ## Installing Recar

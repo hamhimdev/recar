@@ -2,6 +2,29 @@ const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen } = require("elec
 const path = require("path");
 const fs = require("fs");
 
+let venmic = null;
+try {
+	const { PatchBay } = require("@vencord/venmic");
+	if (PatchBay.hasPipeWire()) {
+		venmic = new PatchBay();
+		console.log("[Venmic] Initialized successfully");
+	} else {
+		console.log("[Venmic] Pipewire not detected");
+	}
+} catch (e) {
+	console.error("[Venmic] Failed to initialize:", e);
+}
+
+function getAudioServicePid() {
+	try {
+		const metrics = app.getAppMetrics();
+		const audioService = metrics.find((p) => p.name === "Audio Service" || (p.type === "Utility" && p.name.includes("Audio")));
+		return audioService ? audioService.pid.toString() : null;
+	} catch {
+		return null;
+	}
+}
+
 // Single instance allowed
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -26,6 +49,9 @@ let mainWindow;
 let settingsWindow;
 let splashWindow;
 let callWindow;
+let streamWindow;
+let pendingStreamCallback = null;
+let currentStreamSettings = { resolution: { width: 1920, height: 1080 }, fps: 60, contentHint: "motion" };
 let callBaseHeight = 276;
 let tray;
 let pendingCallData = null;
@@ -174,6 +200,44 @@ const createCallWindow = () => {
 	});
 };
 
+const createStreamWindow = () => {
+	if (streamWindow) {
+		streamWindow.focus();
+		return;
+	}
+	streamWindow = new BrowserWindow({
+		width: 900,
+		height: 640,
+		title: "Share Your Screen",
+		icon: iconPath,
+		autoHideMenuBar: true,
+		backgroundColor: "#0f1012",
+		show: false,
+		webPreferences: {
+			nodeIntegration: false,
+			contextIsolation: true,
+			preload: path.join(__dirname, "stream.js"),
+		},
+	});
+
+	streamWindow.loadFile(path.join(__dirname, "stream.html"));
+	streamWindow.once("ready-to-show", () => streamWindow.show());
+	streamWindow.on("closed", () => {
+		streamWindow = null;
+		if (pendingStreamCallback) {
+			pendingStreamCallback(null);
+			pendingStreamCallback = null;
+		}
+	});
+};
+
+ipcMain.handle("get-session-type", () => {
+	return {
+		isWayland: process.env.WAYLAND_DISPLAY !== undefined || process.env.XDG_SESSION_TYPE === "wayland",
+		platform: process.platform,
+	};
+});
+
 // Adjust call window height by delta from renderer (idempotent against base height)
 ipcMain.on("call-adjust-height", (event, delta) => {
 	if (!callWindow || callWindow.isDestroyed()) return;
@@ -229,38 +293,9 @@ const createMainWindow = () => {
 
 	const session = mainWindow.webContents.session;
 
-	const { desktopCapturer, Menu } = require("electron");
 	session.setDisplayMediaRequestHandler((request, callback) => {
-		desktopCapturer
-			.getSources({ types: ["screen", "window"] })
-			.then((sources) => {
-				if (sources.length === 0) {
-					callback(null);
-					return;
-				}
-
-				if (sources.length === 1) {
-					callback({ video: sources[0] });
-					return;
-				}
-
-				const menu = Menu.buildFromTemplate(
-					sources.map((source) => ({
-						label: source.name,
-						click: () => {
-							callback({ video: source });
-						},
-					}))
-				);
-				menu.popup({
-					callback: () => {
-						callback(null);
-					},
-				});
-			})
-			.catch((e) => {
-				callback(null);
-			});
+		pendingStreamCallback = callback;
+		createStreamWindow();
 	});
 
 	mainWindow.loadURL(getDiscordUrl());
@@ -373,6 +408,158 @@ ipcMain.handle("save-settings", (event, newSettings) => {
 	isFirstLaunch = false; // Once saved, it's no longer first launch
 	return true;
 });
+
+/*
+
+	SO! Turns out exclusion is broken. It's broken on Vesktop too so this is purely an assumption, but it's possible to be venmic, since I referenced Equibop's implementation to do this, which likely has a very close implementation of it to Vesktop's who has it broken. Atleast on Wayland KDE Plasma (don't see how its related though... :/).
+
+	Ignore all of my attempts trying to get exclusion working, keeping for future's sake
+
+	-- hamhim
+
+*/
+
+let lastSources = [];
+ipcMain.handle("get-stream-sources", async () => {
+	const { desktopCapturer } = require("electron");
+	const sources = await desktopCapturer.getSources({
+		types: ["screen", "window"],
+		fetchWindowIcons: true,
+		thumbnailSize: { width: 400, height: 400 },
+	});
+	lastSources = sources;
+	return sources.map((s) => ({
+		id: s.id,
+		name: s.name,
+		thumbnail: s.thumbnail.toDataURL(),
+		appIcon: s.appIcon ? s.appIcon.toDataURL() : null,
+	}));
+});
+
+ipcMain.handle("get-audio-sources", () => {
+	if (!venmic) return [];
+	try {
+		const audioPid = getAudioServicePid();
+		const sources = venmic.list(["node.name", "application.name", "application.process.id", "application.process.binary", "object.serial"]);
+		return sources.filter((s) => s["application.process.id"] !== audioPid);
+	} catch (e) {
+		console.error("[Venmic] Failed to list audio sources:", e);
+		return [];
+	}
+});
+
+ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, includeAudio = [], excludeAudio = [], contentHint }) => {
+	console.log(`[Stream] Selected source ${sourceId} at ${fps} FPS, ${resolution.width}x${resolution.height}`);
+
+	if (venmic) {
+		try {
+			const audioPid = getAudioServicePid();
+			const excludeList = [{ "media.class": "Stream/Input/Audio" }];
+
+			const myName = app.getName().toLowerCase();
+			excludeList.push({ "application.name": myName });
+			excludeList.push({ "node.name": myName });
+			excludeList.push({ "application.name": "recar" });
+			excludeList.push({ "node.name": "recar" });
+
+			if (audioPid && audioPid !== "owo") {
+				excludeList.push({ "application.process.id": audioPid });
+			}
+
+			excludeAudio.forEach((node) => {
+				const filters = [];
+				if (node["application.process.id"]) {
+					filters.push({ "application.process.id": node["application.process.id"].toString() });
+				}
+				if (node["node.name"] && node["node.name"] !== "entire-system") {
+					filters.push({ "node.name": node["node.name"] });
+				}
+				if (node["application.name"]) {
+					filters.push({ "application.name": node["application.name"] });
+				}
+				if (node["application.process.binary"]) {
+					filters.push({ "application.process.binary": node["application.process.binary"] });
+				}
+				filters.forEach((f) => excludeList.push(f));
+			});
+
+			let includeList = [];
+
+			if (includeAudio.some((a) => a["node.name"] === "entire-system")) {
+				includeList = [];
+				console.log(`[Venmic] Linking entire system audio (excludes: ${excludeAudio.length} user-apps + Discord-base)`);
+			} else if (includeAudio.length > 0) {
+				includeAudio.forEach((node) => {
+					const filter = {};
+					if (node["application.process.id"]) filter["application.process.id"] = node["application.process.id"].toString();
+					if (node["node.name"]) filter["node.name"] = node["node.name"];
+					includeList.push(filter);
+				});
+				console.log(`[Venmic] Linking specifically ${includeAudio.length} items`);
+			} else {
+				console.log("[Venmic] Unlinked (no audio selected)");
+			}
+
+			if (includeAudio.length > 0) {
+				const data = {
+					include: includeList,
+					exclude: excludeList,
+					ignore_devices: true,
+					only_speakers: true,
+					only_default_speakers: true,
+				};
+
+				if (audioPid && audioPid !== "owo") {
+					data.workaround = [{ "application.process.id": audioPid, "media.name": "RecordStream" }];
+				}
+
+				console.log("[Venmic] Final Link Data:", JSON.stringify(data, null, 2));
+				venmic.link(data);
+			} else {
+				venmic.unlink();
+			}
+		} catch (e) {
+			console.error("[Venmic] Failed to link audio node:", e);
+		}
+	}
+
+	currentStreamSettings = { fps, resolution, contentHint: contentHint ?? "motion" };
+	if (mainWindow && !mainWindow.isDestroyed()) {
+		mainWindow.webContents.send("stream-settings-update", currentStreamSettings);
+	}
+
+	if (pendingStreamCallback) {
+		const selected = lastSources.find((s) => s.id === sourceId) ?? lastSources[0];
+		if (selected) {
+			pendingStreamCallback({ video: selected });
+		} else {
+			pendingStreamCallback({});
+		}
+		pendingStreamCallback = null;
+	}
+
+	if (streamWindow && !streamWindow.isDestroyed()) {
+		streamWindow.close();
+		streamWindow = null;
+	}
+});
+
+ipcMain.on("stream-cancel", () => {
+	if (pendingStreamCallback) pendingStreamCallback(null);
+	pendingStreamCallback = null;
+	if (streamWindow && !streamWindow.isDestroyed()) {
+		streamWindow.close();
+		streamWindow = null;
+	}
+});
+
+ipcMain.on("stream-resize", (event, width, height) => {
+	if (streamWindow && !streamWindow.isDestroyed()) {
+		streamWindow.setSize(width, height);
+	}
+});
+
+ipcMain.handle("get-current-stream-settings", () => currentStreamSettings);
 
 ipcMain.on("call-ring-started", (event, data) => {
 	if (!settings.enableCallPopup) return;

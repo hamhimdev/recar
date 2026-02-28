@@ -10,6 +10,16 @@ contextBridge.exposeInMainWorld("callBridge", {
 contextBridge.exposeInMainWorld("recarBridge", {
 	themeChanged: () => ipcRenderer.send("discord-theme-changed"),
 	openSettings: () => ipcRenderer.send("open-settings"),
+	getStreamSettings: () => ipcRenderer.invoke("get-current-stream-settings"),
+});
+
+let cachedStreamSettings = null;
+ipcRenderer.on("stream-settings-update", (e, settings) => {
+	cachedStreamSettings = settings;
+});
+
+contextBridge.exposeInMainWorld("recarInternalBridge", {
+	getSyncStreamSettings: () => cachedStreamSettings
 });
 
 (async () => {
