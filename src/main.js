@@ -437,6 +437,7 @@ const createSettingsWindow = () => {
 		icon: iconPath,
 		autoHideMenuBar: true,
 		backgroundColor: "#232323",
+		resizable: false,
 		show: false,
 		webPreferences: {
 			nodeIntegration: false,

@@ -52,10 +52,10 @@
 
 			.sw-thumb {
 				position: absolute;
-				top: 3px;
-				left: 3px;
-				width: 16px;
-				height: 16px;
+				top: 2px;
+				left: 2px;
+				width: 18px;
+				height: 18px;
 				border-radius: 50%;
 				background: #8b909a;
 				transition:
@@ -213,7 +213,7 @@
 							onclick="navigateTo('general')"
 						>
 							<span class="material-symbols-rounded font-thin text-secondary/50"> chevron_right </span>
-							<span class="material-symbols-rounded font-normal"> build </span>
+							<span class="material-symbols-rounded font-normal"> category </span>
 							General
 						</div>
 						<div
@@ -262,14 +262,16 @@
 			</aside>
 
 			<div class="flex flex-col flex-1 min-w-0 overflow-hidden bg-base">
-				<div class="px-7 pt-3 pb-0 border-b border-border-sub shrink-0 shadow-md">
-					<div class="text-[18px] font-bold text-primary tracking-tight" id="page-title">General</div>
-					<div class="text-[13px] text-muted mt-0.5 pb-3.5" id="page-subtitle">App behavior and preferences</div>
+				<div class="px-7 p-2 border-b border-border-sub shrink-0 shadow-md flex flex-row gap-3 items-center">
+					<div class="text-md font-semibold p-1 pr-3 pl-3 rounded-lg text-primary tracking-tight gap-2 flex flex-row items-center bg-border-sub" id="page-title"><span class="material-symbols-rounded font-thin text-3xl mt-0.5 -ml-0.5">category</span> General</div>
+					<div class="text-sm font-medium text-muted" id="page-subtitle">App behavior and preferences</div>
+					<span class="material-symbols-rounded absolute font-thin text-muted hover:text-secondary transition-colors cursor-pointer right-0 mr-7" style="font-size: 22px;">info</span>
+
 				</div>
 
 				<div class="flex-1 overflow-y-auto px-7 py-5">
 					<div class="page active" id="page-general">
-						<div class="mb-7">
+						<div class="mb-5">
 							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Discord Branch</div>
 							<div class="relative">
 								<select
@@ -293,10 +295,10 @@
 							<p class="text-[12px] text-muted italic mt-2">Switching branches requires an app restart.</p>
 						</div>
 
-						<div class="mb-7">
+						<div class="mb-5">
 							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Window</div>
 							<div class="bg-surface border border-border rounded-xl overflow-hidden">
-								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors border-b border-border-sub">
+								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
 									<div>
 										<div class="text-sm font-semibold text-primary">Minimize to Tray</div>
 										<div class="text-xs text-secondary mt-0.5">Keep app running when closed</div>
@@ -308,7 +310,7 @@
 										</div>
 									</label>
 								</div>
-								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors">
+								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
 									<div>
 										<div class="text-sm font-semibold text-primary">Start Maximized</div>
 										<div class="text-xs text-secondary mt-0.5">Launch with a maximized window</div>
@@ -323,10 +325,10 @@
 							</div>
 						</div>
 
-						<div class="mb-7">
+						<div class="mb-5">
 							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Features</div>
 							<div class="bg-surface border border-border rounded-xl overflow-hidden">
-								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors border-b border-border-sub">
+								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
 									<div>
 										<div class="text-sm font-semibold text-primary">Enable arRPC</div>
 										<div class="text-xs text-secondary mt-0.5">Discord Rich Presence support</div>
@@ -338,7 +340,7 @@
 										</div>
 									</label>
 								</div>
-								<div class="flex items-center justify-between px-4 py-4 hover:bg-elevated transition-colors">
+								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
 									<div>
 										<div class="text-sm font-semibold text-primary">Call Popup</div>
 										<div class="text-xs text-secondary mt-0.5">Show popup for incoming calls</div>
@@ -456,7 +458,7 @@
 					<!-- /about -->
 				</div>
 
-				<div class="px-7 py-4 border-t border-border-sub bg-base flex gap-3 shrink-0" id="normalFooter">
+				<div class="p-2 w-md rounded-2xl absolute bottom-4 ml-auto mr-auto left-[24.5%] right-0 items-center border border-border-sub bg-base flex gap-2 shrink-0 shadow-md" id="normalFooter">
 					<button
 						id="saveBtn"
 						class="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dim text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
