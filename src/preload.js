@@ -13,6 +13,15 @@ contextBridge.exposeInMainWorld("recarBridge", {
 	getStreamSettings: () => ipcRenderer.invoke("get-current-stream-settings"),
 });
 
+contextBridge.exposeInMainWorld("overlayBridge", {
+	notification: (data) => ipcRenderer.send("notification", data),
+	vcUpdate: (data) => ipcRenderer.send("vc-update", data),
+	vcJoin: (data) => ipcRenderer.send("vc-join", data),
+	vcLeave: (data) => ipcRenderer.send("vc-leave", data),
+	vcStateChange: (data) => ipcRenderer.send("vc-state-change", data),
+	vcSpeaking: (data) => ipcRenderer.send("vc-speaking", data),
+});
+
 let cachedStreamSettings = null;
 ipcRenderer.on("stream-settings-update", (e, settings) => {
 	cachedStreamSettings = settings;

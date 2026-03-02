@@ -1,7 +1,52 @@
 //PATH=src/plugins/recar/index.ts
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { UserStore, ChannelStore, GuildStore, PresenceStore, FluxDispatcher, React } from "@webpack/common";
+import { ChannelStore, GuildMemberStore, GuildStore, PresenceStore, React, SelectedChannelStore, SelectedGuildStore, UserStore, VoiceStateStore } from "@webpack/common";
+
+interface VoiceState {
+    userId: string;
+    channelId?: string | null;
+    oldChannelId?: string | null;
+    sessionId: string | null | undefined;
+    mute: boolean;
+    deaf: boolean;
+    selfMute: boolean;
+    selfDeaf: boolean;
+    selfVideo: boolean;
+    selfStream: boolean | undefined;
+    suppress: boolean;
+}
+
+interface UserVoiceInfo {
+    userId: string;
+    displayName: string;
+    muted: boolean;
+    deafened: boolean;
+    streaming: boolean;
+    video: boolean;
+    serverMuted: boolean;
+    serverDeafened: boolean;
+    suppressed: boolean;
+}
+
+function getVoiceInfo(state: VoiceState, guildId: string | null): UserVoiceInfo {
+    const user = UserStore.getUser(state.userId);
+    const nick = GuildMemberStore.getNick(guildId!, state.userId)
+        ?? user?.globalName
+        ?? user?.username
+        ?? state.userId;
+    return {
+        userId: state.userId,
+        displayName: nick,
+        muted: state.selfMute,
+        deafened: state.selfDeaf,
+        streaming: state.selfStream ?? false,
+        video: state.selfVideo,
+        serverMuted: state.mute,
+        serverDeafened: state.deaf,
+        suppressed: state.suppress,
+    };
+}
 
 // lazy-loaded stores / helpers
 const closeAllModals = findByPropsLazy("closeAllModals");
@@ -49,51 +94,20 @@ function getUserDisplayName(userId: string): string {
 	return u ? u.globalName || u.username : userId;
 }
 
+function getUsersInMyChannel(): UserVoiceInfo[] {
+	const myChanId = SelectedChannelStore.getVoiceChannelId();
+	if (!myChanId) return [];
+
+	const myGuildId = SelectedGuildStore.getGuildId();
+	const states = VoiceStateStore.getVoiceStatesForChannel(myChanId) as Record<string, VoiceState>;
+	return Object.values(states).map(s => getVoiceInfo(s, myGuildId));
+}
+
 // ---------- plugin ----------
 
 let previousRings: Record<string, unknown> = {};
 let themeObserver: MutationObserver | null = null;
 let origGetDisplayMedia: any = null;
-
-function handleCallUpdate(event: any) {
-	if (event.type !== "CALL_UPDATE") return;
-
-	const me = UserStore.getCurrentUser();
-	if (!me) return;
-
-	const currentRings: Record<string, unknown> = event.ongoingRings ?? {};
-	const channel = ChannelStore.getChannel(event.channelId);
-	const isGroup = channel && (channel.guild_id || (channel.recipients && channel.recipients.length > 1));
-	const channelName = getChannelName(event.channelId);
-	const iconUrl = getChannelIconUrl(event.channelId);
-
-	// New rings - notify if we're the one being rung
-	for (const ringerId of Object.keys(currentRings)) {
-		if (!previousRings[ringerId]) {
-			if (ringerId === me.id && !document.hasFocus() && PresenceStore.getStatus(me.id) !== "dnd" && (window as any).callBridge) {
-				const displayName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
-
-				(window as any).callBridge.ringStarted({
-					username: displayName,
-					iconUrl,
-					channelName,
-					channelId: event.channelId,
-				});
-			}
-		}
-	}
-
-	// Ended rings
-	for (const ringerId of Object.keys(previousRings)) {
-		if (!currentRings[ringerId] && ringerId === me.id && (window as any).callBridge) {
-			const callerName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
-
-			(window as any).callBridge.ringStopped({ username: callerName, channelName });
-		}
-	}
-
-	previousRings = currentRings;
-}
 
 function startThemeObserver() {
 	if (document.documentElement) {
@@ -169,13 +183,117 @@ export default definePlugin({
 	],
 	required: true,
 
+	flux: {
+		CALL_UPDATE(event: any) {
+			const me = UserStore.getCurrentUser();
+			if (!me) return;
+
+			const currentRings: Record<string, unknown> = event.ongoingRings ?? {};
+			const channel = ChannelStore.getChannel(event.channelId);
+			const isGroup = channel && (channel.guild_id || (channel.recipients && channel.recipients.length > 1));
+			const channelName = getChannelName(event.channelId);
+			const iconUrl = getChannelIconUrl(event.channelId);
+
+			// New rings - notify if we're the one being rung
+			for (const ringerId of Object.keys(currentRings)) {
+				if (!previousRings[ringerId]) {
+					if (ringerId === me.id && !document.hasFocus() && PresenceStore.getStatus(me.id) !== "dnd" && (window as any).callBridge) {
+						const displayName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
+
+						(window as any).callBridge.ringStarted({
+							username: displayName,
+							iconUrl,
+							channelName,
+							channelId: event.channelId,
+						});
+					}
+				}
+			}
+
+			// Ended rings
+			for (const ringerId of Object.keys(previousRings)) {
+				if (!currentRings[ringerId] && ringerId === me.id && (window as any).callBridge) {
+					const callerName = isGroup ? channelName : getUserDisplayName(channel.recipients[0]);
+					(window as any).callBridge.ringStopped({ username: callerName, channelName });
+				}
+			}
+
+			previousRings = currentRings;
+		},
+
+		RPC_NOTIFICATION_CREATE(notification: any) {
+			if ((window as any).overlayBridge) {
+				const { type: _type, ...notificationData } = notification; // strip flux event type
+				(window as any).overlayBridge.notification(notificationData);
+			}
+		},
+
+		VOICE_STATE_UPDATES({ voiceStates }: { voiceStates: VoiceState[]; }) {
+			const myChanId = SelectedChannelStore.getVoiceChannelId();
+			const myGuildId = SelectedGuildStore.getGuildId();
+
+			if (!myChanId) {
+				(window as any).overlayBridge?.vcUpdate({ inVoice: false, users: [] });
+				return;
+			}
+
+			let changed = false;
+
+			for (const state of voiceStates) {
+				const { userId, channelId, oldChannelId } = state;
+				if (channelId !== myChanId && oldChannelId !== myChanId) continue;
+
+				changed = true;
+				const info = getVoiceInfo(state, myGuildId);
+
+				if (channelId === myChanId && oldChannelId !== myChanId) {
+					console.log(`[Recar] ➡️ ${info.displayName} joined`, info);
+					(window as any).overlayBridge?.vcJoin(info);
+				} else if (oldChannelId === myChanId && channelId !== myChanId) {
+					console.log(`[Recar] ⬅️ ${info.displayName} left`);
+					(window as any).overlayBridge?.vcLeave({ userId, displayName: info.displayName });
+				} else {
+					const flags = [
+						info.muted && "muted",
+						info.deafened && "deafened",
+						info.streaming && "streaming",
+						info.video && "video",
+						info.serverMuted && "server-muted",
+						info.serverDeafened && "server-deafened",
+					].filter(Boolean);
+					console.log(`[Recar] 🔄 ${info.displayName} state changed: [${flags.join(", ") || "none"}]`, info);
+					(window as any).overlayBridge?.vcStateChange(info);
+				}
+			}
+
+			if (changed) {
+				const users = getUsersInMyChannel();
+				console.log("[Recar] Current VC members:", users);
+				(window as any).overlayBridge?.vcUpdate({ inVoice: true, users });
+			}
+		},
+
+		SPEAKING({ userId, channelId, speakingFlags }: { userId: string; channelId: string; speakingFlags: number; }) {
+			const myChanId = SelectedChannelStore.getVoiceChannelId();
+			if (!myChanId || channelId !== myChanId) return;
+
+			const isSpeaking = speakingFlags !== 0;
+			const myGuildId = SelectedGuildStore.getGuildId();
+			const user = UserStore.getUser(userId);
+			const displayName = GuildMemberStore.getNick(myGuildId!, userId) ?? user?.globalName ?? user?.username ?? userId;
+
+			console.log(`[Recar] 🎙️ ${displayName} ${isSpeaking ? "started" : "stopped"} speaking`);
+			(window as any).overlayBridge?.vcSpeaking({ userId, displayName, speaking: isSpeaking });
+		},
+	},
+
 	start() {
 		previousRings = {};
-		FluxDispatcher.subscribe("CALL_UPDATE", handleCallUpdate);
 
 		syncArRPCSettings();
 		startThemeObserver();
 
+		// stream stuff
 		try {
 			if (navigator?.mediaDevices) {
 				origGetDisplayMedia = navigator.mediaDevices.getDisplayMedia;
@@ -247,8 +365,8 @@ export default definePlugin({
 	},
 
 	stop() {
-		FluxDispatcher.unsubscribe("CALL_UPDATE", handleCallUpdate);
 		previousRings = {};
+
 		try {
 			if (origGetDisplayMedia && navigator?.mediaDevices) {
 				navigator.mediaDevices.getDisplayMedia = origGetDisplayMedia;
