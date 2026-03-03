@@ -52,9 +52,7 @@ function handleDiscordUrl(uri) {
 		// parsed.pathname is e.g. "/channels/123/456" - slice off the leading slash.
 		const discordPath = parsed.pathname.slice(1) || "app";
 
-		const subdomain = settings.branch === "canary" || settings.branch === "ptb"
-			? `${settings.branch}.`
-			: "";
+		const subdomain = settings.branch === "canary" || settings.branch === "ptb" ? `${settings.branch}.` : "";
 
 		const target = `https://${subdomain}discord.com/${discordPath}`;
 		console.log(`[discord://] Navigating to ${target}`);
@@ -354,9 +352,7 @@ const createMainWindow = () => {
 		try {
 			const parsed = new URL(startUrl);
 			const discordPath = parsed.pathname.slice(1) || "app";
-			const subdomain = settings.branch === "canary" || settings.branch === "ptb"
-				? `${settings.branch}.`
-				: "";
+			const subdomain = settings.branch === "canary" || settings.branch === "ptb" ? `${settings.branch}.` : "";
 			mainWindow.loadURL(`https://${subdomain}discord.com/${discordPath}`);
 			console.log(`[discord://] Cold-launched with ${startUrl}`);
 		} catch {
@@ -665,6 +661,41 @@ ipcMain.on("call-answer", () => {
 	if (callWindow && !callWindow.isDestroyed()) {
 		callWindow.close();
 	}
+});
+
+ipcMain.on("notification", (event, data) => {
+	// incoming notification. will be for the overlay in future
+	console.log("[Notification]", data);
+});
+
+ipcMain.on("vc-update", (event, data) => {
+	// full snapshot of everyone currently in the vc. fires after joins, leaves, and
+	// state changes. if you need to rebuild the entire vc ui for some reason, this
+	// is the event to listen to. will be for the overlay in future
+	console.log("[VC Update]", data);
+});
+
+ipcMain.on("vc-join", (event, data) => {
+	// fires when someone joins the vc. will be for the overlay in future
+	console.log("[VC Join]", data);
+});
+
+ipcMain.on("vc-leave", (event, data) => {
+	// fires when someone leaves the vc. will be for the overlay in future
+	console.log("[VC Leave]", data);
+});
+
+ipcMain.on("vc-state-change", (event, data) => {
+	// fires when someone in the vc has a state change (mute/deaf/video on/off)
+	// will be for the overlay in future
+	console.log("[VC State Change]", data);
+});
+
+ipcMain.on("vc-speaking", (event, data) => {
+	// fires when someone starts or stops speaking. use this to update that person's
+	// status in the vc ui without rebuilding the entire thing
+	// will be for the overlay in future
+	console.log("[VC Speaking]", data);
 });
 
 ipcMain.on("open-settings", () => {
