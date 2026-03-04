@@ -17,6 +17,7 @@ https://recar.loxodrome.app/
 - Switch between Vencord & Equicord
 - Wayland Streaming
 - Desktop Notifications
+- Recar exclusive plugins
 
 ## Installing Recar
 
