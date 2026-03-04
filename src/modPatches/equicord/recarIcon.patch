@@ -6,7 +6,7 @@
      const pluginInfo = [
 +        {
 +            condition: pluginMeta.folderName.endsWith("recar"),
-+            src: "https://raw.githubusercontent.com/hamhimdev/recar/refs/heads/main/build/icons/icon.png",
++            src: "https://raw.githubusercontent.com/hamhimdev/recar/refs/heads/main/src/assets/img/recar.png",
 +            alt: "Recar",
 +            title: "Recar Plugin"
 +        },
