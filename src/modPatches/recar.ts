@@ -1,51 +1,58 @@
 //PATH=src/plugins/recar/index.ts
 import definePlugin from "@utils/types";
 import { findByPropsLazy } from "@webpack";
-import { ChannelStore, GuildMemberStore, GuildStore, PresenceStore, React, SelectedChannelStore, SelectedGuildStore, UserStore, VoiceStateStore } from "@webpack/common";
+import {
+	ChannelStore,
+	GuildMemberStore,
+	GuildStore,
+	PresenceStore,
+	React,
+	SelectedChannelStore,
+	SelectedGuildStore,
+	UserStore,
+	VoiceStateStore,
+} from "@webpack/common";
 
 interface VoiceState {
-    userId: string;
-    channelId?: string | null;
-    oldChannelId?: string | null;
-    sessionId: string | null | undefined;
-    mute: boolean;
-    deaf: boolean;
-    selfMute: boolean;
-    selfDeaf: boolean;
-    selfVideo: boolean;
-    selfStream: boolean | undefined;
-    suppress: boolean;
+	userId: string;
+	channelId?: string | null;
+	oldChannelId?: string | null;
+	sessionId: string | null | undefined;
+	mute: boolean;
+	deaf: boolean;
+	selfMute: boolean;
+	selfDeaf: boolean;
+	selfVideo: boolean;
+	selfStream: boolean | undefined;
+	suppress: boolean;
 }
 
 interface UserVoiceInfo {
-    userId: string;
-    displayName: string;
-    muted: boolean;
-    deafened: boolean;
-    streaming: boolean;
-    video: boolean;
-    serverMuted: boolean;
-    serverDeafened: boolean;
-    suppressed: boolean;
+	userId: string;
+	displayName: string;
+	muted: boolean;
+	deafened: boolean;
+	streaming: boolean;
+	video: boolean;
+	serverMuted: boolean;
+	serverDeafened: boolean;
+	suppressed: boolean;
 }
 
 function getVoiceInfo(state: VoiceState, guildId: string | null): UserVoiceInfo {
-    const user = UserStore.getUser(state.userId);
-    const nick = GuildMemberStore.getNick(guildId!, state.userId)
-        ?? user?.globalName
-        ?? user?.username
-        ?? state.userId;
-    return {
-        userId: state.userId,
-        displayName: nick,
-        muted: state.selfMute,
-        deafened: state.selfDeaf,
-        streaming: state.selfStream ?? false,
-        video: state.selfVideo,
-        serverMuted: state.mute,
-        serverDeafened: state.deaf,
-        suppressed: state.suppress,
-    };
+	const user = UserStore.getUser(state.userId);
+	const nick = GuildMemberStore.getNick(guildId!, state.userId) ?? user?.globalName ?? user?.username ?? state.userId;
+	return {
+		userId: state.userId,
+		displayName: nick,
+		muted: state.selfMute,
+		deafened: state.selfDeaf,
+		streaming: state.selfStream ?? false,
+		video: state.selfVideo,
+		serverMuted: state.mute,
+		serverDeafened: state.deaf,
+		suppressed: state.suppress,
+	};
 }
 
 // lazy-loaded stores / helpers
@@ -100,7 +107,7 @@ function getUsersInMyChannel(): UserVoiceInfo[] {
 
 	const myGuildId = SelectedGuildStore.getGuildId();
 	const states = VoiceStateStore.getVoiceStatesForChannel(myChanId) as Record<string, VoiceState>;
-	return Object.values(states).map(s => getVoiceInfo(s, myGuildId));
+	return Object.values(states).map((s) => getVoiceInfo(s, myGuildId));
 }
 
 // ---------- plugin ----------
@@ -228,7 +235,7 @@ export default definePlugin({
 			}
 		},
 
-		VOICE_STATE_UPDATES({ voiceStates }: { voiceStates: VoiceState[]; }) {
+		VOICE_STATE_UPDATES({ voiceStates }: { voiceStates: VoiceState[] }) {
 			const myChanId = SelectedChannelStore.getVoiceChannelId();
 			const myGuildId = SelectedGuildStore.getGuildId();
 
@@ -273,7 +280,7 @@ export default definePlugin({
 			}
 		},
 
-		SPEAKING({ userId, channelId, speakingFlags }: { userId: string; channelId: string; speakingFlags: number; }) {
+		SPEAKING({ userId, channelId, speakingFlags }: { userId: string; channelId: string; speakingFlags: number }) {
 			const myChanId = SelectedChannelStore.getVoiceChannelId();
 			if (!myChanId || channelId !== myChanId) return;
 
@@ -286,6 +293,36 @@ export default definePlugin({
 			(window as any).overlayBridge?.vcSpeaking({ userId, displayName, speaking: isSpeaking });
 		},
 	},
+
+	patches: [
+		{
+			find: "platform-web",
+			replacement: {
+				match: '"platform-web"',
+				replace: "$self.getPlatformClass()",
+			},
+		},
+		{
+			find: '"refresh-title-bar-small"',
+			replacement: [
+				{
+					match: /\i===\i\.PlatformTypes\.WINDOWS/g,
+					replace: "((window).__discordTitleBarEnabled)",
+				},
+				{
+					match: /\i===\i\.PlatformTypes\.WEB/g,
+					replace: "(!((window).__discordTitleBarEnabled))",
+				},
+			],
+		},
+		{
+			find: ",setSystemTrayApplications",
+			replacement: {
+				match: /\i\.window\.(close|minimize|maximize)\(\i\)/g,
+				replace: "((window).recarBridge?.$1())",
+			},
+		},
+	],
 
 	start() {
 		previousRings = {};
@@ -385,5 +422,10 @@ export default definePlugin({
 			const idx = settingsPlugin.customEntries.findIndex((e: any) => e.key === "recar_settings");
 			if (idx !== -1) settingsPlugin.customEntries.splice(idx, 1);
 		}
+	},
+
+	getPlatformClass() {
+		if ((window as any).__discordTitleBarEnabled) return "platform-win";
+		return "platform-web";
 	},
 });

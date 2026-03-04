@@ -11,6 +11,9 @@ contextBridge.exposeInMainWorld("recarBridge", {
 	themeChanged: () => ipcRenderer.send("discord-theme-changed"),
 	openSettings: () => ipcRenderer.send("open-settings"),
 	getStreamSettings: () => ipcRenderer.invoke("get-current-stream-settings"),
+	close: window.close,
+	maximize: () => ipcRenderer.send("window-maximize"),
+	minimize: () => ipcRenderer.send("window-minimize"),
 });
 
 contextBridge.exposeInMainWorld("overlayBridge", {
@@ -62,6 +65,7 @@ contextBridge.exposeInMainWorld("recarInternalBridge", {
 				{
 					// world 0 = main world
 					code: `window.__recarRpcEnabled = ${settings.autoEnableWebRPC ?? true};
+					window.__discordTitleBarEnabled = ${settings.useDiscordTitleBar ?? false};
             		${script}`,
 				},
 			])

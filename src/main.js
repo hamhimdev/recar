@@ -123,6 +123,7 @@ let settings = {
 	startMaximized: true,
 	autoEnableWebRPC: true,
 	enableCallPopup: true,
+	useDiscordTitleBar: false,
 };
 let isFirstLaunch = false;
 let discordCSS = null;
@@ -319,12 +320,26 @@ ipcMain.on("discord-theme-changed", () => {
 	extractCSS();
 });
 
+ipcMain.on("window-maximize", () => {
+	if (!mainWindow) return;
+	if (mainWindow.isMaximized()) {
+		mainWindow.unmaximize();
+	} else {
+		mainWindow.maximize();
+	}
+});
+
+ipcMain.on("window-minimize", () => {
+	if (mainWindow) mainWindow.minimize();
+});
+
 const createMainWindow = () => {
 	mainWindow = new BrowserWindow({
 		width: 1200,
 		height: 800,
 		title: "Discord",
 		backgroundColor: "#2b2d31",
+		frame: !settings.useDiscordTitleBar,
 		show: false,
 		autoHideMenuBar: true,
 		icon: iconPath,

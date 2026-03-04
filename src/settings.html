@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="h-full bg-base overflow-hidden">
+<html lang="en" class="bg-base h-full overflow-hidden">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -176,17 +176,17 @@
 		</style>
 	</head>
 
-	<body class="h-full bg-base overflow-hidden">
+	<body class="bg-base h-full overflow-hidden">
 		<div class="flex h-full overflow-hidden">
-			<aside class="flex flex-col w-48 min-w-[200px] bg-sidebar border-r border-border-sub py-4 px-2 overflow-y-auto overflow-x-hidden">
-				<div class="flex flex-col items-center gap-3 px-2 pb-4 mb-2 border-b border-border-sub">
+			<aside class="flex flex-col bg-sidebar px-2 py-4 border-border-sub border-r w-48 min-w-[200px] overflow-x-hidden overflow-y-auto">
+				<div class="flex flex-col items-center gap-3 mb-2 px-2 pb-4 border-border-sub border-b">
 					<img class="h-8 antialiased" src="assets/img/recarsymbol.webp" />
 					<div id="search" class="relative flex items-center">
-						<span class="material-symbols-rounded absolute left-3 top-[10px] text-4xl font-medium pointer-events-none text-secondary">
+						<span class="top-[10px] left-3 absolute material-symbols-rounded font-medium text-secondary text-4xl pointer-events-none">
 							search
 						</span>
 						<input
-							class="w-44 h-9 pl-9 pr-2 text-[13px] rounded-lg border border-border-sub bg-transparent placeholder:text-secondary/50 text-secondary font-sans focus:outline-none focus:ring focus:ring-accent focus:border-transparent transition-all"
+							class="bg-transparent pr-2 pl-9 border border-border-sub focus:border-transparent rounded-lg focus:outline-none focus:ring focus:ring-accent w-44 h-9 font-sans text-[13px] text-secondary placeholder:text-secondary/50 transition-all"
 							placeholder="Search settings..."
 							type="text"
 						/>
@@ -196,24 +196,24 @@
 				<nav class="flex flex-col gap-0.5">
 					<div
 						id="nav-settings-toggle"
-						class="nav-parent open flex items-center gap-2 px-3 py-1 mb-0.5 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+						class="flex items-center gap-2 hover:bg-hover mb-0.5 px-3 py-1 rounded-lg font-medium text-secondary hover:text-primary text-sm transition-colors cursor-pointer select-none nav-parent open"
 					>
 						<span class="material-symbols-rounded font-normal">settings</span>
 						Settings
-						<span class="material-symbols-rounded chevron ml-auto font-normal"> arrow_drop_down </span>
+						<span class="ml-auto material-symbols-rounded font-normal chevron"> arrow_drop_down </span>
 					</div>
 
 					<div
-						class="nav-sub relative ml-1.5 before:absolute before:left-[12px] before:top-1 before:bottom-1 before:w-px before:bg-border before:rounded-full"
+						class="before:top-1 before:bottom-1 before:left-[12px] before:absolute relative ml-1.5 before:bg-border before:rounded-full before:w-px nav-sub"
 						id="nav-sub-settings"
 					>
 						<div
-							class="sub-indicator absolute left-[12px] w-px bg-accent rounded-full transition-all duration-200 ease-out z-10 top-[4px] h-[28px]"
+							class="top-[4px] left-[12px] z-10 absolute bg-accent rounded-full w-px h-[28px] transition-all duration-200 ease-out sub-indicator"
 							id="nav-sub-indicator"
 						></div>
 						<div
 							data-page="general"
-							class="nav-item is-active flex items-center gap-2 pl-7 pr-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+							class="flex items-center gap-2 hover:bg-hover py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-sm transition-colors cursor-pointer select-none nav-item is-active"
 							onclick="navigateTo('general')"
 						>
 							<span class="material-symbols-rounded font-normal"> category </span>
@@ -221,7 +221,7 @@
 						</div>
 						<div
 							data-page="client"
-							class="nav-item final flex items-center gap-2 pl-7 pr-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+							class="flex items-center gap-2 hover:bg-hover py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-sm transition-colors cursor-pointer select-none nav-item final"
 							onclick="navigateTo('client')"
 						>
 							<span class="material-symbols-rounded font-normal"> service_toolbox </span>
@@ -231,7 +231,7 @@
 
 					<div
 						data-page="about"
-						class="nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+						class="flex items-center gap-2 hover:bg-hover px-3 py-1 rounded-lg font-medium text-secondary hover:text-primary text-sm transition-colors cursor-pointer select-none nav-item open"
 						onclick="navigateTo('about')"
 					>
 						<span class="material-symbols-rounded font-normal"> info </span>
@@ -242,7 +242,7 @@
 				<div class="mt-auto">
 					<div
 						data-page="developer"
-						class="nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary/50 text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+						class="flex items-center gap-2 hover:bg-hover px-3 py-1 rounded-lg font-medium text-secondary/50 hover:text-primary text-sm transition-colors cursor-pointer select-none nav-item open"
 						onclick="navigateTo('developer')"
 					>
 						<span class="material-symbols-rounded font-normal"> data_object </span>
@@ -250,56 +250,56 @@
 					</div>
 					<div
 						data-page="mod-quickcss"
-						class="hidden nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary/50 text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+						class="hidden flex items-center gap-2 hover:bg-hover px-3 py-1 rounded-lg font-medium text-secondary/50 hover:text-primary text-sm transition-colors cursor-pointer select-none nav-item open"
 						onclick="navigateTo('mod-quickcss')"
 					>
 						<span class="material-symbols-rounded font-normal"> style </span>
 						Recar Style
 					</div>
-					<div class="pt-2 mt-2 border-t border-border-sub px-2 flex flex-col gap-1">
-						<div class="font-sans text-sm text-muted leading-relaxed">Electron <span class="text-secondary" id="footer-electron">-</span></div>
-						<div class="font-sans text-sm text-muted leading-relaxed">Recar <span class="text-secondary" id="footer-recar">-</span></div>
+					<div class="flex flex-col gap-1 mt-2 px-2 pt-2 border-border-sub border-t">
+						<div class="font-sans text-muted text-sm leading-relaxed">Electron <span class="text-secondary" id="footer-electron">-</span></div>
+						<div class="font-sans text-muted text-sm leading-relaxed">Recar <span class="text-secondary" id="footer-recar">-</span></div>
 					</div>
 				</div>
 			</aside>
 
-			<div class="flex flex-col flex-1 min-w-0 overflow-hidden bg-base">
-				<div class="px-7 p-2 border-b border-border-sub shrink-0 shadow-md flex flex-row gap-3 items-center">
+			<div class="flex flex-col flex-1 bg-base min-w-0 overflow-hidden">
+				<div class="flex flex-row items-center gap-3 shadow-md p-2 px-7 border-border-sub border-b shrink-0">
 					<div
-						class="text-md font-semibold p-1 pr-3 pl-3 rounded-lg text-primary tracking-tight gap-2 flex flex-row items-center bg-border-sub"
+						class="flex flex-row items-center gap-2 p-1 pr-3 pl-3 bg-border-sub rounded-lg font-semibold text-md text-primary tracking-tight"
 						id="page-title"
 					>
-						<span class="material-symbols-rounded font-thin text-3xl mt-0.5 -ml-0.5" id="page-icon">settings</span>
+						<span class="mt-0.5 -ml-0.5 material-symbols-rounded font-thin text-3xl" id="page-icon">settings</span>
 						<span id="page-title-text">Settings</span>
 					</div>
-					<div class="text-sm font-medium text-muted" id="page-subtitle">Configure Recar</div>
+					<div class="font-medium text-muted text-sm" id="page-subtitle">Configure Recar</div>
 					<span
-						class="material-symbols-rounded absolute font-thin text-muted hover:text-secondary transition-colors cursor-pointer right-0 mr-7"
+						class="right-0 absolute mr-7 material-symbols-rounded font-thin text-muted hover:text-secondary transition-colors cursor-pointer"
 						style="font-size: 22px"
 						>info</span
 					>
 				</div>
 
-				<div class="flex-1 overflow-y-auto px-7 py-5 pb-24" id="scroll-container">
+				<div class="flex-1 px-7 py-5 pb-24 overflow-y-auto" id="scroll-container">
 					<div class="page active" id="page-settings">
 						<!-- general section -->
 						<div id="section-general" class="relative">
 							<div class="mb-5 searchable-chunk">
-								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3 flex items-center gap-2">
+								<div class="flex items-center gap-2 mb-3 font-semibold text-muted text-xs uppercase tracking-wide">
 									<span class="material-symbols-rounded text-lg">category</span> General
 								</div>
-								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Discord Branch</div>
+								<div class="mb-3 font-semibold text-muted text-xs uppercase tracking-wide">Discord Branch</div>
 								<div class="relative">
 									<select
 										id="branch"
-										class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg appearance-none outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+										class="bg-surface px-3.5 py-2.5 pr-10 border border-border hover:border-accent focus:border-accent rounded-lg outline-none w-full font-sans text-primary text-sm transition-colors appearance-none cursor-pointer"
 									>
 										<option value="stable">Stable (discord.com) — Recommended</option>
 										<option value="ptb">PTB (ptb.discord.com)</option>
 										<option value="canary">Canary (canary.discord.com)</option>
 									</select>
 									<svg
-										class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none"
+										class="top-1/2 right-3 absolute w-4 h-4 text-secondary -translate-y-1/2 pointer-events-none"
 										viewBox="0 0 24 24"
 										fill="none"
 										stroke="currentColor"
@@ -311,26 +311,26 @@
 							</div>
 
 							<div class="mb-5 searchable-chunk">
-								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Window</div>
+								<div class="mb-3 font-semibold text-muted text-xs uppercase tracking-wide">Window</div>
 								<div class="bg-surface border border-border rounded-xl overflow-hidden">
-									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
 										<div>
-											<div class="text-sm font-semibold text-primary">Minimize to Tray</div>
-											<div class="text-xs text-secondary mt-0.5">Keep app running when closed</div>
+											<div class="font-semibold text-primary text-sm">Minimize to Tray</div>
+											<div class="mt-0.5 text-secondary text-xs">Keep app running when closed</div>
 										</div>
-										<label class="sw flex items-center ml-4 cursor-pointer">
+										<label class="flex items-center ml-4 cursor-pointer sw">
 											<input type="checkbox" id="trayToggle" />
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
 										</label>
 									</div>
-									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors">
 										<div>
-											<div class="text-sm font-semibold text-primary">Start Maximized</div>
-											<div class="text-xs text-secondary mt-0.5">Launch with a maximized window</div>
+											<div class="font-semibold text-primary text-sm">Start Maximized</div>
+											<div class="mt-0.5 text-secondary text-xs">Launch with a maximized window</div>
 										</div>
-										<label class="sw flex items-center ml-4 cursor-pointer">
+										<label class="flex items-center ml-4 cursor-pointer sw">
 											<input type="checkbox" id="maximizedToggle" />
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
@@ -341,27 +341,39 @@
 							</div>
 
 							<div class="mb-5 searchable-chunk">
-								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Features</div>
+								<div class="mb-3 font-semibold text-muted text-xs uppercase tracking-wide">Features</div>
 								<div class="bg-surface border border-border rounded-xl overflow-hidden">
-									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
 										<div>
-											<div class="text-sm font-semibold text-primary">Enable arRPC</div>
-											<div class="text-xs text-secondary mt-0.5">Discord Rich Presence support</div>
+											<div class="font-semibold text-primary text-sm">Enable arRPC</div>
+											<div class="mt-0.5 text-secondary text-xs">Discord Rich Presence support</div>
 										</div>
-										<label class="sw flex items-center ml-4 cursor-pointer">
+										<label class="flex items-center ml-4 cursor-pointer sw">
 											<input type="checkbox" id="rpcToggle" />
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
 										</label>
 									</div>
-									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
 										<div>
-											<div class="text-sm font-semibold text-primary">Call Popup</div>
-											<div class="text-xs text-secondary mt-0.5">Show popup for incoming calls</div>
+											<div class="font-semibold text-primary text-sm">Call Popup</div>
+											<div class="mt-0.5 text-secondary text-xs">Show popup for incoming calls</div>
 										</div>
-										<label class="sw flex items-center ml-4 cursor-pointer">
+										<label class="flex items-center ml-4 cursor-pointer sw">
 											<input type="checkbox" id="callPopupToggle" />
+											<div class="sw-track">
+												<div class="sw-thumb"></div>
+											</div>
+										</label>
+									</div>
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors">
+										<div>
+											<div class="font-semibold text-primary text-sm">Discord Title Bar</div>
+											<div class="mt-0.5 text-secondary text-xs">Use Discord's native title bar</div>
+										</div>
+										<label class="flex items-center ml-4 cursor-pointer sw">
+											<input type="checkbox" id="discordTitleBarToggle" />
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
@@ -372,14 +384,14 @@
 						</div>
 
 						<!-- client mod section -->
-						<div id="section-client" class="mb-7 relative searchable-chunk">
-							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-1 flex items-center gap-2">
+						<div id="section-client" class="relative mb-7 searchable-chunk">
+							<div class="flex items-center gap-2 mb-1 font-semibold text-muted text-xs uppercase tracking-wide">
 								<span class="material-symbols-rounded text-lg">service_toolbox</span> Client Mods
 							</div>
-							<p class="text-[13px] text-secondary mb-4">Choose your preferred client modification. Switching mods requires an app restart.</p>
-							<div class="grid grid-cols-2 gap-3">
+							<p class="mb-4 text-[13px] text-secondary">Choose your preferred client modification. Switching mods requires an app restart.</p>
+							<div class="gap-3 grid grid-cols-2">
 								<div
-									class="mod-card bg-surface rounded-xl p-5 cursor-pointer relative flex flex-col items-center gap-3 text-center"
+									class="relative flex flex-col items-center gap-3 bg-surface p-5 rounded-xl text-center cursor-pointer mod-card"
 									id="mod-equicord"
 									data-mod="equicord"
 									onclick="selectMod('equicord')"
@@ -393,16 +405,16 @@
 											this.nextElementSibling.style.display = 'flex';
 										"
 									/>
-									<div style="display: none" class="w-12 h-12 rounded-xl bg-elevated items-center justify-center font-bold text-accent">
+									<div style="display: none" class="justify-center items-center bg-elevated rounded-xl w-12 h-12 font-bold text-accent">
 										N/A
 									</div>
-									<span class="text-md font-semibold text-primary">Equicord</span>
-									<div class="mod-check absolute top-3 right-3 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-										<span class="material-symbols-rounded text-white font-lg font-semibold"> check </span>
+									<span class="font-semibold text-md text-primary">Equicord</span>
+									<div class="top-3 right-3 absolute flex justify-center items-center bg-accent rounded-full w-6 h-6 mod-check">
+										<span class="material-symbols-rounded font-lg font-semibold text-white"> check </span>
 									</div>
 								</div>
 								<div
-									class="mod-card bg-surface rounded-xl p-5 cursor-pointer relative flex flex-col items-center gap-3 text-center"
+									class="relative flex flex-col items-center gap-3 bg-surface p-5 rounded-xl text-center cursor-pointer mod-card"
 									id="mod-vencord"
 									data-mod="vencord"
 									onclick="selectMod('vencord')"
@@ -416,12 +428,12 @@
 											this.nextElementSibling.style.display = 'flex';
 										"
 									/>
-									<div style="display: none" class="w-12 h-12 rounded-xl bg-elevated items-center justify-center font-bold text-accent">
+									<div style="display: none" class="justify-center items-center bg-elevated rounded-xl w-12 h-12 font-bold text-accent">
 										VC
 									</div>
-									<span class="text-md font-semibold text-primary">Vencord</span>
-									<div class="mod-check absolute top-3 right-3 w-6 h-6 rounded-full bg-accent flex items-center justify-center">
-										<span class="material-symbols-rounded text-white font-lg font-semibold"> check </span>
+									<span class="font-semibold text-md text-primary">Vencord</span>
+									<div class="top-3 right-3 absolute flex justify-center items-center bg-accent rounded-full w-6 h-6 mod-check">
+										<span class="material-symbols-rounded font-lg font-semibold text-white"> check </span>
 									</div>
 								</div>
 							</div>
@@ -431,41 +443,41 @@
 
 					<!-- about -->
 					<div class="page" id="page-about">
-						<div class="flex flex-col items-center text-center py-8 mb-6">
-							<img src="assets/img/banner.png" class="w-64 mb-2" />
-							<div class="text-md text-secondary mt-1.5">A Discord client for Linux with client mods and extra functionality.</div>
+						<div class="flex flex-col items-center mb-6 py-8 text-center">
+							<img src="assets/img/banner.png" class="mb-2 w-64" />
+							<div class="mt-1.5 text-md text-secondary">A Discord client for Linux with client mods and extra functionality.</div>
 							<div class="flex gap-2 mt-4">
 								<a
 									href="https://codeberg.org/hamhim/recar/"
-									class="text-md flex gap-2 bg-accent px-2 py-1 text-white font-medium rounded-md hover:bg-accent-dim transition-all items-center justify-center cursor-pointer"
+									class="flex justify-center items-center gap-2 bg-accent px-2 py-1 rounded-md font-medium text-md text-white transition-all hover:bg-accent-dim cursor-pointer"
 								>
 									<span class="material-symbols-rounded">rebase</span> Codeberg Repository
 								</a>
 								<a
 									href="https://recar.loxodrome.app/"
-									class="text-md flex gap-2 bg-accent px-2 py-1 text-white font-medium rounded-md hover:bg-accent-dim transition-all items-center justify-center cursor-pointer"
+									class="flex justify-center items-center gap-2 bg-accent px-2 py-1 rounded-md font-medium text-md text-white transition-all hover:bg-accent-dim cursor-pointer"
 								>
 									<span class="material-symbols-rounded">captive_portal</span>
 									Website
 								</a>
 							</div>
 						</div>
-						<div class="grid grid-cols-2 gap-3 mb-4">
-							<div class="bg-surface border border-border rounded-xl p-4">
-								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Recar Version</div>
-								<div class="text-sm font-semibold font-sans text-primary" id="about-recar-ver">-</div>
+						<div class="gap-3 grid grid-cols-2 mb-4">
+							<div class="bg-surface p-4 border border-border rounded-xl">
+								<div class="mb-1.5 font-semibold text-muted text-xs uppercase tracking-wide">Recar Version</div>
+								<div class="font-sans font-semibold text-primary text-sm" id="about-recar-ver">-</div>
 							</div>
-							<div class="bg-surface border border-border rounded-xl p-4">
-								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Electron</div>
-								<div class="text-sm font-semibold font-sans text-primary" id="about-electron-ver">-</div>
+							<div class="bg-surface p-4 border border-border rounded-xl">
+								<div class="mb-1.5 font-semibold text-muted text-xs uppercase tracking-wide">Electron</div>
+								<div class="font-sans font-semibold text-primary text-sm" id="about-electron-ver">-</div>
 							</div>
-							<div class="bg-surface border border-border rounded-xl p-4">
-								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Platform</div>
-								<div class="text-sm font-semibold font-sans text-primary" id="about-platform">-</div>
+							<div class="bg-surface p-4 border border-border rounded-xl">
+								<div class="mb-1.5 font-semibold text-muted text-xs uppercase tracking-wide">Platform</div>
+								<div class="font-sans font-semibold text-primary text-sm" id="about-platform">-</div>
 							</div>
-							<div class="bg-surface border border-border rounded-xl p-4">
-								<div class="text-xs uppercase tracking-wide font-semibold text-muted mb-1.5">Branch</div>
-								<div class="text-sm font-semibold font-sans text-primary" id="about-branch">-</div>
+							<div class="bg-surface p-4 border border-border rounded-xl">
+								<div class="mb-1.5 font-semibold text-muted text-xs uppercase tracking-wide">Branch</div>
+								<div class="font-sans font-semibold text-primary text-sm" id="about-branch">-</div>
 							</div>
 						</div>
 					</div>
@@ -474,18 +486,18 @@
 					<!-- developer -->
 					<div class="page" id="page-developer">
 						<div class="mb-5">
-							<div class="grid grid-cols-2 gap-3">
+							<div class="gap-3 grid grid-cols-2">
 								<button
 									onclick="window.settingsAPI.openDevWindow('splash')"
-									class="bg-surface border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-elevated transition-colors active:scale-[0.98]"
+									class="flex flex-col items-center gap-2 bg-surface hover:bg-elevated p-4 border border-border rounded-xl active:scale-[0.98] transition-colors"
 								>
-									<span class="text-sm font-semibold text-primary">Splash Screen</span>
+									<span class="font-semibold text-primary text-sm">Splash Screen</span>
 								</button>
 								<button
 									onclick="window.settingsAPI.openDevWindow('call')"
-									class="bg-surface border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-elevated transition-colors active:scale-[0.98]"
+									class="flex flex-col items-center gap-2 bg-surface hover:bg-elevated p-4 border border-border rounded-xl active:scale-[0.98] transition-colors"
 								>
-									<span class="text-sm font-semibold text-primary">Call Window</span>
+									<span class="font-semibold text-primary text-sm">Call Window</span>
 								</button>
 							</div>
 						</div>
@@ -494,12 +506,12 @@
 				</div>
 
 				<div
-					class="p-2 w-md rounded-2xl absolute bottom-4 ml-auto mr-auto left-[24.5%] right-0 items-center border border-border-sub bg-base flex gap-2 shrink-0 shadow-md"
+					class="right-0 bottom-4 left-[24.5%] absolute flex items-center gap-2 bg-base shadow-md mr-auto ml-auto p-2 border border-border-sub rounded-2xl w-md shrink-0"
 					id="normalFooter"
 				>
 					<button
 						id="saveBtn"
-						class="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dim text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+						class="flex flex-1 justify-center items-center gap-2 bg-accent disabled:opacity-40 py-2 rounded-lg font-semibold text-white text-sm active:scale-[0.98] transition-all hover:bg-accent-dim disabled:cursor-not-allowed"
 					>
 						<span class="material-symbols-rounded font-thin text-2xl"> save </span>
 						Save Settings
@@ -507,16 +519,16 @@
 					<button
 						id="restartBtn"
 						disabled
-						class="flex-1 flex items-center justify-center gap-2 bg-danger hover:bg-danger-dim text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:bg-elevated disabled:text-muted disabled:cursor-not-allowed"
+						class="flex flex-1 justify-center items-center gap-2 bg-danger hover:bg-danger-dim disabled:bg-elevated py-2 rounded-lg font-semibold text-white disabled:text-muted text-sm active:scale-[0.98] transition-all disabled:cursor-not-allowed"
 					>
 						<span class="material-symbols-rounded font-thin text-2xl"> restart_alt </span>
 						Save & Restart
 					</button>
 				</div>
-				<div class="px-7 py-4 border-t border-border-sub bg-base hidden shrink-0" id="setupFooter">
+				<div class="hidden bg-base px-7 py-4 border-border-sub border-t shrink-0" id="setupFooter">
 					<button
 						id="setupBtn"
-						class="w-full flex items-center justify-center bg-accent hover:bg-accent-dim text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
+						class="flex justify-center items-center bg-accent py-2 rounded-lg w-full font-semibold text-white text-sm active:scale-[0.98] transition-all hover:bg-accent-dim"
 					>
 						Save &amp; Start Recar
 					</button>
@@ -526,21 +538,21 @@
 		</div>
 		<!-- /app -->
 
-		<div class="popup-overlay fixed inset-0 bg-black/60 flex items-center justify-center text-center z-50" id="popupOverlay">
-			<div class="popup-box flex flex-col bg-elevated border border-border rounded-2xl p-6 w-86 items-center justify-center text-center">
+		<div class="z-50 fixed inset-0 flex justify-center items-center bg-black/60 text-center popup-overlay" id="popupOverlay">
+			<div class="flex flex-col justify-center items-center bg-elevated p-6 border border-border rounded-2xl w-86 text-center popup-box">
 				<img class="mb-2" src="assets/img/warn.svg" />
-				<div class="text-lg font-bold text-primary mb-1.5">Are you sure you want to restart?</div>
-				<div class="text-md text-secondary leading-relaxed mb-5">Recar will restart to apply your changes. Continue?</div>
+				<div class="mb-1.5 font-bold text-primary text-lg">Are you sure you want to restart?</div>
+				<div class="mb-5 text-md text-secondary leading-relaxed">Recar will restart to apply your changes. Continue?</div>
 				<div class="flex gap-2.5 w-full">
 					<button
 						onclick="closePopup()"
-						class="flex-1 py-2 rounded-lg text-sm font-semibold bg-surface text-secondary hover:text-primary hover:bg-hover transition-colors items-center"
+						class="flex-1 items-center bg-surface hover:bg-hover py-2 rounded-lg font-semibold text-secondary hover:text-primary text-sm transition-colors"
 					>
 						Cancel
 					</button>
 					<button
 						id="confirmRestartBtn"
-						class="flex-1 py-2 rounded-lg text-sm font-semibold bg-danger hover:bg-danger-dim text-white transition-colors items-center"
+						class="flex-1 items-center bg-danger hover:bg-danger-dim py-2 rounded-lg font-semibold text-white text-sm transition-colors"
 					>
 						Restart
 					</button>
@@ -726,6 +738,7 @@
 			let initialMaximized = true;
 			let initialRPC = true;
 			let initialCallPopup = true;
+			let initialDiscordTitleBar = false;
 			let setupMode = false;
 
 			const branchSel = document.getElementById("branch");
@@ -733,6 +746,7 @@
 			const maxTog = document.getElementById("maximizedToggle");
 			const rpcTog = document.getElementById("rpcToggle");
 			const callTog = document.getElementById("callPopupToggle");
+			const discordTitleBarTog = document.getElementById("discordTitleBarToggle");
 			const saveBtn = document.getElementById("saveBtn");
 			const restartBtn = document.getElementById("restartBtn");
 			const setupBtn = document.getElementById("setupBtn");
@@ -744,12 +758,13 @@
 					maxTog.checked !== initialMaximized ||
 					rpcTog.checked !== initialRPC ||
 					callTog.checked !== initialCallPopup ||
+					discordTitleBarTog.checked !== initialDiscordTitleBar ||
 					currentMod !== initialMod;
 
 				restartBtn.disabled = !changed;
 			}
 
-			[branchSel, trayTog, maxTog, rpcTog, callTog].forEach((el) => {
+			[branchSel, trayTog, maxTog, rpcTog, callTog, discordTitleBarTog].forEach((el) => {
 				el.addEventListener("change", checkChanges);
 			});
 
@@ -777,6 +792,7 @@
 					startMaximized: true,
 					autoEnableWebRPC: true,
 					enableCallPopup: true,
+					useDiscordTitleBar: false,
 					mod: "equicord",
 					isFirstLaunch: false,
 					_appVer: "N/A",
@@ -790,12 +806,14 @@
 				maxTog.checked = settings.startMaximized;
 				rpcTog.checked = settings.autoEnableWebRPC ?? true;
 				callTog.checked = settings.enableCallPopup ?? true;
+				discordTitleBarTog.checked = settings.useDiscordTitleBar ?? false;
 
 				initialBranch = settings.branch;
 				initialTray = settings.minimizeToTray;
 				initialMaximized = settings.startMaximized;
 				initialRPC = settings.autoEnableWebRPC ?? true;
 				initialCallPopup = settings.enableCallPopup ?? true;
+				initialDiscordTitleBar = settings.useDiscordTitleBar ?? false;
 				initialMod = settings.mod || "equicord";
 				setupMode = settings.isFirstLaunch || false;
 
@@ -841,6 +859,7 @@
 					startMaximized: maxTog.checked,
 					autoEnableWebRPC: rpcTog.checked,
 					enableCallPopup: callTog.checked,
+					useDiscordTitleBar: discordTitleBarTog.checked,
 					mod: currentMod,
 				};
 			}
@@ -862,6 +881,7 @@
 				initialMaximized = settings.startMaximized;
 				initialRPC = settings.autoEnableWebRPC;
 				initialCallPopup = settings.enableCallPopup;
+				initialDiscordTitleBar = settings.useDiscordTitleBar;
 				initialMod = settings.mod;
 
 				document.getElementById("about-branch").textContent = settings.branch;
