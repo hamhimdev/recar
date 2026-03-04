@@ -1,0 +1,8 @@
+--- a/src/plugins/catboxUpload_recar/index.tsx
++++ b/src/plugins/catboxUpload_recar/index.tsx
+@@ -1,4 +1,4 @@
+-const NAME = "CatboxUpload";
++const NAME = "CatboxUpload(Recar)";
+ // the above line is for easy patching of the name for vencord since it has no recar badge
+ import { NavContextMenuPatchCallback } from "@api/ContextMenu";
+ import { definePluginSettings } from "@api/Settings";

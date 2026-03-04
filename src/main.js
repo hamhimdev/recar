@@ -340,7 +340,12 @@ const createMainWindow = () => {
 	mainWindow.webContents.setWindowOpenHandler(({ url, features }) => {
 		const isPopup = features && (features.includes("width=") || features.includes("height="));
 		if (isPopup) {
-			return { action: "allow" };
+			return {
+				action: "allow",
+				overrideBrowserWindowOptions: {
+					autoHideMenuBar: true,
+				},
+			};
 		}
 		shell.openExternal(url);
 		return { action: "deny" };
@@ -790,6 +795,54 @@ app.whenReady().then(async () => {
 	app.desktopName = "recar";
 	app.setAppUserModelId("app.loxodrome.recar");
 	loadSettings();
+
+	Menu.setApplicationMenu(
+		Menu.buildFromTemplate([
+			{
+				label: "Recar",
+				submenu: [
+					{ label: "Settings", click: () => createSettingsWindow() },
+					{ type: "separator" },
+					{
+						label: "Restart",
+						click: () => {
+							app.isQuiting = true;
+							app.relaunch({ args: process.argv.slice(1).filter(a => a !== "--reset-config") });
+							app.exit(0);
+						},
+					},
+					{ type: "separator" },
+					{ label: "Quit", accelerator: "CmdOrCtrl+Q", click: () => { app.isQuiting = true; app.quit(); } },
+				],
+			},
+			{
+				label: "Edit",
+				submenu: [
+					{ role: "undo" },
+					{ role: "redo" },
+					{ type: "separator" },
+					{ role: "cut" },
+					{ role: "copy" },
+					{ role: "paste" },
+					{ role: "selectAll" },
+				],
+			},
+			{
+				label: "View",
+				submenu: [
+					{ role: "reload" },
+					{ role: "forceReload" },
+					// { role: "toggleDevTools" },
+					{ type: "separator" },
+					{ role: "resetZoom" },
+					{ role: "zoomIn" },
+					{ role: "zoomOut" },
+					{ type: "separator" },
+					{ role: "togglefullscreen" },
+				],
+			},
+		])
+	);
 
 	registerDiscordProtocol();
 

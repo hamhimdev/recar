@@ -18,36 +18,38 @@ function applyFiles(patchDir, targetRoot) {
 	if (!fs.existsSync(patchDir)) return;
 
 	const entries = fs.readdirSync(patchDir);
+	const files = entries.filter(e => !fs.statSync(path.join(patchDir, e)).isDirectory());
+	const nonPatches = files.filter(e => !e.endsWith(".patch"));
+	const patches = files.filter(e => e.endsWith(".patch"));
 
-	for (const entry of entries) {
+	for (const entry of nonPatches) {
 		const entryPath = path.join(patchDir, entry);
-		if (fs.statSync(entryPath).isDirectory()) continue;
+		const content = fs.readFileSync(entryPath, "utf8");
+		const lines = content.split("\n");
+		const firstLine = lines[0];
 
-		if (entry.endsWith(".patch")) {
-			try {
-				execFileSync("git", ["apply", entryPath], { cwd: targetRoot, stdio: "inherit" });
-				console.log(`Applied patch ${entry}`);
-			} catch {
-				console.error(`Failed to apply patch ${entry}`);
-				process.exit(1);
-			}
-		} else {
-			const content = fs.readFileSync(entryPath, "utf8");
-			const lines = content.split("\n");
-			const firstLine = lines[0];
+		if (!firstLine.startsWith("//PATH=")) {
+			console.warn(`Skipping ${entry}: no //PATH= header`);
+			continue;
+		}
 
-			if (!firstLine.startsWith("//PATH=")) {
-				console.warn(`Skipping ${entry}: no //PATH= header`);
-				continue;
-			}
+		const destRelative = firstLine.slice("//PATH=".length).trim();
+		const destPath = path.join(targetRoot, destRelative);
+		const fileContent = lines.slice(1).join("\n");
 
-			const destRelative = firstLine.slice("//PATH=".length).trim();
-			const destPath = path.join(targetRoot, destRelative);
-			const fileContent = lines.slice(1).join("\n");
+		fs.mkdirSync(path.dirname(destPath), { recursive: true });
+		fs.writeFileSync(destPath, fileContent);
+		console.log(`Copied ${entry} -> ${destPath}`);
+	}
 
-			fs.mkdirSync(path.dirname(destPath), { recursive: true });
-			fs.writeFileSync(destPath, fileContent);
-			console.log(`Copied ${entry} -> ${destPath}`);
+	for (const entry of patches) {
+		const entryPath = path.join(patchDir, entry);
+		try {
+			execFileSync("git", ["apply", entryPath], { cwd: targetRoot, stdio: "inherit" });
+			console.log(`Applied patch ${entry}`);
+		} catch {
+			console.error(`Failed to apply patch ${entry}`);
+			process.exit(1);
 		}
 	}
 }

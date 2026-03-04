@@ -1,4 +1,6 @@
-//PATH=src/plugins/fileUploader_recar/index.tsx
+//PATH=src/plugins/catboxUpload_recar/index.tsx
+const NAME = "CatboxUpload";
+// the above line is for easy patching of the name for vencord since it has no recar badge
 import { NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { definePluginSettings } from "@api/Settings";
 import { insertTextIntoChatInputBox } from "@utils/discord";
@@ -66,7 +68,7 @@ const ctxMenuPatch: NavContextMenuPatchCallback = (children) => {
 };
 
 export default definePlugin({
-	name: "CatboxUpload(Recar)",
+	name: NAME,
 	description: "Adds an Upload to Catbox option to the attachment menu",
 	authors: [
 		{
