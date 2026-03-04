@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 @font-face {
-	font-family: "Inter Variable";
+	font-family: "Source Sans 3 Variable";
 	font-style: normal;
 	font-display: swap;
 	font-weight: 100 900;
-	src: url("assets/font/InterVariable.woff2") format("woff2");
+	src: url("assets/font/SourceSans3-VariableFont_wght.ttf") format("woff2");
 }
 
 @font-face {
-	font-family: "Inter Variable";
+	font-family: "Source Sans 3 Variable";
 	font-style: italic;
 	font-display: swap;
 	font-weight: 100 900;
-	src: url("assets/font/InterVariable-Italic.woff2") format("woff2");
+	src: url("assets/font/SourceSans3-Italic-VariableFont_wght.ttf") format("woff2");
 }
 
 @font-face {
@@ -34,7 +34,7 @@
 }
 
 :root {
-	--font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+	--font-sans: "Source Sans 3 Variable", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
