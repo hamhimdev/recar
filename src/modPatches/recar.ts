@@ -58,7 +58,7 @@ const CDN = "https://cdn.discordapp.com";
 function getChannelName(channelId: string): string {
 	const channel = ChannelStore.getChannel(channelId);
 	if (!channel) return channelId;
-	if (channel.name) return `#${channel.name}`;
+	if (channel.name) return channel.name;
 	if (channel.recipients?.length) {
 		return channel.recipients
 			.map((id: string) => {
