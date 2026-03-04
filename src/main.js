@@ -99,7 +99,11 @@ let splashWindow;
 let callWindow;
 let streamWindow;
 let pendingStreamCallback = null;
-let currentStreamSettings = { resolution: { width: 1920, height: 1080 }, fps: 60, contentHint: "motion" };
+let currentStreamSettings = {
+	resolution: { width: 1920, height: 1080 },
+	fps: 60,
+	contentHint: "motion",
+};
 let callBaseHeight = 276;
 let tray;
 let pendingCallData = null;
@@ -253,9 +257,12 @@ const createStreamWindow = () => {
 		streamWindow.focus();
 		return;
 	}
+
+	const isWayland = process.env.WAYLAND_DISPLAY !== undefined || process.env.XDG_SESSION_TYPE === "wayland";
+
 	streamWindow = new BrowserWindow({
-		width: 900,
-		height: 640,
+		width: isWayland ? 400 : 900,
+		height: isWayland ? 720 : 640,
 		title: "Share Your Screen",
 		icon: iconPath,
 		autoHideMenuBar: true,
@@ -530,16 +537,22 @@ ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, include
 			excludeAudio.forEach((node) => {
 				const filters = [];
 				if (node["application.process.id"]) {
-					filters.push({ "application.process.id": node["application.process.id"].toString() });
+					filters.push({
+						"application.process.id": node["application.process.id"].toString(),
+					});
 				}
 				if (node["node.name"] && node["node.name"] !== "entire-system") {
 					filters.push({ "node.name": node["node.name"] });
 				}
 				if (node["application.name"]) {
-					filters.push({ "application.name": node["application.name"] });
+					filters.push({
+						"application.name": node["application.name"],
+					});
 				}
 				if (node["application.process.binary"]) {
-					filters.push({ "application.process.binary": node["application.process.binary"] });
+					filters.push({
+						"application.process.binary": node["application.process.binary"],
+					});
 				}
 				filters.forEach((f) => excludeList.push(f));
 			});
@@ -552,8 +565,12 @@ ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, include
 			} else if (includeAudio.length > 0) {
 				includeAudio.forEach((node) => {
 					const filter = {};
-					if (node["application.process.id"]) filter["application.process.id"] = node["application.process.id"].toString();
-					if (node["node.name"]) filter["node.name"] = node["node.name"];
+					if (node["application.process.id"]) {
+						filter["application.process.id"] = node["application.process.id"].toString();
+					}
+					if (node["node.name"]) {
+						filter["node.name"] = node["node.name"];
+					}
 					includeList.push(filter);
 				});
 				console.log(`[Venmic] Linking specifically ${includeAudio.length} items`);
@@ -571,7 +588,12 @@ ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, include
 				};
 
 				if (audioPid && audioPid !== "owo") {
-					data.workaround = [{ "application.process.id": audioPid, "media.name": "RecordStream" }];
+					data.workaround = [
+						{
+							"application.process.id": audioPid,
+							"media.name": "RecordStream",
+						},
+					];
 				}
 
 				console.log("[Venmic] Final Link Data:", JSON.stringify(data, null, 2));
@@ -584,7 +606,11 @@ ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, include
 		}
 	}
 
-	currentStreamSettings = { fps, resolution, contentHint: contentHint ?? "motion" };
+	currentStreamSettings = {
+		fps,
+		resolution,
+		contentHint: contentHint ?? "motion",
+	};
 	if (mainWindow && !mainWindow.isDestroyed()) {
 		mainWindow.webContents.send("stream-settings-update", currentStreamSettings);
 	}
@@ -701,6 +727,52 @@ ipcMain.on("vc-speaking", (event, data) => {
 
 ipcMain.on("open-settings", () => {
 	createSettingsWindow();
+});
+
+ipcMain.handle("open-dev-window", (event, which) => {
+	if (which === "splash") {
+		const w = new BrowserWindow({
+			width: 300,
+			height: 350,
+			transparent: true,
+			title: "Recar Splash Preview",
+			frame: false,
+			alwaysOnTop: true,
+			resizable: false,
+			icon: iconPath,
+			webPreferences: {
+				nodeIntegration: false,
+				contextIsolation: true,
+			},
+		});
+		w.loadFile(path.join(__dirname, "splash.html"));
+	} else if (which === "call") {
+		const w = new BrowserWindow({
+			width: 232,
+			height: 276,
+			transparent: true,
+			backgroundColor: "#111214",
+			title: "Recar Call Preview",
+			frame: false,
+			alwaysOnTop: true,
+			resizable: false,
+			icon: iconPath,
+			webPreferences: {
+				nodeIntegration: false,
+				contextIsolation: true,
+				preload: path.join(__dirname, "call.js"),
+			},
+		});
+		w.loadFile(path.join(__dirname, "call.html"));
+		w.once("ready-to-show", async () => {
+			if (discordCSS) w.webContents.insertCSS(discordCSS);
+			w.show();
+		});
+	}
+});
+
+ipcMain.handle("open-external", (event, url) => {
+	shell.openExternal(url);
 });
 
 ipcMain.handle("restart-app", () => {

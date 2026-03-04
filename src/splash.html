@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="overflow-hidden bg-transparent">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,17 +8,15 @@
 	</head>
 
 	<body
-		class="bg-[#232323] m-0 p-0 h-screen flex flex-col justify-center items-center text-white overflow-hidden select-none"
+		class="bg-transparent h-screen flex flex-col justify-center rounded-lg items-center text-white overflow-hidden select-none"
 		style="-webkit-app-region: drag"
 	>
-		<div class="w-full h-full flex flex-col justify-center items-center relative">
+		<div class="w-full h-full flex flex-col justify-center items-center relative bg-base">
 			<div class="flex flex-col justify-center items-center">
-				<video autoplay loop muted playsinline class="w-[90%] h-[90%] items-center justify-center object-cover rounded-[40px]">
-					<source src="assets/img/discord.webm" type="video/webm" />
-				</video>
+				<img src="assets/img/recar.svg" class="w-[70%] h-[70%] items-center justify-center object-fit rounded-[40px]" />
 			</div>
-			<div class="progress-bar-container">
-				<div class="progress-bar"></div>
+			<div class="progress-bar-container bg-border-sub">
+				<div class="progress-bar bg-accent"></div>
 			</div>
 		</div>
 	</body>

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full bg-base overflow-hidden">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,13 +10,6 @@
 			*::before,
 			*::after {
 				box-sizing: border-box;
-			}
-
-			html,
-			body {
-				height: 100%;
-				overflow: hidden;
-				background: #0f1012;
 			}
 
 			::-webkit-scrollbar {
@@ -176,10 +169,14 @@
 				color: #a2a8ee !important;
 				background: #212446;
 			}
+
+			.nav-sub .nav-item.is-active {
+				background: transparent !important;
+			}
 		</style>
 	</head>
 
-	<body class="h-full">
+	<body class="h-full bg-base overflow-hidden">
 		<div class="flex h-full overflow-hidden">
 			<aside class="flex flex-col w-48 min-w-[200px] bg-sidebar border-r border-border-sub py-4 px-2 overflow-y-auto overflow-x-hidden">
 				<div class="flex flex-col items-center gap-3 px-2 pb-4 mb-2 border-b border-border-sub">
@@ -206,22 +203,27 @@
 						<span class="material-symbols-rounded chevron ml-auto font-normal"> arrow_drop_down </span>
 					</div>
 
-					<div class="nav-sub" id="nav-sub-settings">
+					<div
+						class="nav-sub relative ml-1.5 before:absolute before:left-[12px] before:top-1 before:bottom-1 before:w-px before:bg-border before:rounded-full"
+						id="nav-sub-settings"
+					>
+						<div
+							class="sub-indicator absolute left-[12px] w-px bg-accent rounded-full transition-all duration-200 ease-out z-10 top-[4px] h-[28px]"
+							id="nav-sub-indicator"
+						></div>
 						<div
 							data-page="general"
-							class="nav-item is-active flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+							class="nav-item is-active flex items-center gap-2 pl-7 pr-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
 							onclick="navigateTo('general')"
 						>
-							<span class="material-symbols-rounded font-thin text-secondary/50"> chevron_right </span>
 							<span class="material-symbols-rounded font-normal"> category </span>
 							General
 						</div>
 						<div
 							data-page="client"
-							class="nav-item final flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+							class="nav-item final flex items-center gap-2 pl-7 pr-3 py-1 rounded-lg cursor-pointer text-secondary text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
 							onclick="navigateTo('client')"
 						>
-							<span class="material-symbols-rounded font-thin text-secondary/50"> chevron_right </span>
 							<span class="material-symbols-rounded font-normal"> service_toolbox </span>
 							Client Mod
 						</div>
@@ -248,7 +250,7 @@
 					</div>
 					<div
 						data-page="mod-quickcss"
-						class="nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary/50 text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
+						class="hidden nav-item open flex items-center gap-2 px-3 py-1 rounded-lg cursor-pointer text-secondary/50 text-sm font-medium hover:bg-hover hover:text-primary transition-colors select-none"
 						onclick="navigateTo('mod-quickcss')"
 					>
 						<span class="material-symbols-rounded font-normal"> style </span>
@@ -263,104 +265,117 @@
 
 			<div class="flex flex-col flex-1 min-w-0 overflow-hidden bg-base">
 				<div class="px-7 p-2 border-b border-border-sub shrink-0 shadow-md flex flex-row gap-3 items-center">
-					<div class="text-md font-semibold p-1 pr-3 pl-3 rounded-lg text-primary tracking-tight gap-2 flex flex-row items-center bg-border-sub" id="page-title"><span class="material-symbols-rounded font-thin text-3xl mt-0.5 -ml-0.5">category</span> General</div>
-					<div class="text-sm font-medium text-muted" id="page-subtitle">App behavior and preferences</div>
-					<span class="material-symbols-rounded absolute font-thin text-muted hover:text-secondary transition-colors cursor-pointer right-0 mr-7" style="font-size: 22px;">info</span>
-
+					<div
+						class="text-md font-semibold p-1 pr-3 pl-3 rounded-lg text-primary tracking-tight gap-2 flex flex-row items-center bg-border-sub"
+						id="page-title"
+					>
+						<span class="material-symbols-rounded font-thin text-3xl mt-0.5 -ml-0.5" id="page-icon">settings</span>
+						<span id="page-title-text">Settings</span>
+					</div>
+					<div class="text-sm font-medium text-muted" id="page-subtitle">Configure Recar</div>
+					<span
+						class="material-symbols-rounded absolute font-thin text-muted hover:text-secondary transition-colors cursor-pointer right-0 mr-7"
+						style="font-size: 22px"
+						>info</span
+					>
 				</div>
 
-				<div class="flex-1 overflow-y-auto px-7 py-5">
-					<div class="page active" id="page-general">
-						<div class="mb-5">
-							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Discord Branch</div>
-							<div class="relative">
-								<select
-									id="branch"
-									class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg appearance-none outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
-								>
-									<option value="stable">Stable (discord.com) — Recommended</option>
-									<option value="ptb">PTB (ptb.discord.com)</option>
-									<option value="canary">Canary (canary.discord.com)</option>
-								</select>
-								<svg
-									class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									stroke-width="2"
-								>
-									<polyline points="6 9 12 15 18 9" />
-								</svg>
-							</div>
-							<p class="text-[12px] text-muted italic mt-2">Switching branches requires an app restart.</p>
-						</div>
-
-						<div class="mb-5">
-							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Window</div>
-							<div class="bg-surface border border-border rounded-xl overflow-hidden">
-								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
-									<div>
-										<div class="text-sm font-semibold text-primary">Minimize to Tray</div>
-										<div class="text-xs text-secondary mt-0.5">Keep app running when closed</div>
-									</div>
-									<label class="sw flex items-center ml-4 cursor-pointer">
-										<input type="checkbox" id="trayToggle" />
-										<div class="sw-track">
-											<div class="sw-thumb"></div>
-										</div>
-									</label>
+				<div class="flex-1 overflow-y-auto px-7 py-5 pb-24" id="scroll-container">
+					<div class="page active" id="page-settings">
+						<!-- general section -->
+						<div id="section-general" class="relative">
+							<div class="mb-5 searchable-chunk">
+								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3 flex items-center gap-2">
+									<span class="material-symbols-rounded text-lg">category</span> General
 								</div>
-								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
-									<div>
-										<div class="text-sm font-semibold text-primary">Start Maximized</div>
-										<div class="text-xs text-secondary mt-0.5">Launch with a maximized window</div>
-									</div>
-									<label class="sw flex items-center ml-4 cursor-pointer">
-										<input type="checkbox" id="maximizedToggle" />
-										<div class="sw-track">
-											<div class="sw-thumb"></div>
-										</div>
-									</label>
+								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Discord Branch</div>
+								<div class="relative">
+									<select
+										id="branch"
+										class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg appearance-none outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+									>
+										<option value="stable">Stable (discord.com) — Recommended</option>
+										<option value="ptb">PTB (ptb.discord.com)</option>
+										<option value="canary">Canary (canary.discord.com)</option>
+									</select>
+									<svg
+										class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-secondary pointer-events-none"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+									>
+										<polyline points="6 9 12 15 18 9" />
+									</svg>
 								</div>
 							</div>
-						</div>
 
-						<div class="mb-5">
-							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Features</div>
-							<div class="bg-surface border border-border rounded-xl overflow-hidden">
-								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
-									<div>
-										<div class="text-sm font-semibold text-primary">Enable arRPC</div>
-										<div class="text-xs text-secondary mt-0.5">Discord Rich Presence support</div>
-									</div>
-									<label class="sw flex items-center ml-4 cursor-pointer">
-										<input type="checkbox" id="rpcToggle" />
-										<div class="sw-track">
-											<div class="sw-thumb"></div>
+							<div class="mb-5 searchable-chunk">
+								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Window</div>
+								<div class="bg-surface border border-border rounded-xl overflow-hidden">
+									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
+										<div>
+											<div class="text-sm font-semibold text-primary">Minimize to Tray</div>
+											<div class="text-xs text-secondary mt-0.5">Keep app running when closed</div>
 										</div>
-									</label>
+										<label class="sw flex items-center ml-4 cursor-pointer">
+											<input type="checkbox" id="trayToggle" />
+											<div class="sw-track">
+												<div class="sw-thumb"></div>
+											</div>
+										</label>
+									</div>
+									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
+										<div>
+											<div class="text-sm font-semibold text-primary">Start Maximized</div>
+											<div class="text-xs text-secondary mt-0.5">Launch with a maximized window</div>
+										</div>
+										<label class="sw flex items-center ml-4 cursor-pointer">
+											<input type="checkbox" id="maximizedToggle" />
+											<div class="sw-track">
+												<div class="sw-thumb"></div>
+											</div>
+										</label>
+									</div>
 								</div>
-								<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
-									<div>
-										<div class="text-sm font-semibold text-primary">Call Popup</div>
-										<div class="text-xs text-secondary mt-0.5">Show popup for incoming calls</div>
-									</div>
-									<label class="sw flex items-center ml-4 cursor-pointer">
-										<input type="checkbox" id="callPopupToggle" />
-										<div class="sw-track">
-											<div class="sw-thumb"></div>
+							</div>
+
+							<div class="mb-5 searchable-chunk">
+								<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-3">Features</div>
+								<div class="bg-surface border border-border rounded-xl overflow-hidden">
+									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors border-b border-border-sub">
+										<div>
+											<div class="text-sm font-semibold text-primary">Enable arRPC</div>
+											<div class="text-xs text-secondary mt-0.5">Discord Rich Presence support</div>
 										</div>
-									</label>
+										<label class="sw flex items-center ml-4 cursor-pointer">
+											<input type="checkbox" id="rpcToggle" />
+											<div class="sw-track">
+												<div class="sw-thumb"></div>
+											</div>
+										</label>
+									</div>
+									<div class="flex items-center justify-between px-4 py-3 hover:bg-elevated transition-colors">
+										<div>
+											<div class="text-sm font-semibold text-primary">Call Popup</div>
+											<div class="text-xs text-secondary mt-0.5">Show popup for incoming calls</div>
+										</div>
+										<label class="sw flex items-center ml-4 cursor-pointer">
+											<input type="checkbox" id="callPopupToggle" />
+											<div class="sw-track">
+												<div class="sw-thumb"></div>
+											</div>
+										</label>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-					<!-- /general -->
 
-					<!-- client mods -->
-					<div class="page" id="page-client">
-						<div class="mb-7">
-							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-1">Mod Client</div>
+						<!-- client mod section -->
+						<div id="section-client" class="mb-7 relative searchable-chunk">
+							<div class="text-xs font-semibold uppercase tracking-wide text-muted mb-1 flex items-center gap-2">
+								<span class="material-symbols-rounded text-lg">service_toolbox</span> Client Mods
+							</div>
 							<p class="text-[13px] text-secondary mb-4">Choose your preferred client modification. Switching mods requires an app restart.</p>
 							<div class="grid grid-cols-2 gap-3">
 								<div
@@ -453,12 +468,35 @@
 								<div class="text-sm font-semibold font-sans text-primary" id="about-branch">-</div>
 							</div>
 						</div>
-						<div class="text-sm text-muted text-center py-2">© hamhim. All rights reserved.</div>
 					</div>
 					<!-- /about -->
+
+					<!-- developer -->
+					<div class="page" id="page-developer">
+						<div class="mb-5">
+							<div class="grid grid-cols-2 gap-3">
+								<button
+									onclick="window.settingsAPI.openDevWindow('splash')"
+									class="bg-surface border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-elevated transition-colors active:scale-[0.98]"
+								>
+									<span class="text-sm font-semibold text-primary">Splash Screen</span>
+								</button>
+								<button
+									onclick="window.settingsAPI.openDevWindow('call')"
+									class="bg-surface border border-border rounded-xl p-4 flex flex-col items-center gap-2 hover:bg-elevated transition-colors active:scale-[0.98]"
+								>
+									<span class="text-sm font-semibold text-primary">Call Window</span>
+								</button>
+							</div>
+						</div>
+					</div>
+					<!-- /developer -->
 				</div>
 
-				<div class="p-2 w-md rounded-2xl absolute bottom-4 ml-auto mr-auto left-[24.5%] right-0 items-center border border-border-sub bg-base flex gap-2 shrink-0 shadow-md" id="normalFooter">
+				<div
+					class="p-2 w-md rounded-2xl absolute bottom-4 ml-auto mr-auto left-[24.5%] right-0 items-center border border-border-sub bg-base flex gap-2 shrink-0 shadow-md"
+					id="normalFooter"
+				>
 					<button
 						id="saveBtn"
 						class="flex-1 flex items-center justify-center gap-2 bg-accent hover:bg-accent-dim text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
@@ -526,35 +564,78 @@
 			});
 
 			const pageMeta = {
-				general: { title: "General", subtitle: "App behavior and preferences" },
-				client: {
-					title: "Client Mods",
-					subtitle: "Manage your client modification",
-				},
+				settings: { icon: "settings", title: "Settings", subtitle: "Configure Recar" },
 				about: {
+					icon: "info",
 					title: "About Recar",
 					subtitle: "Version information and credits",
+				},
+				developer: {
+					icon: "data_object",
+					title: "Dev Tools",
+					subtitle: "Developer utilities and preview tools",
 				},
 			};
 
 			let currentPage = "general";
+			let activeBasePage = "settings";
 
 			function navigateTo(pageId) {
 				if (pageId === currentPage) return;
 
-				const prev = document.getElementById(`page-${currentPage}`);
-				prev.classList.remove("visible");
+				const targetBasePage = pageId === "general" || pageId === "client" ? "settings" : pageId;
 
-				setTimeout(() => {
-					prev.classList.remove("active");
-					const next = document.getElementById(`page-${pageId}`);
-					next.classList.add("active");
-					requestAnimationFrame(() => requestAnimationFrame(() => next.classList.add("visible")));
-				}, 150);
+				if (targetBasePage !== activeBasePage) {
+					const prev = document.getElementById(`page-${activeBasePage}`);
+					prev.classList.remove("visible");
 
+					setTimeout(() => {
+						prev.classList.remove("active");
+						const next = document.getElementById(`page-${targetBasePage}`);
+						next.classList.add("active");
+						requestAnimationFrame(() =>
+							requestAnimationFrame(() => {
+								next.classList.add("visible");
+
+								if (targetBasePage === "settings") {
+									const sectionEl = document.getElementById(`section-${pageId}`);
+									if (sectionEl && scrollContainer) {
+										scrollContainerListener.isProgrammaticScroll = true;
+										scrollContainer.scrollTo({ top: sectionEl.offsetTop - scrollContainer.offsetTop, behavior: "smooth" });
+										setTimeout(() => {
+											scrollContainerListener.isProgrammaticScroll = false;
+										}, 400);
+									}
+								}
+							})
+						);
+					}, 150);
+				}
+
+				activeBasePage = targetBasePage;
 				currentPage = pageId;
-				document.getElementById("page-title").textContent = pageMeta[pageId].title;
-				document.getElementById("page-subtitle").textContent = pageMeta[pageId].subtitle;
+
+				const meta = pageMeta[targetBasePage];
+				document.getElementById("page-icon").textContent = meta.icon;
+				document.getElementById("page-title-text").textContent = meta.title;
+				document.getElementById("page-subtitle").textContent = meta.subtitle;
+
+				const scrollContainer = document.getElementById("scroll-container");
+
+				if (targetBasePage === "settings") {
+					const sectionEl = document.getElementById(`section-${pageId}`);
+					if (sectionEl && scrollContainer) {
+						scrollContainerListener.isProgrammaticScroll = true;
+						scrollContainer.scrollTo({ top: sectionEl.offsetTop - scrollContainer.offsetTop, behavior: "smooth" });
+						setTimeout(() => {
+							scrollContainerListener.isProgrammaticScroll = false;
+						}, 400);
+					}
+					document.getElementById("nav-sub-indicator").style.opacity = "1";
+				} else {
+					if (scrollContainer) scrollContainer.scrollTop = 0;
+					document.getElementById("nav-sub-indicator").style.opacity = "0";
+				}
 
 				document.querySelectorAll(".nav-item").forEach((el) => {
 					const active = el.dataset.page === pageId;
@@ -562,12 +643,55 @@
 					el.classList.toggle("text-secondary", !active);
 					el.classList.toggle("hover:bg-hover", !active);
 					el.classList.toggle("hover:text-primary", !active);
+
+					if (active && el.closest(".nav-sub")) {
+						const indicator = el.closest(".nav-sub").querySelector(".sub-indicator");
+						if (indicator) {
+							indicator.style.top = el.offsetTop + "px";
+							indicator.style.height = el.offsetHeight + "px";
+						}
+					}
 				});
 
-				const showFooter = pageId !== "about";
+				const showFooter = targetBasePage !== "about" && targetBasePage !== "developer";
 				document.getElementById("normalFooter").classList.toggle("hidden", !showFooter || setupMode);
 				document.getElementById("setupFooter").classList.toggle("hidden", !showFooter || !setupMode);
 			}
+
+			const scrollContainerListener = document.getElementById("scroll-container");
+			scrollContainerListener.addEventListener("scroll", () => {
+				if (activeBasePage !== "settings" || scrollContainerListener.isProgrammaticScroll) return;
+				const clientSection = document.getElementById("section-client");
+				if (!clientSection) return;
+
+				const threshold = clientSection.offsetTop - scrollContainerListener.offsetTop - 100;
+
+				const isAtBottom = scrollContainerListener.scrollTop + scrollContainerListener.clientHeight >= scrollContainerListener.scrollHeight - 10;
+
+				let newPageId = "general";
+				if (scrollContainerListener.scrollTop >= threshold || isAtBottom) {
+					newPageId = "client";
+				}
+
+				if (newPageId !== currentPage) {
+					currentPage = newPageId;
+					document.querySelectorAll(".nav-item").forEach((el) => {
+						const active = el.dataset.page === newPageId;
+						el.classList.toggle("is-active", active);
+						el.classList.toggle("text-secondary", !active);
+						el.classList.toggle("hover:bg-hover", !active);
+						el.classList.toggle("hover:text-primary", !active);
+
+						if (active && el.closest(".nav-sub")) {
+							const indicator = el.closest(".nav-sub").querySelector(".sub-indicator");
+							if (indicator) {
+								indicator.style.top = el.offsetTop + "px";
+								indicator.style.height = el.offsetHeight + "px";
+							}
+						}
+					});
+				}
+			});
 
 			const settingsToggle = document.getElementById("nav-settings-toggle");
 			const settingsSub = document.getElementById("nav-sub-settings");
@@ -812,8 +936,116 @@
 			});
 
 			setTimeout(() => {
-				document.getElementById("page-general").classList.add("visible");
+				document.getElementById("page-settings").classList.add("visible");
 			}, 30);
+
+			const searchInput = document.querySelector("#search input");
+
+			function escapeRegExp(string) {
+				return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+			}
+
+			function clearHighlights(root) {
+				const marks = root.querySelectorAll("mark.search-match");
+				marks.forEach((mark) => {
+					const parent = mark.parentNode;
+					while (mark.firstChild) {
+						parent.insertBefore(mark.firstChild, mark);
+					}
+					parent.removeChild(mark);
+				});
+				root.normalize();
+			}
+
+			function filterSearch(query) {
+				const q = query.trim().toLowerCase();
+				const chunks = document.querySelectorAll(".searchable-chunk");
+
+				clearHighlights(document.body);
+
+				if (!q) {
+					chunks.forEach((chunk) => (chunk.style.display = ""));
+					document.querySelectorAll("hr").forEach((hr) => (hr.style.display = ""));
+					return;
+				}
+
+				document.querySelectorAll("hr").forEach((hr) => (hr.style.display = "none"));
+
+				const regex = new RegExp(`(${escapeRegExp(query.trim())})`, "gi");
+
+				chunks.forEach((chunk) => {
+					if (chunk.textContent.toLowerCase().includes(q)) {
+						chunk.style.display = "";
+
+						const walk = document.createTreeWalker(
+							chunk,
+							NodeFilter.SHOW_TEXT,
+							{
+								acceptNode: function (node) {
+									if (
+										node.parentNode.nodeName === "SCRIPT" ||
+										node.parentNode.nodeName === "STYLE" ||
+										node.parentNode.classList.contains("search-match")
+									) {
+										return NodeFilter.FILTER_REJECT;
+									}
+									return NodeFilter.FILTER_ACCEPT;
+								},
+							},
+							false
+						);
+
+						const nodes = [];
+						let node;
+						while ((node = walk.nextNode())) {
+							if (regex.test(node.nodeValue)) nodes.push(node);
+						}
+
+						nodes.forEach((n) => {
+							const parts = n.nodeValue.split(regex);
+							const fragment = document.createDocumentFragment();
+							parts.forEach((part) => {
+								if (part.toLowerCase() === q) {
+									const mark = document.createElement("mark");
+									mark.className = "search-match bg-yellow-400 text-black";
+									mark.textContent = part;
+									fragment.appendChild(mark);
+								} else if (part) {
+									fragment.appendChild(document.createTextNode(part));
+								}
+							});
+							n.parentNode.replaceChild(fragment, n);
+						});
+					} else {
+						chunk.style.display = "none";
+					}
+				});
+			}
+
+			searchInput.addEventListener("input", (e) => {
+				filterSearch(e.target.value);
+				if (activeBasePage !== "settings") {
+					navigateTo("general");
+				}
+			});
+
+			searchInput.addEventListener("keydown", (e) => {
+				if (e.key === "Escape") {
+					e.target.value = "";
+					filterSearch("");
+					e.target.blur();
+				}
+			});
+
+			document.addEventListener("keydown", (e) => {
+				if (e.ctrlKey && e.key.toLowerCase() === "f") {
+					e.preventDefault();
+					searchInput.focus();
+					if (activeBasePage !== "settings") {
+						navigateTo("general");
+					}
+				}
+			});
 		</script>
 	</body>
 </html>
