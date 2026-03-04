@@ -671,6 +671,10 @@ ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, include
 		}
 	}
 
+	/**
+	 * for later me: "Venmic" is from recar, "venmic" is from venmic
+	 */
+
 	currentStreamSettings = {
 		fps,
 		resolution,
@@ -816,7 +820,6 @@ ipcMain.handle("open-dev-window", (event, which) => {
 			width: 232,
 			height: 276,
 			transparent: true,
-			backgroundColor: "#111214",
 			title: "Recar Call Preview",
 			frame: false,
 			alwaysOnTop: true,
