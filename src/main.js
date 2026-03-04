@@ -222,7 +222,6 @@ const createCallWindow = () => {
 		width: 232,
 		height: 276,
 		transparent: true,
-		backgroundColor: "#111214",
 		title: "Recar",
 		frame: false,
 		alwaysOnTop: true,
