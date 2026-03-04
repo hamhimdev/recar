@@ -5,16 +5,16 @@ const { execFile } = require("child_process");
 
 let _venmic;
 const getVenmic = () => {
-  if (_venmic !== undefined) return _venmic;
-  try {
-    const { PatchBay } = require("@vencord/venmic");
-    _venmic = PatchBay.hasPipeWire() ? new PatchBay() : null;
-    console.log(_venmic ? "[Venmic] Initialized successfully" : "[Venmic] Pipewire not detected");
-  } catch (e) {
-    console.error("[Venmic] Failed to initialize:", e);
-    _venmic = null;
-  }
-  return _venmic;
+	if (_venmic !== undefined) return _venmic;
+	try {
+		const { PatchBay } = require("@vencord/venmic");
+		_venmic = PatchBay.hasPipeWire() ? new PatchBay() : null;
+		console.log(_venmic ? "[Venmic] Initialized successfully" : "[Venmic] Pipewire not detected");
+	} catch (e) {
+		console.error("[Venmic] Failed to initialize:", e);
+		_venmic = null;
+	}
+	return _venmic;
 };
 
 function getAudioServicePid() {
@@ -89,11 +89,10 @@ if (!gotTheLock) {
 	});
 }
 
-app.commandLine.appendSwitch("enable-features", 
-  "WebRTCPipeWireCapturer,VaapiVideoDecodeLinuxGL,VaapiVideoEncoder,CanvasOopRasterization"
-);
-app.commandLine.appendSwitch("disable-features",
-  "ParserBlockingScriptsIntervention,BlinkParserBlockingScriptsIntervention,AudioServiceOutOfProcess,UseChromeOSDirectVideoDecoder,MediaFoundationVideoCapture"
+app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer,VaapiVideoDecodeLinuxGL,VaapiVideoEncoder,CanvasOopRasterization");
+app.commandLine.appendSwitch(
+	"disable-features",
+	"ParserBlockingScriptsIntervention,BlinkParserBlockingScriptsIntervention,AudioServiceOutOfProcess,UseChromeOSDirectVideoDecoder,MediaFoundationVideoCapture"
 );
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
@@ -124,6 +123,7 @@ let settings = {
 	autoEnableWebRPC: true,
 	enableCallPopup: true,
 	useDiscordTitleBar: false,
+	autoStart: false,
 };
 let isFirstLaunch = false;
 let discordCSS = null;
@@ -193,8 +193,43 @@ const loadSettings = () => {
 const saveSettings = () => {
 	try {
 		fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2));
+		if (process.platform === "linux") {
+			updateAutostart(settings.autoStart);
+		}
 	} catch (e) {
 		console.error("Failed to save settings:", e);
+	}
+};
+
+const updateAutostart = (enabled) => {
+	if (process.platform !== "linux") return;
+
+	const autostartDir = path.join(app.getPath("home"), ".config", "autostart");
+	const desktopFilePath = path.join(autostartDir, "recar.desktop");
+
+	if (enabled) {
+		if (!fs.existsSync(autostartDir)) {
+			fs.mkdirSync(autostartDir, { recursive: true });
+		}
+
+		const executablePath = app.getPath("exe");
+		const desktopFileContent = `[Desktop Entry]
+Type=Application
+Name=Recar
+Comment=A Discord Client for Linux
+Exec=${executablePath}
+Icon=recar
+Terminal=false
+Categories=Network;InstantMessaging;Chat;
+StartupWMClass=Recar
+`;
+		fs.writeFileSync(desktopFilePath, desktopFileContent);
+		console.log("[Autostart] Created recar.desktop");
+	} else {
+		if (fs.existsSync(desktopFilePath)) {
+			fs.unlinkSync(desktopFilePath);
+			console.log("[Autostart] Removed recar.desktop");
+		}
 	}
 };
 

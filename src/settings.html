@@ -325,13 +325,25 @@
 											</div>
 										</label>
 									</div>
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors">
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
 										<div>
 											<div class="font-semibold text-primary text-sm">Start Maximized</div>
 											<div class="mt-0.5 text-secondary text-xs">Launch with a maximized window</div>
 										</div>
 										<label class="flex items-center ml-4 cursor-pointer sw">
 											<input type="checkbox" id="maximizedToggle" />
+											<div class="sw-track">
+												<div class="sw-thumb"></div>
+											</div>
+										</label>
+									</div>
+									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors">
+										<div>
+											<div class="font-semibold text-primary text-sm">Start on Startup</div>
+											<div class="mt-0.5 text-secondary text-xs">Launch Recar when your computer turns on</div>
+										</div>
+										<label class="flex items-center ml-4 cursor-pointer sw">
+											<input type="checkbox" id="autoStartToggle" />
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
@@ -739,6 +751,7 @@
 			let initialRPC = true;
 			let initialCallPopup = true;
 			let initialDiscordTitleBar = false;
+			let initialAutoStart = false;
 			let setupMode = false;
 
 			const branchSel = document.getElementById("branch");
@@ -747,6 +760,7 @@
 			const rpcTog = document.getElementById("rpcToggle");
 			const callTog = document.getElementById("callPopupToggle");
 			const discordTitleBarTog = document.getElementById("discordTitleBarToggle");
+			const autoStartTog = document.getElementById("autoStartToggle");
 			const saveBtn = document.getElementById("saveBtn");
 			const restartBtn = document.getElementById("restartBtn");
 			const setupBtn = document.getElementById("setupBtn");
@@ -759,12 +773,13 @@
 					rpcTog.checked !== initialRPC ||
 					callTog.checked !== initialCallPopup ||
 					discordTitleBarTog.checked !== initialDiscordTitleBar ||
+					autoStartTog.checked !== initialAutoStart ||
 					currentMod !== initialMod;
 
 				restartBtn.disabled = !changed;
 			}
 
-			[branchSel, trayTog, maxTog, rpcTog, callTog, discordTitleBarTog].forEach((el) => {
+			[branchSel, trayTog, maxTog, rpcTog, callTog, discordTitleBarTog, autoStartTog].forEach((el) => {
 				el.addEventListener("change", checkChanges);
 			});
 
@@ -793,6 +808,7 @@
 					autoEnableWebRPC: true,
 					enableCallPopup: true,
 					useDiscordTitleBar: false,
+					autoStart: false,
 					mod: "equicord",
 					isFirstLaunch: false,
 					_appVer: "N/A",
@@ -807,6 +823,8 @@
 				rpcTog.checked = settings.autoEnableWebRPC ?? true;
 				callTog.checked = settings.enableCallPopup ?? true;
 				discordTitleBarTog.checked = settings.useDiscordTitleBar ?? false;
+				autoStartTog.checked = settings.autoStart ?? false;
+				initialAutoStart = settings.autoStart ?? false;
 
 				initialBranch = settings.branch;
 				initialTray = settings.minimizeToTray;
@@ -860,6 +878,7 @@
 					autoEnableWebRPC: rpcTog.checked,
 					enableCallPopup: callTog.checked,
 					useDiscordTitleBar: discordTitleBarTog.checked,
+					autoStart: autoStartTog.checked,
 					mod: currentMod,
 				};
 			}
@@ -882,6 +901,7 @@
 				initialRPC = settings.autoEnableWebRPC;
 				initialCallPopup = settings.enableCallPopup;
 				initialDiscordTitleBar = settings.useDiscordTitleBar;
+				initialAutoStart = settings.autoStart;
 				initialMod = settings.mod;
 
 				document.getElementById("about-branch").textContent = settings.branch;
