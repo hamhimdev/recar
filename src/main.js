@@ -3,18 +3,19 @@ const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
 
-let venmic = null;
-try {
-	const { PatchBay } = require("@vencord/venmic");
-	if (PatchBay.hasPipeWire()) {
-		venmic = new PatchBay();
-		console.log("[Venmic] Initialized successfully");
-	} else {
-		console.log("[Venmic] Pipewire not detected");
-	}
-} catch (e) {
-	console.error("[Venmic] Failed to initialize:", e);
-}
+let _venmic;
+const getVenmic = () => {
+  if (_venmic !== undefined) return _venmic;
+  try {
+    const { PatchBay } = require("@vencord/venmic");
+    _venmic = PatchBay.hasPipeWire() ? new PatchBay() : null;
+    console.log(_venmic ? "[Venmic] Initialized successfully" : "[Venmic] Pipewire not detected");
+  } catch (e) {
+    console.error("[Venmic] Failed to initialize:", e);
+    _venmic = null;
+  }
+  return _venmic;
+};
 
 function getAudioServicePid() {
 	try {
@@ -88,8 +89,17 @@ if (!gotTheLock) {
 	});
 }
 
-app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer");
-app.commandLine.appendSwitch("disable-features", "ParserBlockingScriptsIntervention,BlinkParserBlockingScriptsIntervention,AudioServiceOutOfProcess");
+app.commandLine.appendSwitch("enable-features", 
+  "WebRTCPipeWireCapturer,VaapiVideoDecodeLinuxGL,VaapiVideoEncoder,CanvasOopRasterization"
+);
+app.commandLine.appendSwitch("disable-features",
+  "ParserBlockingScriptsIntervention,BlinkParserBlockingScriptsIntervention,AudioServiceOutOfProcess,UseChromeOSDirectVideoDecoder,MediaFoundationVideoCapture"
+);
+app.commandLine.appendSwitch("enable-gpu-rasterization");
+app.commandLine.appendSwitch("enable-zero-copy");
+app.commandLine.appendSwitch("ignore-gpu-blocklist");
+app.commandLine.appendSwitch("enable-hardware-overlays", "single-fullscreen,single-on-top,underlay");
+app.commandLine.appendSwitch("renderer-process-limit", "3");
 
 app.userAgentFallback = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36";
 
@@ -320,6 +330,7 @@ const createMainWindow = () => {
 		icon: iconPath,
 		webPreferences: {
 			nodeIntegration: false,
+			backgroundThrottling: false,
 			contextIsolation: true,
 			sandbox: false,
 			webSecurity: false,
@@ -509,10 +520,10 @@ ipcMain.handle("get-stream-sources", async () => {
 });
 
 ipcMain.handle("get-audio-sources", () => {
-	if (!venmic) return [];
+	if (!getVenmic()) return [];
 	try {
 		const audioPid = getAudioServicePid();
-		const sources = venmic.list(["node.name", "application.name", "application.process.id", "application.process.binary", "object.serial"]);
+		const sources = getVenmic().list(["node.name", "application.name", "application.process.id", "application.process.binary", "object.serial"]);
 		return sources.filter((s) => s["application.process.id"] !== audioPid);
 	} catch (e) {
 		console.error("[Venmic] Failed to list audio sources:", e);
@@ -523,7 +534,7 @@ ipcMain.handle("get-audio-sources", () => {
 ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, includeAudio = [], excludeAudio = [], contentHint }) => {
 	console.log(`[Stream] Selected source ${sourceId} at ${fps} FPS, ${resolution.width}x${resolution.height}`);
 
-	if (venmic) {
+	if (getVenmic()) {
 		try {
 			const audioPid = getAudioServicePid();
 			const excludeList = [{ "media.class": "Stream/Input/Audio" }];
@@ -601,9 +612,9 @@ ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, include
 				}
 
 				console.log("[Venmic] Final Link Data:", JSON.stringify(data, null, 2));
-				venmic.link(data);
+				getVenmic().link(data);
 			} else {
-				venmic.unlink();
+				getVenmic().unlink();
 			}
 		} catch (e) {
 			console.error("[Venmic] Failed to link audio node:", e);
@@ -806,12 +817,19 @@ app.whenReady().then(async () => {
 						label: "Restart",
 						click: () => {
 							app.isQuiting = true;
-							app.relaunch({ args: process.argv.slice(1).filter(a => a !== "--reset-config") });
+							app.relaunch({ args: process.argv.slice(1).filter((a) => a !== "--reset-config") });
 							app.exit(0);
 						},
 					},
 					{ type: "separator" },
-					{ label: "Quit", accelerator: "CmdOrCtrl+Q", click: () => { app.isQuiting = true; app.quit(); } },
+					{
+						label: "Quit",
+						accelerator: "CmdOrCtrl+Q",
+						click: () => {
+							app.isQuiting = true;
+							app.quit();
+						},
+					},
 				],
 			},
 			{
@@ -907,7 +925,7 @@ app.whenReady().then(async () => {
 		} catch (e) {
 			console.error("[arRPC] Failed to start:", e);
 		}
-	}, 2000);
+	}, 500);
 });
 
 app.on("window-all-closed", () => {
