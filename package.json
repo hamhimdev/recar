@@ -18,7 +18,7 @@
 	"scripts": {
 		"start": "electron .",
 		"build:css": "tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify",
-    "watch:css": "tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify --watch",
+		"watch:css": "tailwindcss -i ./src/input.css -o ./src/tailwind.css --minify --watch",
 		"build:equicord": "node ./scripts/patch-mod.js equicord && EQUICORD_HASH=equicord pnpm -C equicord buildWeb && node ./scripts/discard-changes.js equicord",
 		"build:vencord": "node ./scripts/patch-mod.js vencord && VENCORD_HASH=vencord pnpm -C vencord buildWeb && node ./scripts/discard-changes.js vencord",
 		"build:mods": "pnpm build:equicord && pnpm build:vencord",
