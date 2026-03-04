@@ -73,14 +73,12 @@ body {
 	left: 0;
 	width: 100%;
 	height: 4px;
-	background-color: #323232;
 	overflow: hidden;
 }
 
 .progress-bar {
 	width: 50%;
 	height: 100%;
-	background-color: #5865f2;
 	animation: sweep 1s infinite linear;
 }
 

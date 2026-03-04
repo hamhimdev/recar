@@ -5,4 +5,6 @@ contextBridge.exposeInMainWorld("settingsAPI", {
 	saveSettings: (settings) => ipcRenderer.invoke("save-settings", settings),
 	restartApp: () => ipcRenderer.invoke("restart-app"),
 	getVersions: () => ipcRenderer.invoke("get-versions"),
+	openDevWindow: (which) => ipcRenderer.invoke("open-dev-window", which),
+	openExternal: (url) => ipcRenderer.invoke("open-external", url),
 });
