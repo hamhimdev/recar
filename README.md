@@ -12,6 +12,7 @@ https://recar.loxodrome.app/
 </div>
 
 ## Features
+
 - arRPC server built in (for Rich Presence)
 - Custom call popup when ringing
 - Switch between Vencord & Equicord
