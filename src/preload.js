@@ -14,9 +14,13 @@ contextBridge.exposeInMainWorld("recarBridge", {
 	close: window.close,
 	maximize: () => ipcRenderer.send("window-maximize"),
 	minimize: () => ipcRenderer.send("window-minimize"),
+	// Push current user info from the renderer plugin to the main process
+	sendUserInfo: (data) => ipcRenderer.send("user-info", data),
+	// Register a callback that main can invoke to request a fresh user-info snapshot
+	onUserInfoRequested: (cb) => ipcRenderer.on("request-user-info", () => cb()),
 });
 
-contextBridge.exposeInMainWorld("overlayBridge", {
+contextBridge.exposeInMainWorld("statusBridge", {
 	notification: (data) => ipcRenderer.send("notification", data),
 	vcUpdate: (data) => ipcRenderer.send("vc-update", data),
 	vcJoin: (data) => ipcRenderer.send("vc-join", data),

@@ -127,6 +127,7 @@ let settings = {
 };
 let isFirstLaunch = false;
 let discordCSS = null;
+let currentUserInfo = null; // populated once the Discord renderer reports the logged-in user
 
 const extractCSS = async () => {
 	if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -462,6 +463,7 @@ const createMainWindow = () => {
 
 	mainWindow.webContents.on("did-finish-load", () => {
 		extractCSS();
+		mainWindow.webContents.send("request-user-info");
 	});
 };
 
@@ -533,6 +535,13 @@ ipcMain.handle("get-versions", () => ({
 	app: app.getVersion(),
 	electron: process.versions.electron,
 }));
+
+ipcMain.on("user-info", (event, data) => {
+	currentUserInfo = data;
+	console.log("[Main] User info received:", currentUserInfo?.username ?? "(null)");
+});
+
+ipcMain.handle("get-user-info", () => currentUserInfo);
 
 ipcMain.handle("get-settings", () => ({ ...settings, isFirstLaunch }));
 ipcMain.handle("save-settings", (event, newSettings) => {

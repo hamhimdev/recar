@@ -13,6 +13,8 @@ import {
 	VoiceStateStore,
 } from "@webpack/common";
 
+const CDN = "https://cdn.discordapp.com";
+
 interface VoiceState {
 	userId: string;
 	channelId?: string | null;
@@ -30,6 +32,7 @@ interface VoiceState {
 interface UserVoiceInfo {
 	userId: string;
 	displayName: string;
+	avatarUrl: string | null;
 	muted: boolean;
 	deafened: boolean;
 	streaming: boolean;
@@ -39,12 +42,30 @@ interface UserVoiceInfo {
 	suppressed: boolean;
 }
 
+function getUserAvatarUrl(userId: string, guildId: string | null): string | null {
+	const user = UserStore.getUser(userId);
+	if (!user) return null;
+
+	if (guildId) {
+		const member = GuildMemberStore.getMember(guildId, userId);
+		if (member?.avatar) return `${CDN}/guilds/${guildId}/users/${userId}/avatars/${member.avatar}.png?size=64`;
+	}
+
+	if (user.avatar) return `${CDN}/avatars/${user.id}/${user.avatar}.png?size=64`;
+
+	const defaultIndex = user.discriminator && user.discriminator !== "0"
+		? Number(user.discriminator) % 5
+		: Number(BigInt(user.id) >> 22n) % 6;
+	return `${CDN}/embed/avatars/${defaultIndex}.png`;
+}
+
 function getVoiceInfo(state: VoiceState, guildId: string | null): UserVoiceInfo {
 	const user = UserStore.getUser(state.userId);
 	const nick = GuildMemberStore.getNick(guildId!, state.userId) ?? user?.globalName ?? user?.username ?? state.userId;
 	return {
 		userId: state.userId,
 		displayName: nick,
+		avatarUrl: getUserAvatarUrl(state.userId, guildId),
 		muted: state.selfMute,
 		deafened: state.selfDeaf,
 		streaming: state.selfStream ?? false,
@@ -57,8 +78,6 @@ function getVoiceInfo(state: VoiceState, guildId: string | null): UserVoiceInfo 
 
 // lazy-loaded stores / helpers
 const closeAllModals = findByPropsLazy("closeAllModals");
-
-const CDN = "https://cdn.discordapp.com";
 
 // ---------- helpers ----------
 
@@ -99,6 +118,30 @@ function getChannelIconUrl(channelId: string): string | null {
 function getUserDisplayName(userId: string): string {
 	const u = UserStore.getUser(userId);
 	return u ? u.globalName || u.username : userId;
+}
+
+interface CurrentUserInfo {
+	id: string;
+	username: string;
+	globalName: string | null;
+	discriminator: string;
+	avatar: string | null;
+	avatarUrl: string | null;
+}
+
+function getCurrentUserInfo(): CurrentUserInfo | null {
+	const me = UserStore.getCurrentUser();
+	if (!me) return null;
+	return {
+		id: me.id,
+		username: me.username,
+		globalName: me.globalName ?? null,
+		discriminator: me.discriminator ?? "0",
+		avatar: me.avatar ?? null,
+		avatarUrl: me.avatar
+			? `${CDN}/avatars/${me.id}/${me.avatar}.png?size=256`
+			: `${CDN}/embed/avatars/${Number(me.discriminator ?? 0) % 5}.png`,
+	};
 }
 
 function getUsersInMyChannel(): UserVoiceInfo[] {
@@ -191,6 +234,12 @@ export default definePlugin({
 	required: true,
 
 	flux: {
+		CONNECTION_OPEN() {
+			// fired when Discord finishes connecting / the user is available
+			const info = getCurrentUserInfo();
+			if (info) (window as any).recarBridge?.sendUserInfo(info);
+		},
+
 		CALL_UPDATE(event: any) {
 			const me = UserStore.getCurrentUser();
 			if (!me) return;
@@ -229,9 +278,9 @@ export default definePlugin({
 		},
 
 		RPC_NOTIFICATION_CREATE(notification: any) {
-			if ((window as any).overlayBridge) {
+			if ((window as any).statusBridge) {
 				const { type: _type, ...notificationData } = notification; // strip flux event type
-				(window as any).overlayBridge.notification(notificationData);
+				(window as any).statusBridge.notification(notificationData);
 			}
 		},
 
@@ -240,7 +289,7 @@ export default definePlugin({
 			const myGuildId = SelectedGuildStore.getGuildId();
 
 			if (!myChanId) {
-				(window as any).overlayBridge?.vcUpdate({ inVoice: false, users: [] });
+				(window as any).statusBridge?.vcUpdate({ inVoice: false, users: [] });
 				return;
 			}
 
@@ -255,10 +304,10 @@ export default definePlugin({
 
 				if (channelId === myChanId && oldChannelId !== myChanId) {
 					console.log(`[Recar] ➡️ ${info.displayName} joined`, info);
-					(window as any).overlayBridge?.vcJoin(info);
+					(window as any).statusBridge?.vcJoin(info);
 				} else if (oldChannelId === myChanId && channelId !== myChanId) {
 					console.log(`[Recar] ⬅️ ${info.displayName} left`);
-					(window as any).overlayBridge?.vcLeave({ userId, displayName: info.displayName });
+					(window as any).statusBridge?.vcLeave({ userId, displayName: info.displayName });
 				} else {
 					const flags = [
 						info.muted && "muted",
@@ -269,14 +318,14 @@ export default definePlugin({
 						info.serverDeafened && "server-deafened",
 					].filter(Boolean);
 					console.log(`[Recar] 🔄 ${info.displayName} state changed: [${flags.join(", ") || "none"}]`, info);
-					(window as any).overlayBridge?.vcStateChange(info);
+					(window as any).statusBridge?.vcStateChange(info);
 				}
 			}
 
 			if (changed) {
 				const users = getUsersInMyChannel();
 				console.log("[Recar] Current VC members:", users);
-				(window as any).overlayBridge?.vcUpdate({ inVoice: true, users });
+				(window as any).statusBridge?.vcUpdate({ inVoice: true, users });
 			}
 		},
 
@@ -288,9 +337,10 @@ export default definePlugin({
 			const myGuildId = SelectedGuildStore.getGuildId();
 			const user = UserStore.getUser(userId);
 			const displayName = GuildMemberStore.getNick(myGuildId!, userId) ?? user?.globalName ?? user?.username ?? userId;
+			const avatarUrl = getUserAvatarUrl(userId, myGuildId);
 
 			console.log(`[Recar] 🎙️ ${displayName} ${isSpeaking ? "started" : "stopped"} speaking`);
-			(window as any).overlayBridge?.vcSpeaking({ userId, displayName, speaking: isSpeaking });
+			(window as any).statusBridge?.vcSpeaking({ userId, displayName, avatarUrl, speaking: isSpeaking });
 		},
 	},
 
@@ -329,6 +379,14 @@ export default definePlugin({
 
 		syncArRPCSettings();
 		startThemeObserver();
+
+		// send current user info to main process immediately and on demand
+		const sendUserInfo = () => {
+			const info = getCurrentUserInfo();
+			if (info) (window as any).recarBridge?.sendUserInfo(info);
+		};
+		sendUserInfo();
+		(window as any).recarBridge?.onUserInfoRequested(sendUserInfo);
 
 		// stream stuff
 		try {
