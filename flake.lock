@@ -1,95 +1,112 @@
 {
-	"nodes": {
-		"equicord-src": {
-			"flake": false,
-			"locked": {
-				"lastModified": 1772123041,
-				"narHash": "sha256-1U0R18uY70lXyb/XP4pHXz4QOAidSb2tcGRvfkd9JsE=",
-				"owner": "Equicord",
-				"repo": "Equicord",
-				"rev": "dbbf150c0299c00783737335e15b7edf3184dba9",
-				"type": "github"
-			},
-			"original": {
-				"owner": "Equicord",
-				"repo": "Equicord",
-				"type": "github"
-			}
-		},
-		"flake-utils": {
-			"inputs": {
-				"systems": "systems"
-			},
-			"locked": {
-				"lastModified": 1731533236,
-				"narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
-				"owner": "numtide",
-				"repo": "flake-utils",
-				"rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
-				"type": "github"
-			},
-			"original": {
-				"owner": "numtide",
-				"repo": "flake-utils",
-				"type": "github"
-			}
-		},
-		"nixpkgs": {
-			"locked": {
-				"lastModified": 1771848320,
-				"narHash": "sha256-0MAd+0mun3K/Ns8JATeHT1sX28faLII5hVLq0L3BdZU=",
-				"owner": "nixos",
-				"repo": "nixpkgs",
-				"rev": "2fc6539b481e1d2569f25f8799236694180c0993",
-				"type": "github"
-			},
-			"original": {
-				"owner": "nixos",
-				"ref": "nixos-unstable",
-				"repo": "nixpkgs",
-				"type": "github"
-			}
-		},
-		"root": {
-			"inputs": {
-				"equicord-src": "equicord-src",
-				"flake-utils": "flake-utils",
-				"nixpkgs": "nixpkgs",
-				"vencord-src": "vencord-src"
-			}
-		},
-		"systems": {
-			"locked": {
-				"lastModified": 1681028828,
-				"narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
-				"owner": "nix-systems",
-				"repo": "default",
-				"rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
-				"type": "github"
-			},
-			"original": {
-				"owner": "nix-systems",
-				"repo": "default",
-				"type": "github"
-			}
-		},
-		"vencord-src": {
-			"flake": false,
-			"locked": {
-				"lastModified": 1772076587,
-				"narHash": "sha256-Dqw2VPL1E4tu4m/oe2FVdWr9O1cqdsuMsoFFcosldCc=",
-				"owner": "Vendicated",
-				"repo": "Vencord",
-				"rev": "12da7a08fbbfe118ffdb293488745cc991c1c8a6",
-				"type": "github"
-			},
-			"original": {
-				"owner": "Vendicated",
-				"repo": "Vencord",
-				"type": "github"
-			}
-		}
-	},
-	"root": "root",
-	"version": 7
+  "nodes": {
+    "equicord-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772751721,
+        "narHash": "sha256-kgEC9fXANcz34isX3ZHdmTwqtpd5hXJIPV2sTyH8Bnw=",
+        "owner": "Equicord",
+        "repo": "Equicord",
+        "rev": "b0e8f07f6a085e44425b3a10765248afd573cf3e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Equicord",
+        "repo": "Equicord",
+        "type": "github"
+      }
+    },
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1772624091,
+        "narHash": "sha256-QKyJ0QGWBn6r0invrMAK8dmJoBYWoOWy7lN+UHzW1jc=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "80bdc1e5ce51f56b19791b52b2901187931f5353",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "equicord-src": "equicord-src",
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs",
+        "roverpp-src": "roverpp-src",
+        "vencord-src": "vencord-src"
+      }
+    },
+    "roverpp-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772782129,
+        "narHash": "sha256-aySE69ZW7udVGMDQGmP2usFNvlnks4Zdz7ngta80Hpk=",
+        "owner": "TheUnium",
+        "repo": "roverpp",
+        "rev": "0fa84c6a470e180b7583cd0636b5b982140a0bbd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "TheUnium",
+        "repo": "roverpp",
+        "type": "github"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    },
+    "vencord-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772773731,
+        "narHash": "sha256-B+A3ArypZBbgcRBwrW5lr6JEjiTNrKlLWMzX9x3rKzM=",
+        "owner": "Vendicated",
+        "repo": "Vencord",
+        "rev": "15e92a49a1c31ce2d40c10ea1770da53b7c8e1bd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Vendicated",
+        "repo": "Vencord",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
 }

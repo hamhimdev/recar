@@ -1,6 +1,3 @@
-// prevents electron from loading rover-pp
-process.env.DISABLE_RECAR_OVERLAY = "1";
-
 const {
 	app,
 	BrowserWindow,
@@ -15,6 +12,7 @@ const fs = require("fs");
 const { execFile } = require("child_process");
 
 const { OverlayRenderer } = require("./rcRvRndr.js");
+const RvInst = require("./rcRvInst.js");
 const OvRn = new OverlayRenderer();
 
 let _venmic;
@@ -593,6 +591,30 @@ ipcMain.handle("get-versions", () => ({
 	app: app.getVersion(),
 	electron: process.versions.electron,
 }));
+
+ipcMain.handle("roverpp-status", () => {
+	return { installed: RvInst.isInstalled() };
+});
+
+ipcMain.handle("roverpp-install", () => {
+	try {
+		RvInst.install(path.join(__dirname, ".."));
+		return { ok: true };
+	} catch (e) {
+		console.error("[roverpp] Install failed:", e);
+		return { ok: false, error: e.message };
+	}
+});
+
+ipcMain.handle("roverpp-uninstall", () => {
+	try {
+		RvInst.uninstall();
+		return { ok: true };
+	} catch (e) {
+		console.error("[roverpp] Uninstall failed:", e);
+		return { ok: false, error: e.message };
+	}
+});
 
 ipcMain.on("user-info", (event, data) => {
 	currentUserInfo = data;

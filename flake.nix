@@ -11,6 +11,10 @@
 			url = "github:Equicord/Equicord";
 			flake = false;
 		};
+		roverpp-src = {
+			url = "github:TheUnium/roverpp";
+			flake = false;
+		};
 	};
 	outputs =
 		{
@@ -19,12 +23,58 @@
 			flake-utils,
 			vencord-src,
 			equicord-src,
+			roverpp-src,
 		}:
 		flake-utils.lib.eachDefaultSystem (
 			system:
 			let
 				pkgs = nixpkgs.legacyPackages.${system};
 				lib = nixpkgs.lib;
+
+				roverppSoName =
+					if system == "aarch64-linux" then "librecar_overlay_arm64.so"
+					else "librecar_overlay_x64.so";
+
+				roverpp = pkgs.stdenv.mkDerivation {
+					pname = "roverpp";
+					version = "0-unstable";
+					src = roverpp-src;
+
+					nativeBuildInputs = [
+						pkgs.gnumake
+						pkgs.python3
+						pkgs.glslang
+						pkgs.vulkan-headers
+						pkgs.vulkan-loader
+					];
+
+					buildPhase = ''
+						runHook preBuild
+						make
+						runHook postBuild
+					'';
+
+					installPhase = ''
+						runHook preInstall
+
+						mkdir -p $out/lib/recar-overlay
+						mkdir -p $out/share/vulkan/implicit_layer.d
+
+						cp librecar_overlay.so $out/lib/recar-overlay/
+
+						sed 's|__LIB_PATH__|'"$out"'/lib/recar-overlay/librecar_overlay.so|g' \
+							recar_layer.json.in > $out/share/vulkan/implicit_layer.d/recar_layer.json
+
+						runHook postInstall
+					'';
+
+					meta = with lib; {
+						description = "Vulkan implicit layer for the Recar notification overlay";
+						homepage = "https://github.com/TheUnium/roverpp";
+						license = licenses.mit;
+						platforms = [ "x86_64-linux" "aarch64-linux" ];
+					};
+				};
 
 				recar = pkgs.stdenv.mkDerivation rec {
 					pname = "recar";
@@ -34,7 +84,7 @@
 						mkdir -p $out
 						cp -r ${./.}/* $out/
 						chmod -R +w $out
-						rm -rf $out/vencord $out/equicord
+						rm -rf $out/vencord $out/equicord $out/roverpp
 						cp -r ${vencord-src} $out/vencord
 						cp -r ${equicord-src} $out/equicord
 						chmod -R +w $out/vencord $out/equicord
@@ -51,7 +101,7 @@
 
 					pnpmDeps = pkgs.fetchPnpmDeps {
 						inherit pname version src;
-						hash = "sha256-d/5gFXdfHfQQFpzLfHyTu0a+zoTqUqcjqZ9J1XPuBw0=";
+						hash = "sha256-2/eOcSBEnYkF6ajsBBsyp98g9ZRDN/FD+RTueeOBc1o=";
 						fetcherVersion = 3;
 					};
 
@@ -94,14 +144,15 @@
 
 						runHook postBuild
 					'';
+
 					installPhase = ''
 						runHook preInstall
-						
+
 						mkdir -p $out/share/recar
 						cp -r src package.json $out/share/recar/
-						
+
 						cp -r node_modules $out/share/recar/
-						
+
 						if [ -d "equicord/dist" ]; then
 							mkdir -p $out/share/recar/equicord
 							cp -r equicord/dist $out/share/recar/equicord/
@@ -110,7 +161,14 @@
 							mkdir -p $out/share/recar/vencord
 							cp -r vencord/dist $out/share/recar/vencord/
 						fi
-						
+
+						# bundle the native-arch roverpp .so where rcRvInst.js expects it.
+						# main.js is at $out/share/recar/src/main.js, so __dirname/..
+						# resolves to $out/share/recar - dist/roverpp/ goes there.
+						mkdir -p $out/share/recar/dist/roverpp
+						cp ${roverpp}/lib/recar-overlay/librecar_overlay.so \
+							$out/share/recar/dist/roverpp/${roverppSoName}
+
 						mkdir -p $out/bin
 						makeWrapper ${pkgs.electron}/bin/electron $out/bin/recar \
 							--add-flags "$out/share/recar/src/main.js" \
@@ -121,7 +179,7 @@
 							    pkgs.stdenv.cc.cc.lib
 							]} \
 							--add-flags "--no-sandbox"
-						
+
 						mkdir -p $out/share/applications
 						cat > $out/share/applications/recar.desktop <<EOF
 [Desktop Entry]
@@ -134,19 +192,20 @@ Categories=Network;InstantMessaging;Chat;
 Terminal=false
 StartupWMClass=Recar
 EOF
-						
+
 						mkdir -p $out/share/icons/hicolor/256x256/apps
 						if [ -f "src/assets/img/recar.png" ]; then
 							cp src/assets/img/recar.png $out/share/icons/hicolor/256x256/apps/recar.png
 						fi
-						
+
 						runHook postInstall
 					'';
+
 					meta = with lib; {
 						description = "A Discord client for Linux";
 						homepage = "https://recar.loxodrome.app";
 						license = licenses.mit;
-						platforms = platforms.linux;
+						platforms = [ "x86_64-linux" "aarch64-linux" ];
 						maintainers = [ "hamhim" ];
 						mainProgram = "recar";
 					};
@@ -155,6 +214,7 @@ EOF
 			{
 				packages = {
 					recar = recar;
+					roverpp = roverpp;
 					default = recar;
 				};
 				devShells.default = pkgs.mkShell {

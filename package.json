@@ -39,7 +39,9 @@
 			"vencord/dist/browser.js",
 			"vencord/dist/browser.css",
 			"equicord/dist/browser/browser.js",
-			"equicord/dist/browser/browser.css"
+			"equicord/dist/browser/browser.css",
+			"dist/roverpp/librecar_overlay_x64.so",
+			"dist/roverpp/librecar_overlay_arm64.so"
 		],
 		"linux": {
 			"target": [
