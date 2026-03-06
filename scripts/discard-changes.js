@@ -23,15 +23,24 @@ function main() {
 
 	const targetParent = findUp(searchRoot, target);
 	if (!targetParent) {
-		console.warn(`Target package '${target}' not found searching upward from`, searchRoot);
+		console.warn(
+			`Target package '${target}' not found searching upward from`,
+			searchRoot
+		);
 		process.exit(1);
 	}
 
 	const targetRoot = path.join(targetParent, target);
 
 	try {
-		execFileSync("git", ["checkout", "--", "."], { cwd: targetRoot, stdio: "inherit" });
-		execFileSync("git", ["clean", "-fd"], { cwd: targetRoot, stdio: "inherit" });
+		execFileSync("git", ["checkout", "--", "."], {
+			cwd: targetRoot,
+			stdio: "inherit",
+		});
+		execFileSync("git", ["clean", "-fd"], {
+			cwd: targetRoot,
+			stdio: "inherit",
+		});
 		console.log(`Discarded all changes in ${targetRoot}`);
 	} catch (err) {
 		console.error("Failed to discard changes:", err);

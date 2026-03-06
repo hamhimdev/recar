@@ -18,9 +18,11 @@ function applyFiles(patchDir, targetRoot) {
 	if (!fs.existsSync(patchDir)) return;
 
 	const entries = fs.readdirSync(patchDir);
-	const files = entries.filter(e => !fs.statSync(path.join(patchDir, e)).isDirectory());
-	const nonPatches = files.filter(e => !e.endsWith(".patch"));
-	const patches = files.filter(e => e.endsWith(".patch"));
+	const files = entries.filter(
+		(e) => !fs.statSync(path.join(patchDir, e)).isDirectory()
+	);
+	const nonPatches = files.filter((e) => !e.endsWith(".patch"));
+	const patches = files.filter((e) => e.endsWith(".patch"));
 
 	for (const entry of nonPatches) {
 		const entryPath = path.join(patchDir, entry);
@@ -45,7 +47,10 @@ function applyFiles(patchDir, targetRoot) {
 	for (const entry of patches) {
 		const entryPath = path.join(patchDir, entry);
 		try {
-			execFileSync("git", ["apply", entryPath], { cwd: targetRoot, stdio: "inherit" });
+			execFileSync("git", ["apply", entryPath], {
+				cwd: targetRoot,
+				stdio: "inherit",
+			});
 			console.log(`Applied patch ${entry}`);
 		} catch {
 			console.error(`Failed to apply patch ${entry}`);
@@ -63,13 +68,19 @@ function main() {
 
 	const modPatchesParent = findUp(searchRoot, "modPatches");
 	if (!modPatchesParent) {
-		console.warn("No `modPatches` directory found searching upward from", searchRoot);
+		console.warn(
+			"No `modPatches` directory found searching upward from",
+			searchRoot
+		);
 		return;
 	}
 
 	const targetParent = findUp(searchRoot, target);
 	if (!targetParent) {
-		console.warn(`Target package '${target}' not found searching upward from`, searchRoot);
+		console.warn(
+			`Target package '${target}' not found searching upward from`,
+			searchRoot
+		);
 		return;
 	}
 
@@ -77,8 +88,14 @@ function main() {
 	const targetRoot = path.join(targetParent, target);
 
 	try {
-		execFileSync("git", ["checkout", "--", "."], { cwd: targetRoot, stdio: "inherit" });
-		execFileSync("git", ["clean", "-fd"], { cwd: targetRoot, stdio: "inherit" });
+		execFileSync("git", ["checkout", "--", "."], {
+			cwd: targetRoot,
+			stdio: "inherit",
+		});
+		execFileSync("git", ["clean", "-fd"], {
+			cwd: targetRoot,
+			stdio: "inherit",
+		});
 		console.log(`Discarded all changes in ${targetRoot}`);
 	} catch (err) {
 		console.error("Failed to discard changes:", err);

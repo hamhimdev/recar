@@ -182,11 +182,17 @@
 
 	<body class="bg-base h-full overflow-hidden">
 		<div class="flex h-full overflow-hidden">
-			<aside class="flex flex-col bg-sidebar px-2 py-4 border-border-sub border-r w-48 min-w-[200px] overflow-x-hidden overflow-y-auto">
-				<div class="flex flex-col items-center gap-3 mb-2 px-2 pb-4 border-border-sub border-b">
+			<aside
+				class="flex flex-col bg-sidebar px-2 py-4 border-border-sub border-r w-48 min-w-[200px] overflow-x-hidden overflow-y-auto"
+			>
+				<div
+					class="flex flex-col items-center gap-3 mb-2 px-2 pb-4 border-border-sub border-b"
+				>
 					<img class="h-8 antialiased" src="assets/img/recar.svg" />
 					<div id="search" class="relative flex items-center">
-						<span class="top-[10px] left-3 absolute material-symbols-rounded font-medium text-secondary text-4xl pointer-events-none">
+						<span
+							class="top-[10px] left-3 absolute material-symbols-rounded font-medium text-secondary text-4xl pointer-events-none"
+						>
 							search
 						</span>
 						<input
@@ -202,9 +208,15 @@
 						id="nav-settings-toggle"
 						class="flex items-center gap-2 hover:bg-hover mb-0.5 px-3 py-1 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-parent open"
 					>
-						<span class="material-symbols-rounded font-normal">settings</span>
+						<span class="material-symbols-rounded font-normal"
+							>settings</span
+						>
 						Settings
-						<span class="ml-auto material-symbols-rounded font-normal chevron"> arrow_drop_down </span>
+						<span
+							class="ml-auto material-symbols-rounded font-normal chevron"
+						>
+							arrow_drop_down
+						</span>
 					</div>
 
 					<div
@@ -220,7 +232,9 @@
 							class="flex items-center gap-2 hover:bg-hover py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item is-active"
 							onclick="navigateTo('general')"
 						>
-							<span class="material-symbols-rounded font-normal"> category </span>
+							<span class="material-symbols-rounded font-normal">
+								category
+							</span>
 							General
 						</div>
 						<div
@@ -228,7 +242,9 @@
 							class="flex items-center gap-2 hover:bg-hover py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item final"
 							onclick="navigateTo('client')"
 						>
-							<span class="material-symbols-rounded font-normal"> service_toolbox </span>
+							<span class="material-symbols-rounded font-normal">
+								service_toolbox
+							</span>
 							Client Mod
 						</div>
 					</div>
@@ -238,7 +254,9 @@
 						class="flex items-center gap-2 hover:bg-hover px-3 py-1 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item open"
 						onclick="navigateTo('about')"
 					>
-						<span class="material-symbols-rounded font-normal"> info </span>
+						<span class="material-symbols-rounded font-normal">
+							info
+						</span>
 						About Recar
 					</div>
 				</nav>
@@ -249,7 +267,9 @@
 						class="flex items-center gap-2 hover:bg-hover px-3 py-1 rounded-lg font-medium text-secondary/50 hover:text-primary text-md transition-colors cursor-pointer select-none nav-item open"
 						onclick="navigateTo('developer')"
 					>
-						<span class="material-symbols-rounded font-normal"> data_object </span>
+						<span class="material-symbols-rounded font-normal">
+							data_object
+						</span>
 						Dev Tools
 					</div>
 					<div
@@ -257,26 +277,55 @@
 						class="hidden flex items-center gap-2 hover:bg-hover px-3 py-1 rounded-lg font-medium text-secondary/50 hover:text-primary text-sm transition-colors cursor-pointer select-none nav-item open"
 						onclick="navigateTo('mod-quickcss')"
 					>
-						<span class="material-symbols-rounded font-normal"> style </span>
+						<span class="material-symbols-rounded font-normal">
+							style
+						</span>
 						Recar Style
 					</div>
-					<div class="flex flex-col gap-1 mt-2 px-2 pt-2 border-border-sub border-t">
-						<div class="font-sans text-muted text-sm leading-relaxed">Electron <span class="text-secondary" id="footer-electron">-</span></div>
-						<div class="font-sans text-muted text-sm leading-relaxed">Recar <span class="text-secondary" id="footer-recar">-</span></div>
+					<div
+						class="flex flex-col gap-1 mt-2 px-2 pt-2 border-border-sub border-t"
+					>
+						<div
+							class="font-sans text-muted text-sm leading-relaxed"
+						>
+							Electron
+							<span class="text-secondary" id="footer-electron"
+								>-</span
+							>
+						</div>
+						<div
+							class="font-sans text-muted text-sm leading-relaxed"
+						>
+							Recar
+							<span class="text-secondary" id="footer-recar"
+								>-</span
+							>
+						</div>
 					</div>
 				</div>
 			</aside>
 
 			<div class="flex flex-col flex-1 bg-base min-w-0 overflow-hidden">
-				<div class="flex flex-row items-center gap-3 shadow-md p-2 px-7 border-border-sub border-b shrink-0">
+				<div
+					class="flex flex-row items-center gap-3 shadow-md p-2 px-7 border-border-sub border-b shrink-0"
+				>
 					<div
 						class="flex flex-row items-center gap-2 p-1 pr-3 pl-3 bg-border-sub rounded-lg font-semibold text-md text-primary tracking-tight"
 						id="page-title"
 					>
-						<span class="mt-0.5 -ml-0.5 material-symbols-rounded font-thin text-3xl" id="page-icon">settings</span>
+						<span
+							class="mt-0.5 -ml-0.5 material-symbols-rounded font-thin text-3xl"
+							id="page-icon"
+							>settings</span
+						>
 						<span id="page-title-text">Settings</span>
 					</div>
-					<div class="font-medium text-muted text-md" id="page-subtitle">Configure Recar</div>
+					<div
+						class="font-medium text-muted text-md"
+						id="page-subtitle"
+					>
+						Configure Recar
+					</div>
 					<span
 						class="right-0 absolute mr-7 material-symbols-rounded font-thin text-muted hover:text-secondary transition-colors cursor-pointer"
 						style="font-size: 22px"
@@ -284,23 +333,42 @@
 					>
 				</div>
 
-				<div class="flex-1 px-7 py-5 pb-24 overflow-y-auto" id="scroll-container">
+				<div
+					class="flex-1 px-7 py-5 pb-24 overflow-y-auto"
+					id="scroll-container"
+				>
 					<div class="page active" id="page-settings">
 						<!-- general section -->
 						<div id="section-general" class="relative">
 							<div class="mb-5 searchable-chunk">
-								<div class="flex items-center gap-2 mb-3 font-semibold text-muted text-md uppercase tracking-wide">
-									<span class="material-symbols-rounded text-lg">category</span> General
+								<div
+									class="flex items-center gap-2 mb-3 font-semibold text-muted text-md uppercase tracking-wide"
+								>
+									<span
+										class="material-symbols-rounded text-lg"
+										>category</span
+									>
+									General
 								</div>
-								<div class="mb-3 font-semibold text-muted text-sm uppercase tracking-wide">Discord Branch</div>
+								<div
+									class="mb-3 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Discord Branch
+								</div>
 								<div class="relative">
 									<select
 										id="branch"
 										class="bg-surface px-3.5 py-2.5 pr-10 border border-border hover:border-accent focus:border-accent rounded-lg outline-none w-full font-sans text-primary text-sm transition-colors appearance-none cursor-pointer"
 									>
-										<option value="stable">Stable (discord.com) — Recommended</option>
-										<option value="ptb">PTB (ptb.discord.com)</option>
-										<option value="canary">Canary (canary.discord.com)</option>
+										<option value="stable">
+											Stable (discord.com) — Recommended
+										</option>
+										<option value="ptb">
+											PTB (ptb.discord.com)
+										</option>
+										<option value="canary">
+											Canary (canary.discord.com)
+										</option>
 									</select>
 									<svg
 										class="top-1/2 right-3 absolute w-4 h-4 text-secondary -translate-y-1/2 pointer-events-none"
@@ -315,39 +383,91 @@
 							</div>
 
 							<div class="mb-5 searchable-chunk">
-								<div class="mb-3 font-semibold text-muted text-sm uppercase tracking-wide">Window</div>
-								<div class="bg-surface border border-border rounded-xl overflow-hidden">
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
+								<div
+									class="mb-3 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Window
+								</div>
+								<div
+									class="bg-surface border border-border rounded-xl overflow-hidden"
+								>
+									<div
+										class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors"
+									>
 										<div>
-											<div class="font-semibold text-primary text-sm">Minimize to Tray</div>
-											<div class="mt-0.5 text-secondary text-sm">Keep app running when closed</div>
+											<div
+												class="font-semibold text-primary text-sm"
+											>
+												Minimize to Tray
+											</div>
+											<div
+												class="mt-0.5 text-secondary text-sm"
+											>
+												Keep app running when closed
+											</div>
 										</div>
-										<label class="flex items-center ml-4 cursor-pointer sw">
-											<input type="checkbox" id="trayToggle" />
+										<label
+											class="flex items-center ml-4 cursor-pointer sw"
+										>
+											<input
+												type="checkbox"
+												id="trayToggle"
+											/>
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
 										</label>
 									</div>
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
+									<div
+										class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors"
+									>
 										<div>
-											<div class="font-semibold text-primary text-sm">Start Maximized</div>
-											<div class="mt-0.5 text-secondary text-sm">Launch with a maximized window</div>
+											<div
+												class="font-semibold text-primary text-sm"
+											>
+												Start Maximized
+											</div>
+											<div
+												class="mt-0.5 text-secondary text-sm"
+											>
+												Launch with a maximized window
+											</div>
 										</div>
-										<label class="flex items-center ml-4 cursor-pointer sw">
-											<input type="checkbox" id="maximizedToggle" />
+										<label
+											class="flex items-center ml-4 cursor-pointer sw"
+										>
+											<input
+												type="checkbox"
+												id="maximizedToggle"
+											/>
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
 										</label>
 									</div>
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors">
+									<div
+										class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors"
+									>
 										<div>
-											<div class="font-semibold text-primary text-sm">Start on Startup</div>
-											<div class="mt-0.5 text-secondary text-sm">Launch Recar when your computer turns on</div>
+											<div
+												class="font-semibold text-primary text-sm"
+											>
+												Start on Startup
+											</div>
+											<div
+												class="mt-0.5 text-secondary text-sm"
+											>
+												Launch Recar when your computer
+												turns on
+											</div>
 										</div>
-										<label class="flex items-center ml-4 cursor-pointer sw">
-											<input type="checkbox" id="autoStartToggle" />
+										<label
+											class="flex items-center ml-4 cursor-pointer sw"
+										>
+											<input
+												type="checkbox"
+												id="autoStartToggle"
+											/>
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
@@ -357,39 +477,90 @@
 							</div>
 
 							<div class="mb-5 searchable-chunk">
-								<div class="mb-3 font-semibold text-muted text-sm uppercase tracking-wide">Features</div>
-								<div class="bg-surface border border-border rounded-xl overflow-hidden">
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
+								<div
+									class="mb-3 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Features
+								</div>
+								<div
+									class="bg-surface border border-border rounded-xl overflow-hidden"
+								>
+									<div
+										class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors"
+									>
 										<div>
-											<div class="font-semibold text-primary text-sm">Enable arRPC</div>
-											<div class="mt-0.5 text-secondary text-sm">Discord Rich Presence support</div>
+											<div
+												class="font-semibold text-primary text-sm"
+											>
+												Enable arRPC
+											</div>
+											<div
+												class="mt-0.5 text-secondary text-sm"
+											>
+												Discord Rich Presence support
+											</div>
 										</div>
-										<label class="flex items-center ml-4 cursor-pointer sw">
-											<input type="checkbox" id="rpcToggle" />
+										<label
+											class="flex items-center ml-4 cursor-pointer sw"
+										>
+											<input
+												type="checkbox"
+												id="rpcToggle"
+											/>
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
 										</label>
 									</div>
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors">
+									<div
+										class="flex justify-between items-center hover:bg-elevated px-4 py-3 border-border-sub border-b transition-colors"
+									>
 										<div>
-											<div class="font-semibold text-primary text-sm">Call Popup</div>
-											<div class="mt-0.5 text-secondary text-sm">Show popup for incoming calls</div>
+											<div
+												class="font-semibold text-primary text-sm"
+											>
+												Call Popup
+											</div>
+											<div
+												class="mt-0.5 text-secondary text-sm"
+											>
+												Show popup for incoming calls
+											</div>
 										</div>
-										<label class="flex items-center ml-4 cursor-pointer sw">
-											<input type="checkbox" id="callPopupToggle" />
+										<label
+											class="flex items-center ml-4 cursor-pointer sw"
+										>
+											<input
+												type="checkbox"
+												id="callPopupToggle"
+											/>
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
 										</label>
 									</div>
-									<div class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors">
+									<div
+										class="flex justify-between items-center hover:bg-elevated px-4 py-3 transition-colors"
+									>
 										<div>
-											<div class="font-semibold text-primary text-sm">Discord Title Bar</div>
-											<div class="mt-0.5 text-secondary text-sm">Use Discord's native title bar</div>
+											<div
+												class="font-semibold text-primary text-sm"
+											>
+												Discord Title Bar
+											</div>
+											<div
+												class="mt-0.5 text-secondary text-sm"
+											>
+												Use Discord's native title bar
+											</div>
 										</div>
-										<label class="flex items-center ml-4 cursor-pointer sw">
-											<input type="checkbox" id="discordTitleBarToggle" />
+										<label
+											class="flex items-center ml-4 cursor-pointer sw"
+										>
+											<input
+												type="checkbox"
+												id="discordTitleBarToggle"
+											/>
 											<div class="sw-track">
 												<div class="sw-thumb"></div>
 											</div>
@@ -400,11 +571,22 @@
 						</div>
 
 						<!-- client mod section -->
-						<div id="section-client" class="relative mb-7 searchable-chunk">
-							<div class="flex items-center gap-2 mb-1 font-semibold text-muted text-md uppercase tracking-wide">
-								<span class="material-symbols-rounded text-lg">service_toolbox</span> Client Mods
+						<div
+							id="section-client"
+							class="relative mb-7 searchable-chunk"
+						>
+							<div
+								class="flex items-center gap-2 mb-1 font-semibold text-muted text-md uppercase tracking-wide"
+							>
+								<span class="material-symbols-rounded text-lg"
+									>service_toolbox</span
+								>
+								Client Mods
 							</div>
-							<p class="mb-4 text-sm text-secondary">Choose your preferred client modification. Switching mods requires an app restart.</p>
+							<p class="mb-4 text-sm text-secondary">
+								Choose your preferred client modification.
+								Switching mods requires an app restart.
+							</p>
 							<div class="gap-3 grid grid-cols-2">
 								<div
 									class="relative flex flex-col items-center gap-3 bg-surface p-5 rounded-xl text-center cursor-pointer mod-card"
@@ -418,15 +600,28 @@
 										alt="Equicord"
 										onerror="
 											this.style.display = 'none';
-											this.nextElementSibling.style.display = 'flex';
+											this.nextElementSibling.style.display =
+												'flex';
 										"
 									/>
-									<div style="display: none" class="justify-center items-center bg-elevated rounded-xl w-12 h-12 font-bold text-accent">
+									<div
+										style="display: none"
+										class="justify-center items-center bg-elevated rounded-xl w-12 h-12 font-bold text-accent"
+									>
 										N/A
 									</div>
-									<span class="font-semibold text-md text-primary">Equicord</span>
-									<div class="top-3 right-3 absolute flex justify-center items-center bg-accent rounded-full w-6 h-6 mod-check">
-										<span class="material-symbols-rounded font-lg font-semibold text-white"> check </span>
+									<span
+										class="font-semibold text-md text-primary"
+										>Equicord</span
+									>
+									<div
+										class="top-3 right-3 absolute flex justify-center items-center bg-accent rounded-full w-6 h-6 mod-check"
+									>
+										<span
+											class="material-symbols-rounded font-lg font-semibold text-white"
+										>
+											check
+										</span>
 									</div>
 								</div>
 								<div
@@ -441,15 +636,28 @@
 										alt="Vencord"
 										onerror="
 											this.style.display = 'none';
-											this.nextElementSibling.style.display = 'flex';
+											this.nextElementSibling.style.display =
+												'flex';
 										"
 									/>
-									<div style="display: none" class="justify-center items-center bg-elevated rounded-xl w-12 h-12 font-bold text-accent">
+									<div
+										style="display: none"
+										class="justify-center items-center bg-elevated rounded-xl w-12 h-12 font-bold text-accent"
+									>
 										VC
 									</div>
-									<span class="font-semibold text-md text-primary">Vencord</span>
-									<div class="top-3 right-3 absolute flex justify-center items-center bg-accent rounded-full w-6 h-6 mod-check">
-										<span class="material-symbols-rounded font-lg font-semibold text-white"> check </span>
+									<span
+										class="font-semibold text-md text-primary"
+										>Vencord</span
+									>
+									<div
+										class="top-3 right-3 absolute flex justify-center items-center bg-accent rounded-full w-6 h-6 mod-check"
+									>
+										<span
+											class="material-symbols-rounded font-lg font-semibold text-white"
+										>
+											check
+										</span>
 									</div>
 								</div>
 							</div>
@@ -459,41 +667,98 @@
 
 					<!-- about -->
 					<div class="page" id="page-about">
-						<div class="flex flex-col items-center mb-6 py-8 text-center">
-							<img src="assets/img/banner.png" class="mb-2 w-64" />
-							<div class="mt-1.5 text-md text-secondary">A Discord client for Linux with client mods and extra functionality.</div>
+						<div
+							class="flex flex-col items-center mb-6 py-8 text-center"
+						>
+							<img
+								src="assets/img/banner.png"
+								class="mb-2 w-64"
+							/>
+							<div class="mt-1.5 text-md text-secondary">
+								A Discord client for Linux with client mods and
+								extra functionality.
+							</div>
 							<div class="flex gap-2 mt-4">
 								<a
 									href="https://codeberg.org/hamhim/recar/"
 									class="flex justify-center items-center gap-2 bg-accent px-4 py-2 rounded-lg font-medium text-md text-white transition-all hover:bg-accent-dim cursor-pointer"
 								>
-									<span class="material-symbols-rounded">rebase</span> Codeberg Repository
+									<span class="material-symbols-rounded"
+										>rebase</span
+									>
+									Codeberg Repository
 								</a>
 								<a
 									href="https://recar.loxodrome.app/"
 									class="flex justify-center items-center gap-2 bg-accent px-4 py-2 rounded-lg font-medium text-md text-white transition-all hover:bg-accent-dim cursor-pointer"
 								>
-									<span class="material-symbols-rounded">captive_portal</span>
+									<span class="material-symbols-rounded"
+										>captive_portal</span
+									>
 									Website
 								</a>
 							</div>
 						</div>
 						<div class="gap-3 grid grid-cols-2 mb-4">
-							<div class="bg-surface p-4 border border-border rounded-xl">
-								<div class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide">Recar Version</div>
-								<div class="font-sans font-semibold text-primary text-sm" id="about-recar-ver">-</div>
+							<div
+								class="bg-surface p-4 border border-border rounded-xl"
+							>
+								<div
+									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Recar Version
+								</div>
+								<div
+									class="font-sans font-semibold text-primary text-sm"
+									id="about-recar-ver"
+								>
+									-
+								</div>
 							</div>
-							<div class="bg-surface p-4 border border-border rounded-xl">
-								<div class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide">Electron</div>
-								<div class="font-sans font-semibold text-primary text-sm" id="about-electron-ver">-</div>
+							<div
+								class="bg-surface p-4 border border-border rounded-xl"
+							>
+								<div
+									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Electron
+								</div>
+								<div
+									class="font-sans font-semibold text-primary text-sm"
+									id="about-electron-ver"
+								>
+									-
+								</div>
 							</div>
-							<div class="bg-surface p-4 border border-border rounded-xl">
-								<div class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide">Platform</div>
-								<div class="font-sans font-semibold text-primary text-sm" id="about-platform">-</div>
+							<div
+								class="bg-surface p-4 border border-border rounded-xl"
+							>
+								<div
+									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Platform
+								</div>
+								<div
+									class="font-sans font-semibold text-primary text-sm"
+									id="about-platform"
+								>
+									-
+								</div>
 							</div>
-							<div class="bg-surface p-4 border border-border rounded-xl">
-								<div class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide">Branch</div>
-								<div class="font-sans font-semibold text-primary text-sm" id="about-branch">-</div>
+							<div
+								class="bg-surface p-4 border border-border rounded-xl"
+							>
+								<div
+									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+								>
+									Branch
+								</div>
+								<div
+									class="font-sans font-semibold text-primary text-sm"
+									id="about-branch"
+								>
+									-
+								</div>
 							</div>
 						</div>
 					</div>
@@ -504,16 +769,28 @@
 						<div class="mb-5">
 							<div class="gap-3 grid grid-cols-2">
 								<button
-									onclick="window.settingsAPI.openDevWindow('splash')"
+									onclick="
+										window.settingsAPI.openDevWindow(
+											'splash'
+										)
+									"
 									class="flex flex-col items-center gap-2 bg-surface hover:bg-elevated p-4 border border-border rounded-xl active:scale-[0.98] transition-colors"
 								>
-									<span class="font-semibold text-primary text-sm">Splash Screen</span>
+									<span
+										class="font-semibold text-primary text-sm"
+										>Splash Screen</span
+									>
 								</button>
 								<button
-									onclick="window.settingsAPI.openDevWindow('call')"
+									onclick="
+										window.settingsAPI.openDevWindow('call')
+									"
 									class="flex flex-col items-center gap-2 bg-surface hover:bg-elevated p-4 border border-border rounded-xl active:scale-[0.98] transition-colors"
 								>
-									<span class="font-semibold text-primary text-sm">Call Window</span>
+									<span
+										class="font-semibold text-primary text-sm"
+										>Call Window</span
+									>
 								</button>
 							</div>
 						</div>
@@ -529,7 +806,12 @@
 						id="saveBtn"
 						class="flex flex-1 justify-center items-center gap-2 bg-accent disabled:opacity-40 py-2 max-h-10 rounded-lg font-semibold text-white text-md active:scale-[0.98] transition-all hover:bg-accent-dim disabled:cursor-not-allowed"
 					>
-						<span class="material-symbols-rounded font-thin" style="font-size: 18px"> save </span>
+						<span
+							class="material-symbols-rounded font-thin"
+							style="font-size: 18px"
+						>
+							save
+						</span>
 						Save Settings
 					</button>
 					<button
@@ -537,11 +819,19 @@
 						disabled
 						class="flex flex-1 justify-center items-center gap-2 bg-danger hover:bg-danger-dim max-h-10 disabled:bg-elevated py-2 rounded-lg font-semibold text-white disabled:text-muted text-md active:scale-[0.98] transition-all disabled:cursor-not-allowed"
 					>
-						<span class="material-symbols-rounded font-thin text-2xl" style="font-size: 18px"> replay </span>
+						<span
+							class="material-symbols-rounded font-thin text-2xl"
+							style="font-size: 18px"
+						>
+							replay
+						</span>
 						Save & Restart
 					</button>
 				</div>
-				<div class="hidden bg-base px-7 py-4 border-border-sub border-t shrink-0" id="setupFooter">
+				<div
+					class="hidden bg-base px-7 py-4 border-border-sub border-t shrink-0"
+					id="setupFooter"
+				>
 					<button
 						id="setupBtn"
 						class="flex justify-center items-center bg-accent py-2 rounded-lg w-full font-semibold text-white text-sm active:scale-[0.98] transition-all hover:bg-accent-dim"
@@ -554,11 +844,20 @@
 		</div>
 		<!-- /app -->
 
-		<div class="z-50 fixed inset-0 flex justify-center items-center bg-black/60 text-center popup-overlay" id="popupOverlay">
-			<div class="flex flex-col justify-center items-center bg-elevated p-6 border border-border rounded-2xl w-86 text-center popup-box">
+		<div
+			class="z-50 fixed inset-0 flex justify-center items-center bg-black/60 text-center popup-overlay"
+			id="popupOverlay"
+		>
+			<div
+				class="flex flex-col justify-center items-center bg-elevated p-6 border border-border rounded-2xl w-86 text-center popup-box"
+			>
 				<img class="mb-2" src="assets/img/warn.svg" />
-				<div class="mb-1.5 font-bold text-primary text-lg">Are you sure you want to restart?</div>
-				<div class="mb-5 text-md text-secondary leading-relaxed">Recar will restart to apply your changes. Continue?</div>
+				<div class="mb-1.5 font-bold text-primary text-lg">
+					Are you sure you want to restart?
+				</div>
+				<div class="mb-5 text-md text-secondary leading-relaxed">
+					Recar will restart to apply your changes. Continue?
+				</div>
 				<div class="flex gap-2.5 w-full">
 					<button
 						onclick="closePopup()"
@@ -592,7 +891,11 @@
 			});
 
 			const pageMeta = {
-				settings: { icon: "settings", title: "Settings", subtitle: "Configure Recar" },
+				settings: {
+					icon: "settings",
+					title: "Settings",
+					subtitle: "Configure Recar",
+				},
 				about: {
 					icon: "info",
 					title: "About Recar",
@@ -611,25 +914,39 @@
 			function navigateTo(pageId) {
 				if (pageId === currentPage) return;
 
-				const targetBasePage = pageId === "general" || pageId === "client" ? "settings" : pageId;
+				const targetBasePage =
+					pageId === "general" || pageId === "client"
+						? "settings"
+						: pageId;
 
 				if (targetBasePage !== activeBasePage) {
-					const prev = document.getElementById(`page-${activeBasePage}`);
+					const prev = document.getElementById(
+						`page-${activeBasePage}`
+					);
 					prev.classList.remove("visible");
 
 					setTimeout(() => {
 						prev.classList.remove("active");
-						const next = document.getElementById(`page-${targetBasePage}`);
+						const next = document.getElementById(
+							`page-${targetBasePage}`
+						);
 						next.classList.add("active");
 						requestAnimationFrame(() =>
 							requestAnimationFrame(() => {
 								next.classList.add("visible");
 
 								if (targetBasePage === "settings") {
-									const sectionEl = document.getElementById(`section-${pageId}`);
+									const sectionEl = document.getElementById(
+										`section-${pageId}`
+									);
 									if (sectionEl && scrollContainer) {
 										scrollContainerListener.isProgrammaticScroll = true;
-										scrollContainer.scrollTo({ top: sectionEl.offsetTop - scrollContainer.offsetTop, behavior: "smooth" });
+										scrollContainer.scrollTo({
+											top:
+												sectionEl.offsetTop -
+												scrollContainer.offsetTop,
+											behavior: "smooth",
+										});
 										setTimeout(() => {
 											scrollContainerListener.isProgrammaticScroll = false;
 										}, 400);
@@ -645,24 +962,35 @@
 
 				const meta = pageMeta[targetBasePage];
 				document.getElementById("page-icon").textContent = meta.icon;
-				document.getElementById("page-title-text").textContent = meta.title;
-				document.getElementById("page-subtitle").textContent = meta.subtitle;
+				document.getElementById("page-title-text").textContent =
+					meta.title;
+				document.getElementById("page-subtitle").textContent =
+					meta.subtitle;
 
-				const scrollContainer = document.getElementById("scroll-container");
+				const scrollContainer =
+					document.getElementById("scroll-container");
 
 				if (targetBasePage === "settings") {
-					const sectionEl = document.getElementById(`section-${pageId}`);
+					const sectionEl = document.getElementById(
+						`section-${pageId}`
+					);
 					if (sectionEl && scrollContainer) {
 						scrollContainerListener.isProgrammaticScroll = true;
-						scrollContainer.scrollTo({ top: sectionEl.offsetTop - scrollContainer.offsetTop, behavior: "smooth" });
+						scrollContainer.scrollTo({
+							top:
+								sectionEl.offsetTop - scrollContainer.offsetTop,
+							behavior: "smooth",
+						});
 						setTimeout(() => {
 							scrollContainerListener.isProgrammaticScroll = false;
 						}, 400);
 					}
-					document.getElementById("nav-sub-indicator").style.opacity = "1";
+					document.getElementById("nav-sub-indicator").style.opacity =
+						"1";
 				} else {
 					if (scrollContainer) scrollContainer.scrollTop = 0;
-					document.getElementById("nav-sub-indicator").style.opacity = "0";
+					document.getElementById("nav-sub-indicator").style.opacity =
+						"0";
 				}
 
 				document.querySelectorAll(".nav-item").forEach((el) => {
@@ -673,7 +1001,9 @@
 					el.classList.toggle("hover:text-primary", !active);
 
 					if (active && el.closest(".nav-sub")) {
-						const indicator = el.closest(".nav-sub").querySelector(".sub-indicator");
+						const indicator = el
+							.closest(".nav-sub")
+							.querySelector(".sub-indicator");
 						if (indicator) {
 							indicator.style.top = el.offsetTop + "px";
 							indicator.style.height = el.offsetHeight + "px";
@@ -681,23 +1011,43 @@
 					}
 				});
 
-				const showFooter = targetBasePage !== "about" && targetBasePage !== "developer";
-				document.getElementById("normalFooter").classList.toggle("hidden", !showFooter || setupMode);
-				document.getElementById("setupFooter").classList.toggle("hidden", !showFooter || !setupMode);
+				const showFooter =
+					targetBasePage !== "about" &&
+					targetBasePage !== "developer";
+				document
+					.getElementById("normalFooter")
+					.classList.toggle("hidden", !showFooter || setupMode);
+				document
+					.getElementById("setupFooter")
+					.classList.toggle("hidden", !showFooter || !setupMode);
 			}
 
-			const scrollContainerListener = document.getElementById("scroll-container");
+			const scrollContainerListener =
+				document.getElementById("scroll-container");
 			scrollContainerListener.addEventListener("scroll", () => {
-				if (activeBasePage !== "settings" || scrollContainerListener.isProgrammaticScroll) return;
+				if (
+					activeBasePage !== "settings" ||
+					scrollContainerListener.isProgrammaticScroll
+				)
+					return;
 				const clientSection = document.getElementById("section-client");
 				if (!clientSection) return;
 
-				const threshold = clientSection.offsetTop - scrollContainerListener.offsetTop - 100;
+				const threshold =
+					clientSection.offsetTop -
+					scrollContainerListener.offsetTop -
+					100;
 
-				const isAtBottom = scrollContainerListener.scrollTop + scrollContainerListener.clientHeight >= scrollContainerListener.scrollHeight - 10;
+				const isAtBottom =
+					scrollContainerListener.scrollTop +
+						scrollContainerListener.clientHeight >=
+					scrollContainerListener.scrollHeight - 10;
 
 				let newPageId = "general";
-				if (scrollContainerListener.scrollTop >= threshold || isAtBottom) {
+				if (
+					scrollContainerListener.scrollTop >= threshold ||
+					isAtBottom
+				) {
 					newPageId = "client";
 				}
 
@@ -711,7 +1061,9 @@
 						el.classList.toggle("hover:text-primary", !active);
 
 						if (active && el.closest(".nav-sub")) {
-							const indicator = el.closest(".nav-sub").querySelector(".sub-indicator");
+							const indicator = el
+								.closest(".nav-sub")
+								.querySelector(".sub-indicator");
 							if (indicator) {
 								indicator.style.top = el.offsetTop + "px";
 								indicator.style.height = el.offsetHeight + "px";
@@ -721,12 +1073,16 @@
 				}
 			});
 
-			const settingsToggle = document.getElementById("nav-settings-toggle");
+			const settingsToggle = document.getElementById(
+				"nav-settings-toggle"
+			);
 			const settingsSub = document.getElementById("nav-sub-settings");
 			let subOpen = true;
 
 			function updateSub() {
-				settingsSub.style.maxHeight = subOpen ? settingsSub.scrollHeight + "px" : "0";
+				settingsSub.style.maxHeight = subOpen
+					? settingsSub.scrollHeight + "px"
+					: "0";
 				settingsSub.classList.toggle("open", subOpen);
 				settingsToggle.classList.toggle("open", subOpen);
 			}
@@ -763,7 +1119,9 @@
 			const maxTog = document.getElementById("maximizedToggle");
 			const rpcTog = document.getElementById("rpcToggle");
 			const callTog = document.getElementById("callPopupToggle");
-			const discordTitleBarTog = document.getElementById("discordTitleBarToggle");
+			const discordTitleBarTog = document.getElementById(
+				"discordTitleBarToggle"
+			);
 			const autoStartTog = document.getElementById("autoStartToggle");
 			const saveBtn = document.getElementById("saveBtn");
 			const restartBtn = document.getElementById("restartBtn");
@@ -783,14 +1141,25 @@
 				restartBtn.disabled = !changed;
 			}
 
-			[branchSel, trayTog, maxTog, rpcTog, callTog, discordTitleBarTog, autoStartTog].forEach((el) => {
+			[
+				branchSel,
+				trayTog,
+				maxTog,
+				rpcTog,
+				callTog,
+				discordTitleBarTog,
+				autoStartTog,
+			].forEach((el) => {
 				el.addEventListener("change", checkChanges);
 			});
 
 			async function loadSettings() {
 				if (typeof window.settingsAPI !== "undefined") {
 					try {
-						const [settings, versions] = await Promise.all([window.settingsAPI.getSettings(), window.settingsAPI.getVersions()]);
+						const [settings, versions] = await Promise.all([
+							window.settingsAPI.getSettings(),
+							window.settingsAPI.getVersions(),
+						]);
 						return {
 							...settings,
 							_appVer: versions.app,
@@ -826,7 +1195,8 @@
 				maxTog.checked = settings.startMaximized;
 				rpcTog.checked = settings.autoEnableWebRPC ?? true;
 				callTog.checked = settings.enableCallPopup ?? true;
-				discordTitleBarTog.checked = settings.useDiscordTitleBar ?? false;
+				discordTitleBarTog.checked =
+					settings.useDiscordTitleBar ?? false;
 				autoStartTog.checked = settings.autoStart ?? false;
 				initialAutoStart = settings.autoStart ?? false;
 
@@ -845,10 +1215,15 @@
 				updateFooter(settings);
 
 				if (setupMode) {
-					document.getElementById("normalFooter").classList.add("hidden");
-					document.getElementById("setupFooter").classList.remove("hidden");
+					document
+						.getElementById("normalFooter")
+						.classList.add("hidden");
+					document
+						.getElementById("setupFooter")
+						.classList.remove("hidden");
 					document.getElementById("page-title").textContent = "Setup";
-					document.getElementById("page-subtitle").textContent = "Configure Recar before first launch";
+					document.getElementById("page-subtitle").textContent =
+						"Configure Recar before first launch";
 				}
 			}
 
@@ -856,18 +1231,26 @@
 				const electronVer = settings._elecVer || "—";
 				const recarVer = settings._appVer || "—";
 
-				document.getElementById("about-recar-ver").textContent = recarVer;
-				document.getElementById("about-electron-ver").textContent = electronVer;
-				document.getElementById("about-platform").textContent = (typeof process !== "undefined" ? process.platform : navigator.platform) || "—";
-				document.getElementById("about-branch").textContent = settings.branch;
+				document.getElementById("about-recar-ver").textContent =
+					recarVer;
+				document.getElementById("about-electron-ver").textContent =
+					electronVer;
+				document.getElementById("about-platform").textContent =
+					(typeof process !== "undefined"
+						? process.platform
+						: navigator.platform) || "—";
+				document.getElementById("about-branch").textContent =
+					settings.branch;
 			}
 
 			function updateFooter(settings) {
 				const electronVer = settings._elecVer || "—";
 				const recarVer = settings._appVer || "—";
 
-				document.getElementById("footer-electron").textContent = `v${electronVer}`;
-				document.getElementById("footer-recar").textContent = `v${recarVer}`;
+				document.getElementById("footer-electron").textContent =
+					`v${electronVer}`;
+				document.getElementById("footer-recar").textContent =
+					`v${recarVer}`;
 			}
 
 			loadSettings().then((settings) => {
@@ -908,7 +1291,8 @@
 				initialAutoStart = settings.autoStart;
 				initialMod = settings.mod;
 
-				document.getElementById("about-branch").textContent = settings.branch;
+				document.getElementById("about-branch").textContent =
+					settings.branch;
 				return true;
 			}
 
@@ -922,12 +1306,21 @@
 				if (success) {
 					saveBtn.innerHTML = CHECK_ICON;
 					saveBtn.classList.add("bg-success", "hover:bg-success");
-					saveBtn.classList.remove("bg-accent", "hover:bg-accent-dim");
+					saveBtn.classList.remove(
+						"bg-accent",
+						"hover:bg-accent-dim"
+					);
 
 					setTimeout(() => {
 						saveBtn.innerHTML = SAVE_ICON;
-						saveBtn.classList.remove("bg-success", "hover:bg-success");
-						saveBtn.classList.add("bg-accent", "hover:bg-accent-dim");
+						saveBtn.classList.remove(
+							"bg-success",
+							"hover:bg-success"
+						);
+						saveBtn.classList.add(
+							"bg-accent",
+							"hover:bg-accent-dim"
+						);
 						saveBtn.disabled = false;
 						checkChanges();
 					}, 1500);
@@ -941,17 +1334,19 @@
 				showPopup();
 			});
 
-			document.getElementById("confirmRestartBtn").addEventListener("click", async () => {
-				closePopup();
-				await performSave();
-				if (window.settingsAPI) {
-					try {
-						window.settingsAPI.restartApp();
-					} catch (error) {
-						console.error("Failed to restart app:", error);
+			document
+				.getElementById("confirmRestartBtn")
+				.addEventListener("click", async () => {
+					closePopup();
+					await performSave();
+					if (window.settingsAPI) {
+						try {
+							window.settingsAPI.restartApp();
+						} catch (error) {
+							console.error("Failed to restart app:", error);
+						}
 					}
-				}
-			});
+				});
 
 			setupBtn.addEventListener("click", async () => {
 				await performSave();
@@ -972,15 +1367,21 @@
 				}
 			}
 
-			document.querySelectorAll('a[href*="codeberg"], a[href*="recar.loxodrome"]').forEach((link) => {
-				link.addEventListener("click", (e) => {
-					e.preventDefault();
-					openExternalLink(link.href);
+			document
+				.querySelectorAll(
+					'a[href*="codeberg"], a[href*="recar.loxodrome"]'
+				)
+				.forEach((link) => {
+					link.addEventListener("click", (e) => {
+						e.preventDefault();
+						openExternalLink(link.href);
+					});
 				});
-			});
 
 			setTimeout(() => {
-				document.getElementById("page-settings").classList.add("visible");
+				document
+					.getElementById("page-settings")
+					.classList.add("visible");
 			}, 30);
 
 			const searchInput = document.querySelector("#search input");
@@ -1009,13 +1410,20 @@
 
 				if (!q) {
 					chunks.forEach((chunk) => (chunk.style.display = ""));
-					document.querySelectorAll("hr").forEach((hr) => (hr.style.display = ""));
+					document
+						.querySelectorAll("hr")
+						.forEach((hr) => (hr.style.display = ""));
 					return;
 				}
 
-				document.querySelectorAll("hr").forEach((hr) => (hr.style.display = "none"));
+				document
+					.querySelectorAll("hr")
+					.forEach((hr) => (hr.style.display = "none"));
 
-				const regex = new RegExp(`(${escapeRegExp(query.trim())})`, "gi");
+				const regex = new RegExp(
+					`(${escapeRegExp(query.trim())})`,
+					"gi"
+				);
 
 				chunks.forEach((chunk) => {
 					if (chunk.textContent.toLowerCase().includes(q)) {
@@ -1029,7 +1437,9 @@
 									if (
 										node.parentNode.nodeName === "SCRIPT" ||
 										node.parentNode.nodeName === "STYLE" ||
-										node.parentNode.classList.contains("search-match")
+										node.parentNode.classList.contains(
+											"search-match"
+										)
 									) {
 										return NodeFilter.FILTER_REJECT;
 									}
@@ -1051,11 +1461,14 @@
 							parts.forEach((part) => {
 								if (part.toLowerCase() === q) {
 									const mark = document.createElement("mark");
-									mark.className = "search-match bg-yellow-400 text-black";
+									mark.className =
+										"search-match bg-yellow-400 text-black";
 									mark.textContent = part;
 									fragment.appendChild(mark);
 								} else if (part) {
-									fragment.appendChild(document.createTextNode(part));
+									fragment.appendChild(
+										document.createTextNode(part)
+									);
 								}
 							});
 							n.parentNode.replaceChild(fragment, n);

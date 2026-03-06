@@ -1,4 +1,12 @@
-const { app, BrowserWindow, ipcMain, shell, Tray, Menu, screen } = require("electron");
+const {
+	app,
+	BrowserWindow,
+	ipcMain,
+	shell,
+	Tray,
+	Menu,
+	screen,
+} = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
@@ -9,7 +17,11 @@ const getVenmic = () => {
 	try {
 		const { PatchBay } = require("@vencord/venmic");
 		_venmic = PatchBay.hasPipeWire() ? new PatchBay() : null;
-		console.log(_venmic ? "[Venmic] Initialized successfully" : "[Venmic] Pipewire not detected");
+		console.log(
+			_venmic
+				? "[Venmic] Initialized successfully"
+				: "[Venmic] Pipewire not detected"
+		);
 	} catch (e) {
 		console.error("[Venmic] Failed to initialize:", e);
 		_venmic = null;
@@ -20,7 +32,11 @@ const getVenmic = () => {
 function getAudioServicePid() {
 	try {
 		const metrics = app.getAppMetrics();
-		const audioService = metrics.find((p) => p.name === "Audio Service" || (p.type === "Utility" && p.name.includes("Audio")));
+		const audioService = metrics.find(
+			(p) =>
+				p.name === "Audio Service" ||
+				(p.type === "Utility" && p.name.includes("Audio"))
+		);
 		return audioService ? audioService.pid.toString() : null;
 	} catch {
 		return null;
@@ -34,13 +50,22 @@ function registerDiscordProtocol() {
 
 	const desktopFile = process.env.CHROME_DESKTOP || "recar.desktop";
 
-	execFile("xdg-mime", ["default", desktopFile, "x-scheme-handler/discord"], (err) => {
-		if (err) {
-			console.error("[discord://] Failed to register protocol handler:", err.message);
-		} else {
-			console.log(`[discord://] Registered as handler via ${desktopFile}`);
+	execFile(
+		"xdg-mime",
+		["default", desktopFile, "x-scheme-handler/discord"],
+		(err) => {
+			if (err) {
+				console.error(
+					"[discord://] Failed to register protocol handler:",
+					err.message
+				);
+			} else {
+				console.log(
+					`[discord://] Registered as handler via ${desktopFile}`
+				);
+			}
 		}
-	});
+	);
 }
 
 // parse a discord:// uri and navigate mainWindow to the equivalent https://discord.com/... url, respecting the configured branch.
@@ -53,7 +78,10 @@ function handleDiscordUrl(uri) {
 		// parsed.pathname is e.g. "/channels/123/456" - slice off the leading slash.
 		const discordPath = parsed.pathname.slice(1) || "app";
 
-		const subdomain = settings.branch === "canary" || settings.branch === "ptb" ? `${settings.branch}.` : "";
+		const subdomain =
+			settings.branch === "canary" || settings.branch === "ptb"
+				? `${settings.branch}.`
+				: "";
 
 		const target = `https://${subdomain}discord.com/${discordPath}`;
 		console.log(`[discord://] Navigating to ${target}`);
@@ -75,7 +103,9 @@ if (!gotTheLock) {
 	app.on("second-instance", (event, commandLine, workingDirectory) => {
 		// on linux/windows, the os re-launches the app and passes
 		// the discord:// url as a command-line argument when already running.
-		const discordUrl = commandLine.find((arg) => arg.startsWith("discord://"));
+		const discordUrl = commandLine.find((arg) =>
+			arg.startsWith("discord://")
+		);
 		if (discordUrl) {
 			handleDiscordUrl(discordUrl);
 			return;
@@ -89,7 +119,10 @@ if (!gotTheLock) {
 	});
 }
 
-app.commandLine.appendSwitch("enable-features", "WebRTCPipeWireCapturer,VaapiVideoDecodeLinuxGL,VaapiVideoEncoder,CanvasOopRasterization");
+app.commandLine.appendSwitch(
+	"enable-features",
+	"WebRTCPipeWireCapturer,VaapiVideoDecodeLinuxGL,VaapiVideoEncoder,CanvasOopRasterization"
+);
 app.commandLine.appendSwitch(
 	"disable-features",
 	"ParserBlockingScriptsIntervention,BlinkParserBlockingScriptsIntervention,AudioServiceOutOfProcess,UseChromeOSDirectVideoDecoder,MediaFoundationVideoCapture"
@@ -97,10 +130,14 @@ app.commandLine.appendSwitch(
 app.commandLine.appendSwitch("enable-gpu-rasterization");
 app.commandLine.appendSwitch("enable-zero-copy");
 app.commandLine.appendSwitch("ignore-gpu-blocklist");
-app.commandLine.appendSwitch("enable-hardware-overlays", "single-fullscreen,single-on-top,underlay");
+app.commandLine.appendSwitch(
+	"enable-hardware-overlays",
+	"single-fullscreen,single-on-top,underlay"
+);
 app.commandLine.appendSwitch("renderer-process-limit", "3");
 
-app.userAgentFallback = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36";
+app.userAgentFallback =
+	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36";
 
 let mainWindow;
 let settingsWindow;
@@ -171,7 +208,9 @@ const iconPath = path.join(__dirname, "assets", "img", "recar.png");
 
 const loadSettings = () => {
 	if (process.argv.includes("--reset-config")) {
-		console.log("[Main] --reset-config flag detected. Removing config file.");
+		console.log(
+			"[Main] --reset-config flag detected. Removing config file."
+		);
 		if (fs.existsSync(settingsPath)) {
 			fs.unlinkSync(settingsPath);
 		}
@@ -304,7 +343,9 @@ const createStreamWindow = () => {
 		return;
 	}
 
-	const isWayland = process.env.WAYLAND_DISPLAY !== undefined || process.env.XDG_SESSION_TYPE === "wayland";
+	const isWayland =
+		process.env.WAYLAND_DISPLAY !== undefined ||
+		process.env.XDG_SESSION_TYPE === "wayland";
 
 	streamWindow = new BrowserWindow({
 		width: isWayland ? 400 : 900,
@@ -334,7 +375,9 @@ const createStreamWindow = () => {
 
 ipcMain.handle("get-session-type", () => {
 	return {
-		isWayland: process.env.WAYLAND_DISPLAY !== undefined || process.env.XDG_SESSION_TYPE === "wayland",
+		isWayland:
+			process.env.WAYLAND_DISPLAY !== undefined ||
+			process.env.XDG_SESSION_TYPE === "wayland",
 		platform: process.platform,
 	};
 });
@@ -399,7 +442,9 @@ const createMainWindow = () => {
 	});
 
 	mainWindow.webContents.setWindowOpenHandler(({ url, features }) => {
-		const isPopup = features && (features.includes("width=") || features.includes("height="));
+		const isPopup =
+			features &&
+			(features.includes("width=") || features.includes("height="));
 		if (isPopup) {
 			return {
 				action: "allow",
@@ -425,8 +470,13 @@ const createMainWindow = () => {
 		try {
 			const parsed = new URL(startUrl);
 			const discordPath = parsed.pathname.slice(1) || "app";
-			const subdomain = settings.branch === "canary" || settings.branch === "ptb" ? `${settings.branch}.` : "";
-			mainWindow.loadURL(`https://${subdomain}discord.com/${discordPath}`);
+			const subdomain =
+				settings.branch === "canary" || settings.branch === "ptb"
+					? `${settings.branch}.`
+					: "";
+			mainWindow.loadURL(
+				`https://${subdomain}discord.com/${discordPath}`
+			);
 			console.log(`[discord://] Cold-launched with ${startUrl}`);
 		} catch {
 			mainWindow.loadURL(getDiscordUrl());
@@ -538,7 +588,10 @@ ipcMain.handle("get-versions", () => ({
 
 ipcMain.on("user-info", (event, data) => {
 	currentUserInfo = data;
-	console.log("[Main] User info received:", currentUserInfo?.username ?? "(null)");
+	console.log(
+		"[Main] User info received:",
+		currentUserInfo?.username ?? "(null)"
+	);
 });
 
 ipcMain.handle("get-user-info", () => currentUserInfo);
@@ -582,7 +635,13 @@ ipcMain.handle("get-audio-sources", () => {
 	if (!getVenmic()) return [];
 	try {
 		const audioPid = getAudioServicePid();
-		const sources = getVenmic().list(["node.name", "application.name", "application.process.id", "application.process.binary", "object.serial"]);
+		const sources = getVenmic().list([
+			"node.name",
+			"application.name",
+			"application.process.id",
+			"application.process.binary",
+			"object.serial",
+		]);
 		return sources.filter((s) => s["application.process.id"] !== audioPid);
 	} catch (e) {
 		console.error("[Venmic] Failed to list audio sources:", e);
@@ -590,124 +649,158 @@ ipcMain.handle("get-audio-sources", () => {
 	}
 });
 
-ipcMain.on("stream-selected", async (event, { sourceId, fps, resolution, includeAudio = [], excludeAudio = [], contentHint }) => {
-	console.log(`[Stream] Selected source ${sourceId} at ${fps} FPS, ${resolution.width}x${resolution.height}`);
+ipcMain.on(
+	"stream-selected",
+	async (
+		event,
+		{
+			sourceId,
+			fps,
+			resolution,
+			includeAudio = [],
+			excludeAudio = [],
+			contentHint,
+		}
+	) => {
+		console.log(
+			`[Stream] Selected source ${sourceId} at ${fps} FPS, ${resolution.width}x${resolution.height}`
+		);
 
-	if (getVenmic()) {
-		try {
-			const audioPid = getAudioServicePid();
-			const excludeList = [{ "media.class": "Stream/Input/Audio" }];
+		if (getVenmic()) {
+			try {
+				const audioPid = getAudioServicePid();
+				const excludeList = [{ "media.class": "Stream/Input/Audio" }];
 
-			const myName = app.getName().toLowerCase();
-			excludeList.push({ "application.name": myName });
-			excludeList.push({ "node.name": myName });
-			excludeList.push({ "application.name": "recar" });
-			excludeList.push({ "node.name": "recar" });
-
-			if (audioPid && audioPid !== "owo") {
-				excludeList.push({ "application.process.id": audioPid });
-			}
-
-			excludeAudio.forEach((node) => {
-				const filters = [];
-				if (node["application.process.id"]) {
-					filters.push({
-						"application.process.id": node["application.process.id"].toString(),
-					});
-				}
-				if (node["node.name"] && node["node.name"] !== "entire-system") {
-					filters.push({ "node.name": node["node.name"] });
-				}
-				if (node["application.name"]) {
-					filters.push({
-						"application.name": node["application.name"],
-					});
-				}
-				if (node["application.process.binary"]) {
-					filters.push({
-						"application.process.binary": node["application.process.binary"],
-					});
-				}
-				filters.forEach((f) => excludeList.push(f));
-			});
-
-			let includeList = [];
-
-			if (includeAudio.some((a) => a["node.name"] === "entire-system")) {
-				includeList = [];
-				console.log(`[Venmic] Linking entire system audio (excludes: ${excludeAudio.length} user-apps + Discord-base)`);
-			} else if (includeAudio.length > 0) {
-				includeAudio.forEach((node) => {
-					const filter = {};
-					if (node["application.process.id"]) {
-						filter["application.process.id"] = node["application.process.id"].toString();
-					}
-					if (node["node.name"]) {
-						filter["node.name"] = node["node.name"];
-					}
-					includeList.push(filter);
-				});
-				console.log(`[Venmic] Linking specifically ${includeAudio.length} items`);
-			} else {
-				console.log("[Venmic] Unlinked (no audio selected)");
-			}
-
-			if (includeAudio.length > 0) {
-				const data = {
-					include: includeList,
-					exclude: excludeList,
-					ignore_devices: true,
-					only_speakers: true,
-					only_default_speakers: true,
-				};
+				const myName = app.getName().toLowerCase();
+				excludeList.push({ "application.name": myName });
+				excludeList.push({ "node.name": myName });
+				excludeList.push({ "application.name": "recar" });
+				excludeList.push({ "node.name": "recar" });
 
 				if (audioPid && audioPid !== "owo") {
-					data.workaround = [
-						{
-							"application.process.id": audioPid,
-							"media.name": "RecordStream",
-						},
-					];
+					excludeList.push({ "application.process.id": audioPid });
 				}
 
-				console.log("[Venmic] Final Link Data:", JSON.stringify(data, null, 2));
-				getVenmic().link(data);
-			} else {
-				getVenmic().unlink();
+				excludeAudio.forEach((node) => {
+					const filters = [];
+					if (node["application.process.id"]) {
+						filters.push({
+							"application.process.id":
+								node["application.process.id"].toString(),
+						});
+					}
+					if (
+						node["node.name"] &&
+						node["node.name"] !== "entire-system"
+					) {
+						filters.push({ "node.name": node["node.name"] });
+					}
+					if (node["application.name"]) {
+						filters.push({
+							"application.name": node["application.name"],
+						});
+					}
+					if (node["application.process.binary"]) {
+						filters.push({
+							"application.process.binary":
+								node["application.process.binary"],
+						});
+					}
+					filters.forEach((f) => excludeList.push(f));
+				});
+
+				let includeList = [];
+
+				if (
+					includeAudio.some((a) => a["node.name"] === "entire-system")
+				) {
+					includeList = [];
+					console.log(
+						`[Venmic] Linking entire system audio (excludes: ${excludeAudio.length} user-apps + Discord-base)`
+					);
+				} else if (includeAudio.length > 0) {
+					includeAudio.forEach((node) => {
+						const filter = {};
+						if (node["application.process.id"]) {
+							filter["application.process.id"] =
+								node["application.process.id"].toString();
+						}
+						if (node["node.name"]) {
+							filter["node.name"] = node["node.name"];
+						}
+						includeList.push(filter);
+					});
+					console.log(
+						`[Venmic] Linking specifically ${includeAudio.length} items`
+					);
+				} else {
+					console.log("[Venmic] Unlinked (no audio selected)");
+				}
+
+				if (includeAudio.length > 0) {
+					const data = {
+						include: includeList,
+						exclude: excludeList,
+						ignore_devices: true,
+						only_speakers: true,
+						only_default_speakers: true,
+					};
+
+					if (audioPid && audioPid !== "owo") {
+						data.workaround = [
+							{
+								"application.process.id": audioPid,
+								"media.name": "RecordStream",
+							},
+						];
+					}
+
+					console.log(
+						"[Venmic] Final Link Data:",
+						JSON.stringify(data, null, 2)
+					);
+					getVenmic().link(data);
+				} else {
+					getVenmic().unlink();
+				}
+			} catch (e) {
+				console.error("[Venmic] Failed to link audio node:", e);
 			}
-		} catch (e) {
-			console.error("[Venmic] Failed to link audio node:", e);
+		}
+
+		/**
+		 * for later me: "Venmic" is from recar, "venmic" is from venmic
+		 */
+
+		currentStreamSettings = {
+			fps,
+			resolution,
+			contentHint: contentHint ?? "motion",
+		};
+		if (mainWindow && !mainWindow.isDestroyed()) {
+			mainWindow.webContents.send(
+				"stream-settings-update",
+				currentStreamSettings
+			);
+		}
+
+		if (pendingStreamCallback) {
+			const selected =
+				lastSources.find((s) => s.id === sourceId) ?? lastSources[0];
+			if (selected) {
+				pendingStreamCallback({ video: selected });
+			} else {
+				pendingStreamCallback({});
+			}
+			pendingStreamCallback = null;
+		}
+
+		if (streamWindow && !streamWindow.isDestroyed()) {
+			streamWindow.close();
+			streamWindow = null;
 		}
 	}
-
-	/**
-	 * for later me: "Venmic" is from recar, "venmic" is from venmic
-	 */
-
-	currentStreamSettings = {
-		fps,
-		resolution,
-		contentHint: contentHint ?? "motion",
-	};
-	if (mainWindow && !mainWindow.isDestroyed()) {
-		mainWindow.webContents.send("stream-settings-update", currentStreamSettings);
-	}
-
-	if (pendingStreamCallback) {
-		const selected = lastSources.find((s) => s.id === sourceId) ?? lastSources[0];
-		if (selected) {
-			pendingStreamCallback({ video: selected });
-		} else {
-			pendingStreamCallback({});
-		}
-		pendingStreamCallback = null;
-	}
-
-	if (streamWindow && !streamWindow.isDestroyed()) {
-		streamWindow.close();
-		streamWindow = null;
-	}
-});
+);
 
 ipcMain.on("stream-cancel", () => {
 	if (pendingStreamCallback) pendingStreamCallback(null);
@@ -747,7 +840,9 @@ ipcMain.on("call-ring-stopped", () => {
 ipcMain.on("call-dismiss", () => {
 	const channelId = pendingCallData?.channelId;
 	if (channelId && mainWindow && !mainWindow.isDestroyed()) {
-		mainWindow.webContents.executeJavaScript(`Vencord.Webpack.findByProps("stopRinging")?.stopRinging(${JSON.stringify(channelId)})`);
+		mainWindow.webContents.executeJavaScript(
+			`Vencord.Webpack.findByProps("stopRinging")?.stopRinging(${JSON.stringify(channelId)})`
+		);
 	}
 	pendingCallData = null;
 	if (callWindow && !callWindow.isDestroyed()) {
@@ -758,7 +853,9 @@ ipcMain.on("call-dismiss", () => {
 ipcMain.on("call-answer", () => {
 	const channelId = pendingCallData?.channelId;
 	if (channelId && mainWindow && !mainWindow.isDestroyed()) {
-		mainWindow.webContents.executeJavaScript(`Vencord.Webpack.findByProps("stopRinging")?.call(${JSON.stringify(channelId)})`);
+		mainWindow.webContents.executeJavaScript(
+			`Vencord.Webpack.findByProps("stopRinging")?.call(${JSON.stringify(channelId)})`
+		);
 		mainWindow.show();
 		mainWindow.focus();
 	}
@@ -856,7 +953,9 @@ ipcMain.handle("restart-app", () => {
 	app.isQuiting = true;
 
 	// Filter out --reset-config so it doesn't loop
-	const args = process.argv.slice(1).filter((arg) => arg !== "--reset-config");
+	const args = process.argv
+		.slice(1)
+		.filter((arg) => arg !== "--reset-config");
 	app.relaunch({ args });
 
 	app.exit(0);
@@ -879,7 +978,11 @@ app.whenReady().then(async () => {
 						label: "Restart",
 						click: () => {
 							app.isQuiting = true;
-							app.relaunch({ args: process.argv.slice(1).filter((a) => a !== "--reset-config") });
+							app.relaunch({
+								args: process.argv
+									.slice(1)
+									.filter((a) => a !== "--reset-config"),
+							});
 							app.exit(0);
 						},
 					},
@@ -928,7 +1031,12 @@ app.whenReady().then(async () => {
 	const { session } = require("electron");
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
 		const responseHeaders = Object.assign({}, details.responseHeaders);
-		const toDelete = ["content-security-policy", "content-security-policy-report-only", "x-frame-options", "x-content-type-options"];
+		const toDelete = [
+			"content-security-policy",
+			"content-security-policy-report-only",
+			"x-frame-options",
+			"x-content-type-options",
+		];
 
 		for (const header of Object.keys(responseHeaders)) {
 			if (toDelete.includes(header.toLowerCase())) {
@@ -964,7 +1072,9 @@ app.whenReady().then(async () => {
 						clients.delete(ws);
 					});
 				});
-				console.log("[arRPC Bridge] WebSocket server started on port 1337");
+				console.log(
+					"[arRPC Bridge] WebSocket server started on port 1337"
+				);
 
 				const arrpc = await new Server();
 				arrpc.on("activity", (data) => {
@@ -973,16 +1083,24 @@ app.whenReady().then(async () => {
 					for (const client of clients) {
 						client.send(message);
 					}
-					console.log("[arRPC] Activity broadcasted to", clients.size, "clients");
+					console.log(
+						"[arRPC] Activity broadcasted to",
+						clients.size,
+						"clients"
+					);
 				});
 				console.log("[arRPC] Rich Presence server started");
 			} else {
-				console.log("[arRPC Bridge] Port 1337 is already in use, skipping websocket");
+				console.log(
+					"[arRPC Bridge] Port 1337 is already in use, skipping websocket"
+				);
 				const arrpc = await new Server();
 				arrpc.on("activity", (data) => {
 					console.log("[arRPC] Activity received:", data);
 				});
-				console.log("[arRPC] Rich Presence server started (without websocket)");
+				console.log(
+					"[arRPC] Rich Presence server started (without websocket)"
+				);
 			}
 		} catch (e) {
 			console.error("[arRPC] Failed to start:", e);

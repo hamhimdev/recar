@@ -15,7 +15,8 @@ const CATBOX_API = "https://catbox.moe/user/api.php";
 const settings = definePluginSettings({
 	userhash: {
 		type: OptionType.STRING,
-		description: "Your Catbox userhash for account binding (leave empty for anonymous uploads).",
+		description:
+			"Your Catbox userhash for account binding (leave empty for anonymous uploads).",
 		default: "",
 	},
 });
@@ -23,11 +24,16 @@ const settings = definePluginSettings({
 async function uploadToCatbox(file: File): Promise<string> {
 	const formData = new FormData();
 	formData.append("reqtype", "fileupload");
-	if (settings.store.userhash) formData.append("userhash", settings.store.userhash);
+	if (settings.store.userhash)
+		formData.append("userhash", settings.store.userhash);
 	formData.append("fileToUpload", file, file.name);
 
-	const response = await fetch(CATBOX_API, { method: "POST", body: formData });
-	if (!response.ok) throw new Error(`${response.status} ${await response.text()}`);
+	const response = await fetch(CATBOX_API, {
+		method: "POST",
+		body: formData,
+	});
+	if (!response.ok)
+		throw new Error(`${response.status} ${await response.text()}`);
 
 	const url = (await response.text()).trim();
 	if (!url) throw new Error("Empty response from Catbox");
@@ -43,7 +49,10 @@ async function pickAndUpload() {
 		const files = Array.from(input.files ?? []);
 		if (!files.length) return;
 
-		showToast(`Uploading ${files.length} file${files.length > 1 ? "s" : ""} to Catbox...`, Toasts.Type.MESSAGE);
+		showToast(
+			`Uploading ${files.length} file${files.length > 1 ? "s" : ""} to Catbox...`,
+			Toasts.Type.MESSAGE
+		);
 
 		const urls: string[] = [];
 		for (const file of files) {
@@ -57,14 +66,24 @@ async function pickAndUpload() {
 
 		if (!urls.length) return;
 		insertTextIntoChatInputBox(urls.join("\n"));
-		showToast(`Uploaded ${urls.length} file${urls.length > 1 ? "s" : ""} to Catbox`, Toasts.Type.SUCCESS);
+		showToast(
+			`Uploaded ${urls.length} file${urls.length > 1 ? "s" : ""} to Catbox`,
+			Toasts.Type.SUCCESS
+		);
 	};
 
 	input.click();
 }
 
 const ctxMenuPatch: NavContextMenuPatchCallback = (children) => {
-	children.push(<Menu.MenuItem id="catbox-upload" icon={CloudUploadIcon} label="Upload to Catbox" action={pickAndUpload} />);
+	children.push(
+		<Menu.MenuItem
+			id="catbox-upload"
+			icon={CloudUploadIcon}
+			label="Upload to Catbox"
+			action={pickAndUpload}
+		/>
+	);
 };
 
 export default definePlugin({

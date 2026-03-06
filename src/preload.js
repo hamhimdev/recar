@@ -17,7 +17,8 @@ contextBridge.exposeInMainWorld("recarBridge", {
 	// Push current user info from the renderer plugin to the main process
 	sendUserInfo: (data) => ipcRenderer.send("user-info", data),
 	// Register a callback that main can invoke to request a fresh user-info snapshot
-	onUserInfoRequested: (cb) => ipcRenderer.on("request-user-info", () => cb()),
+	onUserInfoRequested: (cb) =>
+		ipcRenderer.on("request-user-info", () => cb()),
 });
 
 contextBridge.exposeInMainWorld("statusBridge", {
@@ -47,15 +48,43 @@ contextBridge.exposeInMainWorld("recarInternalBridge", {
 
 		let modPath, modCssPath;
 		if (selectedMod === "equicord") {
-			modPath = path.join(__dirname, "..", "equicord", "dist", "browser", "browser.js");
-			modCssPath = path.join(__dirname, "..", "equicord", "dist", "browser", "browser.css");
+			modPath = path.join(
+				__dirname,
+				"..",
+				"equicord",
+				"dist",
+				"browser",
+				"browser.js"
+			);
+			modCssPath = path.join(
+				__dirname,
+				"..",
+				"equicord",
+				"dist",
+				"browser",
+				"browser.css"
+			);
 		} else {
-			modPath = path.join(__dirname, "..", "vencord", "dist", "browser.js");
-			modCssPath = path.join(__dirname, "..", "vencord", "dist", "browser.css");
+			modPath = path.join(
+				__dirname,
+				"..",
+				"vencord",
+				"dist",
+				"browser.js"
+			);
+			modCssPath = path.join(
+				__dirname,
+				"..",
+				"vencord",
+				"dist",
+				"browser.css"
+			);
 		}
 
 		if (!fs.existsSync(modPath)) {
-			console.error(`[Preload] ${selectedMod} build not found at ${modPath}. Please run pnpm build:${selectedMod}!!`);
+			console.error(
+				`[Preload] ${selectedMod} build not found at ${modPath}. Please run pnpm build:${selectedMod}!!`
+			);
 			return;
 		}
 

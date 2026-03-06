@@ -13,14 +13,16 @@
 	font-style: italic;
 	font-display: swap;
 	font-weight: 100 900;
-	src: url("assets/font/SourceSans3-Italic-VariableFont_wght.ttf") format("woff2");
+	src: url("assets/font/SourceSans3-Italic-VariableFont_wght.ttf")
+		format("woff2");
 }
 
 @font-face {
 	font-family: "Material Symbols Rounded";
 	font-style: normal;
 	font-weight: 400;
-	src: url("assets/font/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2") format("woff2");
+	src: url("assets/font/MaterialSymbolsRounded[FILL,GRAD,opsz,wght].woff2")
+		format("woff2");
 }
 
 .material-symbols-rounded {
