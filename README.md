@@ -13,7 +13,7 @@ https://recar.loxodrome.app/
 
 > #### ⚠️ Warning
 >
-> Recar is still in alpha! Things may be broken or change unexpectedly.
+> Recar is still in alpha! Things may be broken, missing, or change unexpectedly.
 
 ## Features
 
