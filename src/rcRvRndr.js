@@ -3,40 +3,40 @@ const net = require("net");
 const fs = require("fs");
 const path = require("path");
 
-let fF = "sans-serif";
+let fontFamily = "sans-serif";
 
-function initFn(ad) {
-	const fDR = ad ? path.join(ad, "font") : null;
+function initFonts(assetsDir) {
+	const fontDir = assetsDir ? path.join(assetsDir, "font") : null;
 
-	const bFNs = fDR
+	const bundledFonts = fontDir
 		? [
 				{
-					ff: "SourceSans3-VariableFont_wght.ttf",
-					fm: "Source Sans 3",
+					filename: "SourceSans3-VariableFont_wght.ttf",
+					familyName: "Source Sans 3",
 				},
 				{
-					ff: "SourceSans3-Italic-VariableFont_wght.ttf",
-					fm: "Source Sans 3",
+					filename: "SourceSans3-Italic-VariableFont_wght.ttf",
+					familyName: "Source Sans 3",
 				},
 			]
 		: [];
 
-	for (const { ff, fm } of bFNs) {
-		const fp = path.join(fDR, ff);
-		if (fs.existsSync(fp)) {
+	for (const { filename, familyName } of bundledFonts) {
+		const fontPath = path.join(fontDir, filename);
+		if (fs.existsSync(fontPath)) {
 			try {
-				GlobalFonts.registerFromPath(fp, fm);
-				fF = fm;
-				console.log(`[Overlay] Loaded font: ${fp}`);
+				GlobalFonts.registerFromPath(fontPath, familyName);
+				fontFamily = familyName;
+				console.log(`[Overlay] Loaded font: ${fontPath}`);
 			} catch (e) {
-				console.warn(`[Overlay] Failed to load ${fp}:`, e.message);
+				console.warn(`[Overlay] Failed to load ${fontPath}:`, e.message);
 			}
 		}
 	}
 
-	if (fF !== "sans-serif") return;
+	if (fontFamily !== "sans-serif") return;
 
-	const sFNs = [
+	const systemFonts = [
 		["/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "DejaVu Sans"],
 		["/usr/share/fonts/TTF/DejaVuSans.ttf", "DejaVu Sans"],
 		[
@@ -46,75 +46,75 @@ function initFn(ad) {
 		["/usr/share/fonts/noto/NotoSans-Regular.ttf", "Noto Sans"],
 	];
 
-	for (const [fp, fm] of sFNs) {
-		if (fs.existsSync(fp)) {
+	for (const [fontPath, familyName] of systemFonts) {
+		if (fs.existsSync(fontPath)) {
 			try {
-				GlobalFonts.registerFromPath(fp, fm);
-				fF = fm;
-				console.log(`[Overlay] Loaded system font: ${fp}`);
+				GlobalFonts.registerFromPath(fontPath, familyName);
+				fontFamily = familyName;
+				console.log(`[Overlay] Loaded system font: ${fontPath}`);
 				return;
 			} catch {}
 		}
 	}
 }
 
-const icmcof = "muted";
-const ichsof = "deafened";
+const ICON_MUTED = "muted";
+const ICON_DEAFENED = "deafened";
 
-const shnm = "/recar_overlay";
-const shhdsz = 64;
-const shmmwt = 3840;
-const shmmht = 2160;
-const shpxsz = shmmwt * shmmht * 4;
-const shttsz = shhdsz + shpxsz;
-const shwring = 1;
-const shrd = 2;
-const scpt = "/tmp/recar_overlay.sock";
+const SHM_NAME = "/recar_overlay";
+const SHM_HEADER_SIZE = 64;
+const SHM_MAX_WIDTH = 3840;
+const SHM_MAX_HEIGHT = 2160;
+const SHM_PIXEL_SIZE = SHM_MAX_WIDTH * SHM_MAX_HEIGHT * 4;
+const SHM_TOTAL_SIZE = SHM_HEADER_SIZE + SHM_PIXEL_SIZE;
+const SHM_STATE_WRITING = 1;
+const SHM_STATE_READY = 2;
+const SOCKET_PATH = "/tmp/recar_overlay.sock";
 
 class OverlayRenderer {
 	constructor() {
-		this._shfd = -1;
-		this._hdbf = null;
-		this._rdbf = null;
-		this._cvs = null;
+		this._shmFd = -1;
+		this._headerBuf = null;
+		this._readBuf = null;
+		this._canvas = null;
 		this._ctx = null;
-		this._w = 0;
-		this._h = 0;
-		this._drt = false;
-		this._rtmr = null;
-		this._ind = false;
-		this._ntfs = [];
-		this._vcu = [];
-		this._lgw = 0;
-		this._lgh = 0;
-		this._dsc = 1.0;
-		this._rdbc = null;
-		this._avc = new Map();
-		this._asd = null;
-		this._isvg = new Map();
-		this._irnd = new Map();
-		this._ild = new Set();
+		this._width = 0;
+		this._height = 0;
+		this._dirty = false;
+		this._renderTimer = null;
+		this._initialized = false;
+		this._notifications = [];
+		this._voiceUsers = [];
+		this._lastWidth = 0;
+		this._lastHeight = 0;
+		this._scale = 1.0;
+		this._resizeDebounce = null;
+		this._avatarCache = new Map();
+		this._assetsDir = null;
+		this._svgCache = new Map();
+		this._iconCache = new Map();
+		this._iconLoading = new Set();
 	}
 
-	async init(w = 1920, h = 1080, ad = null) {
+	async init(width = 1920, height = 1080, assetsDir = null) {
 		if (process.platform !== "linux") return false;
 
-		this._asd = ad;
-		initFn(ad);
-		this._plIcSvg();
+		this._assetsDir = assetsDir;
+		initFonts(assetsDir);
+		this._loadIconSvgs();
 
-		this._w = Math.min(w, shmmwt);
-		this._h = Math.min(h, shmmht);
-		this._updSc();
+		this._width = Math.min(width, SHM_MAX_WIDTH);
+		this._height = Math.min(height, SHM_MAX_HEIGHT);
+		this._updateScale();
 
-		if (!this._opShm()) return false;
+		if (!this._openShm()) return false;
 
-		this._rcCvs(this._w, this._h);
-		this._ind = true;
+		this._recreateCanvas(this._width, this._height);
+		this._initialized = true;
 
-		this._rtmr = setInterval(() => {
+		this._renderTimer = setInterval(() => {
 			try {
-				this._rnFr();
+				this._renderFrame();
 			} catch (e) {
 				console.error("[Overlay] Render error:", e);
 			}
@@ -124,151 +124,151 @@ class OverlayRenderer {
 	}
 
 	destroy() {
-		if (this._rtmr) clearInterval(this._rtmr);
-		if (this._rdbc) clearTimeout(this._rdbc);
-		this._clShm();
-		this._ind = false;
+		if (this._renderTimer) clearInterval(this._renderTimer);
+		if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
+		this._closeShm();
+		this._initialized = false;
 	}
 
-	_updSc() {
-		this._dsc = Math.max(1.0, this._w / 1920);
+	_updateScale() {
+		this._scale = Math.max(1.0, this._width / 1920);
 	}
 
-	_rcCvs(w, h) {
-		this._w = w;
-		this._h = h;
-		this._updSc();
-		this._cvs = createCanvas(w, h);
-		this._ctx = this._cvs.getContext("2d");
-		this._irnd.clear();
-		this._ild.clear();
-		this._drt = true;
+	_recreateCanvas(width, height) {
+		this._width = width;
+		this._height = height;
+		this._updateScale();
+		this._canvas = createCanvas(width, height);
+		this._ctx = this._canvas.getContext("2d");
+		this._iconCache.clear();
+		this._iconLoading.clear();
+		this._dirty = true;
 	}
 
-	_plIcSvg() {
-		if (!this._asd) return;
+	_loadIconSvgs() {
+		if (!this._assetsDir) return;
 
-		const ic = {
-			[icmcof]: "muted.svg",
-			[ichsof]: "deafened.svg",
+		const icons = {
+			[ICON_MUTED]: "muted.svg",
+			[ICON_DEAFENED]: "deafened.svg",
 		};
 
-		for (const [nm, fn] of Object.entries(ic)) {
-			const sp = path.join(this._asd, "img", "overlay", fn);
-			if (!fs.existsSync(sp)) {
-				console.warn(`[Overlay] Icon not found: ${sp}`);
+		for (const [name, filename] of Object.entries(icons)) {
+			const svgPath = path.join(this._assetsDir, "img", "overlay", filename);
+			if (!fs.existsSync(svgPath)) {
+				console.warn(`[Overlay] Icon not found: ${svgPath}`);
 				continue;
 			}
 			try {
-				const sd = fs.readFileSync(sp, "utf-8");
-				this._isvg.set(nm, sd);
-				console.log(`[Overlay] Loaded SVG source: ${fn}`);
+				const svgData = fs.readFileSync(svgPath, "utf-8");
+				this._svgCache.set(name, svgData);
+				console.log(`[Overlay] Loaded SVG source: ${filename}`);
 			} catch (e) {
-				console.warn(`[Overlay] Failed to read ${fn}:`, e.message);
+				console.warn(`[Overlay] Failed to read ${filename}:`, e.message);
 			}
 		}
 	}
 
-	async _rnIcImg(icn, sz, cl) {
-		const ck = `${icn}_${sz}_${cl}`;
-		if (this._irnd.has(ck) || this._ild.has(ck)) return;
+	async _renderIcon(iconName, size, color) {
+		const cacheKey = `${iconName}_${size}_${color}`;
+		if (this._iconCache.has(cacheKey) || this._iconLoading.has(cacheKey)) return;
 
-		const ss = this._isvg.get(icn);
-		if (!ss) return;
+		const svgSource = this._svgCache.get(iconName);
+		if (!svgSource) return;
 
-		this._ild.add(ck);
+		this._iconLoading.add(cacheKey);
 
 		try {
 			// strp existing fill attr from <svg> tag, set explicit w/h
 			// then prepend a new fill attr so all child paths inherit it
-			let sv = ss;
-			sv = sv.replace(/(<svg[^>]*)\sfill="[^"]*"/i, "$1");
-			sv = sv.replace(/width="[^"]*"/, `width="${sz}"`);
-			sv = sv.replace(/height="[^"]*"/, `height="${sz}"`);
-			sv = sv.replace(/<svg/, `<svg fill="${cl}"`);
+			let svg = svgSource;
+			svg = svg.replace(/(<svg[^>]*)\sfill="[^"]*"/i, "$1");
+			svg = svg.replace(/width="[^"]*"/, `width="${size}"`);
+			svg = svg.replace(/height="[^"]*"/, `height="${size}"`);
+			svg = svg.replace(/<svg/, `<svg fill="${color}"`);
 
 			// svg -> temp cvs -> png buff -> img
 			// why? bc napi-rs is a prick with direct svg rendering :p
-			const tc = createCanvas(sz, sz);
-			const tx = tc.getContext("2d");
-			const si = await loadImage(Buffer.from(sv));
-			tx.drawImage(si, 0, 0, sz, sz);
-			const pb = tc.toBuffer("image/png");
-			const fi = await loadImage(pb);
+			const tempCanvas = createCanvas(size, size);
+			const tempCtx = tempCanvas.getContext("2d");
+			const svgImage = await loadImage(Buffer.from(svg));
+			tempCtx.drawImage(svgImage, 0, 0, size, size);
+			const pngBuffer = tempCanvas.toBuffer("image/png");
+			const finalImage = await loadImage(pngBuffer);
 
-			this._irnd.set(ck, fi);
-			this._drt = true;
+			this._iconCache.set(cacheKey, finalImage);
+			this._dirty = true;
 		} catch (e) {
-			console.warn(`[Overlay] Failed to render icon ${icn}:`, e.message);
+			console.warn(`[Overlay] Failed to render icon ${iconName}:`, e.message);
 		} finally {
-			this._ild.delete(ck);
+			this._iconLoading.delete(cacheKey);
 		}
 	}
 
-	_drIcSn(ctx, icn, x, y, sz, cl) {
-		const ck = `${icn}_${sz}_${cl}`;
-		const im = this._irnd.get(ck);
+	_drawIcon(ctx, iconName, x, y, size, color) {
+		const cacheKey = `${iconName}_${size}_${color}`;
+		const image = this._iconCache.get(cacheKey);
 
-		if (im) {
-			ctx.drawImage(im, x - sz / 2, y - sz / 2, sz, sz);
+		if (image) {
+			ctx.drawImage(image, x - size / 2, y - size / 2, size, size);
 			return;
 		}
 
-		this._rnIcImg(icn, sz, cl);
-		this._drFbIc(ctx, icn, x, y, sz, cl);
+		this._renderIcon(iconName, size, color);
+		this._drawFallbackIcon(ctx, iconName, x, y, size, color);
 	}
 
-	_drFbIc(ctx, icn, x, y, sz, cl) {
+	_drawFallbackIcon(ctx, iconName, x, y, size, color) {
 		ctx.save();
-		const r = sz * 0.35;
-		ctx.strokeStyle = cl;
-		ctx.lineWidth = Math.max(1.5, sz * 0.12);
+		const radius = size * 0.35;
+		ctx.strokeStyle = color;
+		ctx.lineWidth = Math.max(1.5, size * 0.12);
 		ctx.lineCap = "round";
 
-		if (icn === icmcof) {
+		if (iconName === ICON_MUTED) {
 			ctx.beginPath();
-			ctx.arc(x, y - sz * 0.1, r * 0.55, Math.PI, 0);
-			ctx.lineTo(x + r * 0.55, y + sz * 0.05);
-			ctx.arc(x, y + sz * 0.05, r * 0.55, 0, Math.PI);
+			ctx.arc(x, y - size * 0.1, radius * 0.55, Math.PI, 0);
+			ctx.lineTo(x + radius * 0.55, y + size * 0.05);
+			ctx.arc(x, y + size * 0.05, radius * 0.55, 0, Math.PI);
 			ctx.closePath();
 			ctx.stroke();
 			ctx.beginPath();
-			ctx.moveTo(x - r, y + r);
-			ctx.lineTo(x + r, y - r);
+			ctx.moveTo(x - radius, y + radius);
+			ctx.lineTo(x + radius, y - radius);
 			ctx.stroke();
-		} else if (icn === ichsof) {
+		} else if (iconName === ICON_DEAFENED) {
 			ctx.beginPath();
-			ctx.arc(x, y, r, Math.PI * 1.15, Math.PI * 1.85);
+			ctx.arc(x, y, radius, Math.PI * 1.15, Math.PI * 1.85);
 			ctx.stroke();
 			ctx.beginPath();
-			ctx.moveTo(x - r, y + r);
-			ctx.lineTo(x + r, y - r);
+			ctx.moveTo(x - radius, y + radius);
+			ctx.lineTo(x + radius, y - radius);
 			ctx.stroke();
 		}
 		ctx.restore();
 	}
 
-	_opShm() {
+	_openShm() {
 		try {
-			const sp = `/dev/shm${shnm}`;
+			const shmPath = `/dev/shm${SHM_NAME}`;
 			let fd;
 			try {
-				fd = fs.openSync(sp, "r+");
+				fd = fs.openSync(shmPath, "r+");
 			} catch {
-				fd = fs.openSync(sp, "w+");
-				const zb = Buffer.alloc(4096);
-				let wr = 0;
-				while (wr < shttsz) {
-					const ch = Math.min(zb.length, shttsz - wr);
-					fs.writeSync(fd, zb, 0, ch);
-					wr += ch;
+				fd = fs.openSync(shmPath, "w+");
+				const zeroBuf = Buffer.alloc(4096);
+				let written = 0;
+				while (written < SHM_TOTAL_SIZE) {
+					const chunk = Math.min(zeroBuf.length, SHM_TOTAL_SIZE - written);
+					fs.writeSync(fd, zeroBuf, 0, chunk);
+					written += chunk;
 				}
 			}
-			if (fs.fstatSync(fd).size < shttsz) fs.ftruncateSync(fd, shttsz);
+			if (fs.fstatSync(fd).size < SHM_TOTAL_SIZE) fs.ftruncateSync(fd, SHM_TOTAL_SIZE);
 
-			this._shfd = fd;
-			this._hdbf = Buffer.alloc(shhdsz);
-			this._rdbf = Buffer.alloc(shhdsz);
+			this._shmFd = fd;
+			this._headerBuf = Buffer.alloc(SHM_HEADER_SIZE);
+			this._readBuf = Buffer.alloc(SHM_HEADER_SIZE);
 			return true;
 		} catch (e) {
 			console.error("[Overlay] shm open failed:", e);
@@ -276,89 +276,88 @@ class OverlayRenderer {
 		}
 	}
 
-	_clShm() {
-		if (this._shfd >= 0) {
+	_closeShm() {
+		if (this._shmFd >= 0) {
 			try {
-				fs.closeSync(this._shfd);
+				fs.closeSync(this._shmFd);
 			} catch {}
-			this._shfd = -1;
+			this._shmFd = -1;
 		}
 	}
 
-	_rdGmRes() {
-		if (this._shfd < 0) return null;
+	_readGameResolution() {
+		if (this._shmFd < 0) return null;
 		try {
-			fs.readSync(this._shfd, this._rdbf, 0, shhdsz, 0);
-			const w = this._rdbf.readUInt32LE(16);
-			const h = this._rdbf.readUInt32LE(20);
-			if (w > 0 && h > 0 && w <= shmmwt && h <= shmmht)
-				return { width: w, height: h };
+			fs.readSync(this._shmFd, this._readBuf, 0, SHM_HEADER_SIZE, 0);
+			const width = this._readBuf.readUInt32LE(16);
+			const height = this._readBuf.readUInt32LE(20);
+			if (width > 0 && height > 0 && width <= SHM_MAX_WIDTH && height <= SHM_MAX_HEIGHT)
+				return { width, height };
 		} catch {}
 		return null;
 	}
 
-	_wrShm(pb) {
-		if (this._shfd < 0) return false;
+	_writeShm(pixelBuf) {
+		if (this._shmFd < 0) return false;
 		try {
-			this._hdbf[0] = shwring;
-			this._hdbf.writeUInt32LE(this._w, 4);
-			this._hdbf.writeUInt32LE(this._h, 8);
-			fs.writeSync(this._shfd, this._hdbf, 0, 16, 0);
-			fs.writeSync(this._shfd, pb, 0, pb.length, shhdsz);
-			this._hdbf[0] = shrd;
-			fs.writeSync(this._shfd, this._hdbf, 0, 1, 0);
+			this._headerBuf[0] = SHM_STATE_WRITING;
+			this._headerBuf.writeUInt32LE(this._width, 4);
+			this._headerBuf.writeUInt32LE(this._height, 8);
+			fs.writeSync(this._shmFd, this._headerBuf, 0, 16, 0);
+			fs.writeSync(this._shmFd, pixelBuf, 0, pixelBuf.length, SHM_HEADER_SIZE);
+			this._headerBuf[0] = SHM_STATE_READY;
+			fs.writeSync(this._shmFd, this._headerBuf, 0, 1, 0);
 			return true;
 		} catch (e) {
 			return false;
 		}
 	}
 
-	_sgLyr() {
-		const cl = net.createConnection(scpt, () => {
-			cl.write('{"op":"FRAME_UPDATE"}');
-			cl.end();
+	_signalLayer() {
+		const client = net.createConnection(SOCKET_PATH, () => {
+			client.write('{"op":"FRAME_UPDATE"}');
+			client.end();
 		});
-		cl.on("error", () => {});
+		client.on("error", () => {});
 	}
 
-	async _ldAv(uid, ah) {
-		if (!uid) return;
-		const k = `${uid}_${ah || "default"}`;
+	async _loadAvatar(userId, avatarHash) {
+		if (!userId) return;
+		const key = `${userId}_${avatarHash || "default"}`;
 
-		if (this._avc.has(k)) return;
-		this._avc.set(k, null);
+		if (this._avatarCache.has(key)) return;
+		this._avatarCache.set(key, null);
 
 		let url;
-		if (ah) {
-			const ext = ah.startsWith("a_") ? "gif" : "png";
-			url = `https://cdn.discordapp.com/avatars/${uid}/${ah}.${ext}?size=128`;
+		if (avatarHash) {
+			const ext = avatarHash.startsWith("a_") ? "gif" : "png";
+			url = `https://cdn.discordapp.com/avatars/${userId}/${avatarHash}.${ext}?size=128`;
 		} else {
-			const idx = (BigInt(uid) >> 22n) % 6n;
+			const idx = (BigInt(userId) >> 22n) % 6n;
 			url = `https://cdn.discordapp.com/embed/avatars/${idx}.png?size=128`;
 		}
 
 		try {
-			const im = await loadImage(url);
-			this._avc.set(k, im);
-			this._drt = true;
+			const image = await loadImage(url);
+			this._avatarCache.set(key, image);
+			this._dirty = true;
 		} catch (e) {
 			console.warn(
-				`[Overlay] Failed to load avatar for ${uid}:`,
+				`[Overlay] Failed to load avatar for ${userId}:`,
 				e.message
 			);
-			this._avc.delete(k);
+			this._avatarCache.delete(key);
 		}
 	}
 
-	_gtAvImg(uid, ah) {
-		if (!uid) return null;
-		const k = `${uid}_${ah || "default"}`;
-		const c = this._avc.get(k);
-		return c || null;
+	_getAvatar(userId, avatarHash) {
+		if (!userId) return null;
+		const key = `${userId}_${avatarHash || "default"}`;
+		return this._avatarCache.get(key) || null;
 	}
 
 	addNotification(data) {
-		this._ntfs.push({
+		this._notifications.push({
 			message: data.message || "",
 			sender: data.sender || null,
 			channel: data.channel || null,
@@ -371,14 +370,14 @@ class OverlayRenderer {
 			duration: data.duration || 5000,
 		});
 
-		if (data.userId) this._ldAv(data.userId, data.avatarHash);
-		this._drt = true;
+		if (data.userId) this._loadAvatar(data.userId, data.avatarHash);
+		this._dirty = true;
 	}
 
 	voiceJoin(data) {
 		if (!data || !data.uid) return;
-		this._vcu = this._vcu.filter((u) => u.id !== data.uid);
-		this._vcu.push({
+		this._voiceUsers = this._voiceUsers.filter((u) => u.id !== data.uid);
+		this._voiceUsers.push({
 			id: data.uid,
 			username: data.username || data.uid,
 			avatarHash: data.avatarHash || null,
@@ -387,152 +386,152 @@ class OverlayRenderer {
 			speaking: false,
 		});
 
-		if (data.uid) this._ldAv(data.uid, data.avatarHash);
-		this._drt = true;
+		if (data.uid) this._loadAvatar(data.uid, data.avatarHash);
+		this._dirty = true;
 	}
 
 	voiceLeave({ uid }) {
-		this._vcu = this._vcu.filter((u) => u.id !== uid);
-		this._drt = true;
+		this._voiceUsers = this._voiceUsers.filter((u) => u.id !== uid);
+		this._dirty = true;
 	}
 
 	voiceUpdateAvatar({ uid, avatarHash }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u && avatarHash && u.avatarHash !== avatarHash) {
-			u.avatarHash = avatarHash;
-			this._ldAv(uid, avatarHash);
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user && avatarHash && user.avatarHash !== avatarHash) {
+			user.avatarHash = avatarHash;
+			this._loadAvatar(uid, avatarHash);
+			this._dirty = true;
 		}
 	}
 
 	voiceMuted({ uid }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u) {
-			u.muted = true;
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			user.muted = true;
+			this._dirty = true;
 		}
 	}
 
 	voiceUnmuted({ uid }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u) {
-			u.muted = false;
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			user.muted = false;
+			this._dirty = true;
 		}
 	}
 
 	voiceDeafened({ uid }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u) {
-			u.deafened = true;
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			user.deafened = true;
+			this._dirty = true;
 		}
 	}
 
 	voiceUndeafened({ uid }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u) {
-			u.deafened = false;
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			user.deafened = false;
+			this._dirty = true;
 		}
 	}
 
 	voiceStartedSpeaking({ uid }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u) {
-			u.speaking = true;
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			user.speaking = true;
+			this._dirty = true;
 		}
 	}
 
 	voiceStoppedSpeaking({ uid }) {
-		const u = this._vcu.find((u) => u.id === uid);
-		if (u) {
-			u.speaking = false;
-			this._drt = true;
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			user.speaking = false;
+			this._dirty = true;
 		}
 	}
 
 	voiceClear() {
-		this._vcu = [];
-		this._drt = true;
+		this._voiceUsers = [];
+		this._dirty = true;
 	}
 
-	_rnFr() {
-		if (!this._ind) return;
+	_renderFrame() {
+		if (!this._initialized) return;
 
-		const gr = this._rdGmRes();
-		if (gr && (gr.width !== this._lgw || gr.height !== this._lgh)) {
-			this._lgw = gr.width;
-			this._lgh = gr.height;
-			if (gr.width !== this._w || gr.height !== this._h) {
-				if (this._rdbc) clearTimeout(this._rdbc);
-				this._rdbc = setTimeout(() => {
-					const cr = this._rdGmRes();
+		const gameRes = this._readGameResolution();
+		if (gameRes && (gameRes.width !== this._lastWidth || gameRes.height !== this._lastHeight)) {
+			this._lastWidth = gameRes.width;
+			this._lastHeight = gameRes.height;
+			if (gameRes.width !== this._width || gameRes.height !== this._height) {
+				if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
+				this._resizeDebounce = setTimeout(() => {
+					const current = this._readGameResolution();
 					if (
-						cr &&
-						cr.width === this._lgw &&
-						cr.height === this._lgh
+						current &&
+						current.width === this._lastWidth &&
+						current.height === this._lastHeight
 					) {
-						this._rcCvs(cr.width, cr.height);
+						this._recreateCanvas(current.width, current.height);
 					}
-					this._rdbc = null;
+					this._resizeDebounce = null;
 				}, 200);
 			}
 		}
 
-		const nw = Date.now();
-		const bf = this._ntfs.length;
-		this._ntfs = this._ntfs.filter((n) => nw - n.createdAt < n.duration);
-		if (this._ntfs.length !== bf) this._drt = true;
+		const now = Date.now();
+		const prevCount = this._notifications.length;
+		this._notifications = this._notifications.filter((n) => now - n.createdAt < n.duration);
+		if (this._notifications.length !== prevCount) this._dirty = true;
 
-		for (const n of this._ntfs) {
-			const el = nw - n.createdAt;
-			const rm = n.duration - el;
-			if (el < 300 || rm < 500) {
-				this._drt = true;
+		for (const n of this._notifications) {
+			const elapsed = now - n.createdAt;
+			const remaining = n.duration - elapsed;
+			if (elapsed < 300 || remaining < 500) {
+				this._dirty = true;
 				break;
 			}
 		}
 
-		if (!this._drt) return;
-		this._drt = false;
+		if (!this._dirty) return;
+		this._dirty = false;
 
 		const ctx = this._ctx;
-		const w = this._w;
-		const h = this._h;
+		const w = this._width;
+		const h = this._height;
 
 		ctx.clearRect(0, 0, w, h);
-		this._drNt(ctx, w, h);
-		this._drVp(ctx, w, h);
+		this._drawNotifications(ctx, w, h);
+		this._drawVoicePanel(ctx, w, h);
 
-		const id = ctx.getImageData(0, 0, w, h);
-		const pb = Buffer.from(id.data.buffer);
+		const imageData = ctx.getImageData(0, 0, w, h);
+		const pixelBuf = Buffer.from(imageData.data.buffer);
 
-		if (this._wrShm(pb)) {
-			this._sgLyr();
+		if (this._writeShm(pixelBuf)) {
+			this._signalLayer();
 		}
 	}
 
-	_px(b) {
-		return Math.round(b * this._dsc);
+	_px(base) {
+		return Math.round(base * this._scale);
 	}
 
-	_fn(sz, wt = 400) {
-		if (typeof wt === "boolean") wt = wt ? 600 : 400;
-		return `${wt} ${this._px(sz)}px "${fF}", sans-serif`;
+	_font(size, weight = 400) {
+		if (typeof weight === "boolean") weight = weight ? 600 : 400;
+		return `${weight} ${this._px(size)}px "${fontFamily}", sans-serif`;
 	}
 
-	_gtNtAl(n) {
-		const el = Date.now() - n.createdAt;
-		const rm = n.duration - el;
-		let a = 1.0;
-		if (el < 200) a = el / 200;
-		if (rm < 500) a = Math.min(a, rm / 500);
-		return Math.max(0, Math.min(1, a));
+	_getNotifAlpha(notif) {
+		const elapsed = Date.now() - notif.createdAt;
+		const remaining = notif.duration - elapsed;
+		let alpha = 1.0;
+		if (elapsed < 200) alpha = elapsed / 200;
+		if (remaining < 500) alpha = Math.min(alpha, remaining / 500);
+		return Math.max(0, Math.min(1, alpha));
 	}
 
-	_rrct(ctx, x, y, w, h, r) {
+	_roundedRectPath(ctx, x, y, w, h, r) {
 		if (w <= 0 || h <= 0) return;
 		r = Math.min(r, w / 2, h / 2);
 		ctx.beginPath();
@@ -548,26 +547,26 @@ class OverlayRenderer {
 		ctx.closePath();
 	}
 
-	_flRR(ctx, x, y, w, h, r, cl) {
-		this._rrct(ctx, x, y, w, h, r);
-		ctx.fillStyle = cl;
+	_fillRoundedRect(ctx, x, y, w, h, r, color) {
+		this._roundedRectPath(ctx, x, y, w, h, r);
+		ctx.fillStyle = color;
 		ctx.fill();
 	}
 
-	_drAv(ctx, cx, cy, r, im, fb) {
+	_drawAvatar(ctx, centerX, centerY, radius, image, fallback) {
 		ctx.save();
 		ctx.beginPath();
-		ctx.arc(cx, cy, r, 0, Math.PI * 2);
+		ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
 
-		if (im) {
+		if (image) {
 			ctx.clip();
-			ctx.drawImage(im, cx - r, cy - r, r * 2, r * 2);
+			ctx.drawImage(image, centerX - radius, centerY - radius, radius * 2, radius * 2);
 		} else {
 			// djb2 hash for determiniuystic palette color from fallback str
-			let hv = 5381;
-			for (let i = 0; i < fb.length; i++)
-				hv = ((hv << 5) + hv + fb.charCodeAt(i)) >>> 0;
-			const pl = [
+			let hashVal = 5381;
+			for (let i = 0; i < fallback.length; i++)
+				hashVal = ((hashVal << 5) + hashVal + fallback.charCodeAt(i)) >>> 0;
+			const palette = [
 				[113, 140, 219],
 				[84, 184, 148],
 				[245, 148, 69],
@@ -577,234 +576,234 @@ class OverlayRenderer {
 				[240, 181, 66],
 				[219, 113, 171],
 			];
-			const [cr, cg, cb] = pl[hv % pl.length];
+			const [cr, cg, cb] = palette[hashVal % palette.length];
 
 			ctx.fillStyle = `rgb(${cr},${cg},${cb})`;
 			ctx.fill();
 
-			if (fb.length > 0) {
+			if (fallback.length > 0) {
 				ctx.fillStyle = "#ffffff";
-				ctx.font = this._fn(Math.max(10, r * 0.85), 600);
+				ctx.font = this._font(Math.max(10, radius * 0.85), 600);
 				ctx.textAlign = "center";
 				ctx.textBaseline = "middle";
-				ctx.fillText(fb[0].toUpperCase(), cx, cy + this._px(1));
+				ctx.fillText(fallback[0].toUpperCase(), centerX, centerY + this._px(1));
 			}
 		}
 		ctx.restore();
 	}
 
-	_trnc(ctx, txt, mw) {
-		if (!txt || mw <= 0) return "";
-		if (ctx.measureText(txt).width <= mw) return txt;
-		const ew = ctx.measureText("…").width;
-		const aw = mw - ew;
-		if (aw <= 0) return "…";
+	_truncate(ctx, text, maxWidth) {
+		if (!text || maxWidth <= 0) return "";
+		if (ctx.measureText(text).width <= maxWidth) return text;
+		const ellipsisWidth = ctx.measureText("…").width;
+		const availWidth = maxWidth - ellipsisWidth;
+		if (availWidth <= 0) return "…";
 		let lo = 0,
-			hi = txt.length,
-			bs = 0;
+			hi = text.length,
+			best = 0;
 		while (lo <= hi) {
-			const md = (lo + hi) >> 1;
-			if (ctx.measureText(txt.substring(0, md)).width <= aw) {
-				bs = md;
-				lo = md + 1;
-			} else hi = md - 1;
+			const mid = (lo + hi) >> 1;
+			if (ctx.measureText(text.substring(0, mid)).width <= availWidth) {
+				best = mid;
+				lo = mid + 1;
+			} else hi = mid - 1;
 		}
-		return txt.substring(0, bs) + "…";
+		return text.substring(0, best) + "…";
 	}
 
-	_drNt(ctx, W, H) {
-		if (this._ntfs.length === 0) return;
+	_drawNotifications(ctx, W, H) {
+		if (this._notifications.length === 0) return;
 
-		const mg = this._px(24);
-		const rd = this._px(12);
-		const sp = this._px(12);
-		const mxW = Math.min(W * 0.35, this._px(450));
-		const fz = 20;
-		const lh = this._px(fz * 1.3);
-		let y = mg;
-		let ct = 0;
+		const margin = this._px(24);
+		const cornerRadius = this._px(12);
+		const spacing = this._px(12);
+		const maxWidth = Math.min(W * 0.35, this._px(450));
+		const fontSize = 20;
+		const lineHeight = this._px(fontSize * 1.3);
+		let y = margin;
+		let count = 0;
 
-		for (const n of this._ntfs) {
-			if (ct >= 4) break;
-			const al = this._gtNtAl(n);
-			if (al <= 0.01) continue;
+		for (const notif of this._notifications) {
+			if (count >= 4) break;
+			const alpha = this._getNotifAlpha(notif);
+			if (alpha <= 0.01) continue;
 
-			const el = Date.now() - n.createdAt;
-			const t = Math.min(el / 300, 1);
-			const es = 1 - Math.pow(1 - t, 3);
-			const sx = (1 - es) * this._px(60);
+			const elapsed = Date.now() - notif.createdAt;
+			const t = Math.min(elapsed / 300, 1);
+			const eased = 1 - Math.pow(1 - t, 3);
+			const slideX = (1 - eased) * this._px(60);
 
 			ctx.save();
-			ctx.globalAlpha = al;
+			ctx.globalAlpha = alpha;
 
-			if (n.sender) {
-				const pX = this._px(20),
-					pY = this._px(16);
-				const aR = this._px(20);
-				const ts = aR * 2 + this._px(16);
+			if (notif.sender) {
+				const padX = this._px(20),
+					padY = this._px(16);
+				const avatarRadius = this._px(20);
+				const textStart = avatarRadius * 2 + this._px(16);
 
-				ctx.font = this._fn(fz, 600);
-				ctx.font = this._fn(fz);
+				ctx.font = this._font(fontSize, 600);
+				ctx.font = this._font(fontSize);
 
-				let cs = "";
-				if (n.isDM) cs = "DM";
+				let channelStr = "";
+				if (notif.isDM) channelStr = "DM";
 				else {
-					if (n.channel) cs = "#" + n.channel;
-					if (n.server) {
-						if (cs) cs += " · ";
-						cs += n.server;
+					if (notif.channel) channelStr = "#" + notif.channel;
+					if (notif.server) {
+						if (channelStr) channelStr += " · ";
+						channelStr += notif.server;
 					}
 				}
 
-				const bW = Math.max(
+				const boxW = Math.max(
 					this._px(260),
-					Math.min(mxW, pX + ts + this._px(280) + pX)
+					Math.min(maxWidth, padX + textStart + this._px(280) + padX)
 				);
-				const bH = pY + lh + this._px(6) + lh + pY;
-				const bx = W - bW - mg + sx;
+				const boxH = padY + lineHeight + this._px(6) + lineHeight + padY;
+				const boxX = W - boxW - margin + slideX;
 
 				ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
 				ctx.shadowBlur = this._px(12);
 				ctx.shadowOffsetY = this._px(6);
 
-				this._flRR(ctx, bx, y, bW, bH, rd, "#111214");
+				this._fillRoundedRect(ctx, boxX, y, boxW, boxH, cornerRadius, "#111214");
 				ctx.shadowColor = "transparent";
 
-				this._flRR(
+				this._fillRoundedRect(
 					ctx,
-					bx,
+					boxX,
 					y,
 					this._px(4),
-					bH,
+					boxH,
 					this._px(4),
-					n.isDM ? "#9766de" : "#5865F2"
+					notif.isDM ? "#9766de" : "#5865F2"
 				);
 
-				const im = this._gtAvImg(n.userId, n.avatarHash);
-				this._drAv(ctx, bx + pX + aR, y + bH * 0.5, aR, im, n.sender);
+				const avatarImage = this._getAvatar(notif.userId, notif.avatarHash);
+				this._drawAvatar(ctx, boxX + padX + avatarRadius, y + boxH * 0.5, avatarRadius, avatarImage, notif.sender);
 
-				const tx = bx + pX + ts;
-				const avW = bW - pX - ts - pX;
+				const textX = boxX + padX + textStart;
+				const availW = boxW - padX - textStart - padX;
 
 				ctx.textAlign = "left";
 				ctx.textBaseline = "top";
 
-				ctx.font = this._fn(fz, 600);
+				ctx.font = this._font(fontSize, 600);
 				ctx.fillStyle = "#f2f3f5";
-				const tn = this._trnc(ctx, n.sender, avW * 0.55);
-				ctx.fillText(tn, tx, y + pY);
+				const truncName = this._truncate(ctx, notif.sender, availW * 0.55);
+				ctx.fillText(truncName, textX, y + padY);
 
-				if (cs) {
-					const sw = ctx.measureText(tn).width;
-					ctx.font = this._fn(fz - 4);
+				if (channelStr) {
+					const nameWidth = ctx.measureText(truncName).width;
+					ctx.font = this._font(fontSize - 4);
 					ctx.fillStyle = "#949ba4";
-					const ca = avW - sw - this._px(12);
-					if (ca > this._px(20))
+					const channelAvailW = availW - nameWidth - this._px(12);
+					if (channelAvailW > this._px(20))
 						ctx.fillText(
-							this._trnc(ctx, cs, ca),
-							tx + sw + this._px(10),
-							y + pY + this._px(4)
+							this._truncate(ctx, channelStr, channelAvailW),
+							textX + nameWidth + this._px(10),
+							y + padY + this._px(4)
 						);
 				}
 
-				ctx.font = this._fn(fz);
+				ctx.font = this._font(fontSize);
 				ctx.fillStyle = "#dbdee1";
 				ctx.fillText(
-					this._trnc(ctx, n.message, avW),
-					tx,
-					y + pY + lh + this._px(4)
+					this._truncate(ctx, notif.message, availW),
+					textX,
+					y + padY + lineHeight + this._px(4)
 				);
 
-				y += bH + sp;
+				y += boxH + spacing;
 			} else {
-				const pX = this._px(20),
-					pY = this._px(14);
+				const padX = this._px(20),
+					padY = this._px(14);
 
-				ctx.font = this._fn(fz);
-				const mW = ctx.measureText(n.message).width;
-				const bW = Math.max(
+				ctx.font = this._font(fontSize);
+				const msgWidth = ctx.measureText(notif.message).width;
+				const boxW = Math.max(
 					this._px(160),
-					Math.min(mxW, pX * 2 + mW + this._px(8))
+					Math.min(maxWidth, padX * 2 + msgWidth + this._px(8))
 				);
-				const bH = pY * 2 + lh;
-				const bx = W - bW - mg + sx;
+				const boxH = padY * 2 + lineHeight;
+				const boxX = W - boxW - margin + slideX;
 
 				ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
 				ctx.shadowBlur = this._px(12);
 				ctx.shadowOffsetY = this._px(6);
 
-				this._flRR(
+				this._fillRoundedRect(
 					ctx,
-					bx,
+					boxX,
 					y,
-					bW,
-					bH,
-					rd,
-					n.type === "system" ? "#111214" : "#1e1f22"
+					boxW,
+					boxH,
+					cornerRadius,
+					notif.type === "system" ? "#111214" : "#1e1f22"
 				);
 				ctx.shadowColor = "transparent";
 
-				this._flRR(
+				this._fillRoundedRect(
 					ctx,
-					bx,
+					boxX,
 					y,
 					this._px(4),
-					bH,
+					boxH,
 					this._px(4),
-					n.type === "system" ? "#5865F2" : "#80848e"
+					notif.type === "system" ? "#5865F2" : "#80848e"
 				);
 
 				ctx.textAlign = "left";
 				ctx.textBaseline = "top";
-				ctx.fillStyle = n.type === "system" ? "#e3e5e8" : "#dbdee1";
+				ctx.fillStyle = notif.type === "system" ? "#e3e5e8" : "#dbdee1";
 				ctx.fillText(
-					this._trnc(ctx, n.message, bW - pX * 2),
-					bx + pX,
-					y + pY
+					this._truncate(ctx, notif.message, boxW - padX * 2),
+					boxX + padX,
+					y + padY
 				);
 
-				y += bH + sp;
+				y += boxH + spacing;
 			}
 
 			ctx.restore();
-			ct++;
+			count++;
 		}
 	}
 
-	_drVp(ctx, W, H) {
-		if (!this._vcu || this._vcu.length === 0) return;
+	_drawVoicePanel(ctx, W, H) {
+		if (!this._voiceUsers || this._voiceUsers.length === 0) return;
 
-		const mg = this._px(20);
-		const pX = this._px(12);
-		const pY = this._px(10);
-		const rd = this._px(10);
-		const fz = 16;
-		const lh = this._px(fz * 1.3);
-		const aR = this._px(14);
-		const aP = this._px(10);
-		const iSz = this._px(15);
-		const iPd = this._px(6);
-		const iH = aR * 2 + this._px(8);
-		const iG = this._px(4);
+		const margin = this._px(20);
+		const padX = this._px(12);
+		const padY = this._px(10);
+		const cornerRadius = this._px(10);
+		const fontSize = 16;
+		const lineHeight = this._px(fontSize * 1.3);
+		const avatarRadius = this._px(14);
+		const avatarPad = this._px(10);
+		const iconSize = this._px(15);
+		const iconPad = this._px(6);
+		const rowHeight = avatarRadius * 2 + this._px(8);
+		const rowGap = this._px(4);
 
-		ctx.font = this._fn(fz, 500);
-		let mrW = 0;
-		for (const u of this._vcu) {
-			const uw = ctx.measureText(u.username).width + iSz + this._px(8);
-			if (uw > mrW) mrW = uw;
+		ctx.font = this._font(fontSize, 500);
+		let maxNameWidth = 0;
+		for (const user of this._voiceUsers) {
+			const nameWidth = ctx.measureText(user.username).width + iconSize + this._px(8);
+			if (nameWidth > maxNameWidth) maxNameWidth = nameWidth;
 		}
 
-		const pW = Math.max(
+		const panelW = Math.max(
 			this._px(170),
-			Math.min(W * 0.22, pX + aR * 2 + aP + mrW + pX + this._px(8))
+			Math.min(W * 0.22, padX + avatarRadius * 2 + avatarPad + maxNameWidth + padX + this._px(8))
 		);
-		const pH =
-			pY +
-			this._vcu.length * iH +
-			(this._vcu.length > 1 ? (this._vcu.length - 1) * iG : 0) +
-			pY;
-		const px = mg;
-		const py = H - pH - mg;
+		const panelH =
+			padY +
+			this._voiceUsers.length * rowHeight +
+			(this._voiceUsers.length > 1 ? (this._voiceUsers.length - 1) * rowGap : 0) +
+			padY;
+		const panelX = margin;
+		const panelY = H - panelH - margin;
 
 		ctx.save();
 
@@ -812,62 +811,62 @@ class OverlayRenderer {
 		ctx.shadowBlur = this._px(8);
 		ctx.shadowOffsetY = this._px(2);
 
-		this._flRR(ctx, px, py, pW, pH, rd, "rgba(0, 0, 0, 0.25)");
+		this._fillRoundedRect(ctx, panelX, panelY, panelW, panelH, cornerRadius, "rgba(0, 0, 0, 0.25)");
 		ctx.shadowColor = "transparent";
 
 		ctx.globalAlpha = 1.0;
 
-		let iy = py + pY;
+		let rowY = panelY + padY;
 
-		for (const us of this._vcu) {
-			const nm = us.username || "Unknown";
-			const acx = px + pX + aR;
-			const acy = iy + iH * 0.5;
+		for (const user of this._voiceUsers) {
+			const name = user.username || "Unknown";
+			const avatarCX = panelX + padX + avatarRadius;
+			const avatarCY = rowY + rowHeight * 0.5;
 
-			if (us.speaking) {
+			if (user.speaking) {
 				ctx.beginPath();
-				ctx.arc(acx, acy, aR + this._px(2.5), 0, Math.PI * 2);
+				ctx.arc(avatarCX, avatarCY, avatarRadius + this._px(2.5), 0, Math.PI * 2);
 				ctx.strokeStyle = "#23a559";
 				ctx.lineWidth = this._px(2);
 				ctx.stroke();
 			}
 
-			const avAl = us.deafened ? 0.4 : us.muted ? 0.65 : 1.0;
-			ctx.globalAlpha = avAl;
-			const im = this._gtAvImg(us.id, us.avatarHash);
-			this._drAv(ctx, acx, acy, aR, im, nm);
+			const avatarAlpha = user.deafened ? 0.4 : user.muted ? 0.65 : 1.0;
+			ctx.globalAlpha = avatarAlpha;
+			const avatarImage = this._getAvatar(user.id, user.avatarHash);
+			this._drawAvatar(ctx, avatarCX, avatarCY, avatarRadius, avatarImage, name);
 			ctx.globalAlpha = 1.0;
 
-			const tx = px + pX + aR * 2 + aP;
-			const tA = pW - pX - aR * 2 - aP - pX;
+			const textX = panelX + padX + avatarRadius * 2 + avatarPad;
+			const textAvailW = panelW - padX - avatarRadius * 2 - avatarPad - padX;
 
-			let nc;
-			if (us.speaking) nc = "#23a559";
-			else if (us.deafened) nc = "#da373c";
-			else if (us.muted) nc = "#f0b232";
-			else nc = "rgba(255, 255, 255, 0.9)";
+			let nameColor;
+			if (user.speaking) nameColor = "#23a559";
+			else if (user.deafened) nameColor = "#da373c";
+			else if (user.muted) nameColor = "#f0b232";
+			else nameColor = "rgba(255, 255, 255, 0.9)";
 
 			ctx.textAlign = "left";
 			ctx.textBaseline = "middle";
 
-			const wt = us.speaking ? 600 : 500;
-			ctx.font = this._fn(fz, wt);
-			ctx.fillStyle = nc;
+			const fontWeight = user.speaking ? 600 : 500;
+			ctx.font = this._font(fontSize, fontWeight);
+			ctx.fillStyle = nameColor;
 
-			const iSp = us.deafened || us.muted ? iSz + iPd : 0;
-			const dn = this._trnc(ctx, nm, tA - iSp);
-			ctx.fillText(dn, tx, acy);
+			const iconSpace = user.deafened || user.muted ? iconSize + iconPad : 0;
+			const truncName = this._truncate(ctx, name, textAvailW - iconSpace);
+			ctx.fillText(truncName, textX, avatarCY);
 
-			if (us.deafened || us.muted) {
-				const nW = ctx.measureText(dn).width;
-				const ix = tx + nW + iPd + iSz / 2;
-				const iy2 = acy;
-				const ic = us.deafened ? "#da373c" : "#f0b232";
-				const ii = us.deafened ? ichsof : icmcof;
-				this._drIcSn(ctx, ii, ix, iy2, iSz, ic);
+			if (user.deafened || user.muted) {
+				const nameW = ctx.measureText(truncName).width;
+				const iconX = textX + nameW + iconPad + iconSize / 2;
+				const iconY = avatarCY;
+				const iconColor = user.deafened ? "#da373c" : "#f0b232";
+				const iconName = user.deafened ? ICON_DEAFENED : ICON_MUTED;
+				this._drawIcon(ctx, iconName, iconX, iconY, iconSize, iconColor);
 			}
 
-			iy += iH + iG;
+			rowY += rowHeight + rowGap;
 		}
 
 		ctx.restore();
