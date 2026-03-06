@@ -4,3 +4,6 @@
 [submodule "equicord"]
 	path = equicord
 	url = https://github.com/Equicord/Equicord
+[submodule "roverpp"]
+	path = roverpp
+	url = https://github.com/TheUnium/roverpp.git

@@ -71,6 +71,7 @@
 		"tailwindcss": "^4.2.1"
 	},
 	"dependencies": {
+		"@napi-rs/canvas": "^0.1.96",
 		"@vencord/venmic": "^6.1.0",
 		"arrpc": "^3.6.0",
 		"ws": "^8.19.0"
