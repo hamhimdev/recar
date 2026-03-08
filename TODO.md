@@ -25,4 +25,4 @@
 ---
 
 - [ ] normal semver versioning (do this when most of the above items are done!
-first normal version will be 1.2.0)
+      first normal version will be 1.2.0)

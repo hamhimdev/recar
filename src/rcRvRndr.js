@@ -29,7 +29,10 @@ function initFonts(assetsDir) {
 				fontFamily = familyName;
 				console.log(`[Overlay] Loaded font: ${fontPath}`);
 			} catch (e) {
-				console.warn(`[Overlay] Failed to load ${fontPath}:`, e.message);
+				console.warn(
+					`[Overlay] Failed to load ${fontPath}:`,
+					e.message
+				);
 			}
 		}
 	}
@@ -109,6 +112,14 @@ class OverlayRenderer {
 
 		if (!this._openShm()) return false;
 
+		const gameRes = this._readGameResolution();
+		if (gameRes) {
+			this._width = gameRes.width;
+			this._height = gameRes.height;
+			this._lastWidth = gameRes.width;
+			this._lastHeight = gameRes.height;
+		}
+
 		this._recreateCanvas(this._width, this._height);
 		this._initialized = true;
 
@@ -120,11 +131,16 @@ class OverlayRenderer {
 			}
 		}, 33);
 
+		this._heartbeatTimer = setInterval(() => {
+			this._dirty = true;
+		}, 1000);
+
 		return true;
 	}
 
 	destroy() {
 		if (this._renderTimer) clearInterval(this._renderTimer);
+		if (this._heartbeatTimer) clearInterval(this._heartbeatTimer); // add this
 		if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
 		this._closeShm();
 		this._initialized = false;
@@ -154,7 +170,12 @@ class OverlayRenderer {
 		};
 
 		for (const [name, filename] of Object.entries(icons)) {
-			const svgPath = path.join(this._assetsDir, "img", "overlay", filename);
+			const svgPath = path.join(
+				this._assetsDir,
+				"img",
+				"overlay",
+				filename
+			);
 			if (!fs.existsSync(svgPath)) {
 				console.warn(`[Overlay] Icon not found: ${svgPath}`);
 				continue;
@@ -164,14 +185,18 @@ class OverlayRenderer {
 				this._svgCache.set(name, svgData);
 				console.log(`[Overlay] Loaded SVG source: ${filename}`);
 			} catch (e) {
-				console.warn(`[Overlay] Failed to read ${filename}:`, e.message);
+				console.warn(
+					`[Overlay] Failed to read ${filename}:`,
+					e.message
+				);
 			}
 		}
 	}
 
 	async _renderIcon(iconName, size, color) {
 		const cacheKey = `${iconName}_${size}_${color}`;
-		if (this._iconCache.has(cacheKey) || this._iconLoading.has(cacheKey)) return;
+		if (this._iconCache.has(cacheKey) || this._iconLoading.has(cacheKey))
+			return;
 
 		const svgSource = this._svgCache.get(iconName);
 		if (!svgSource) return;
@@ -199,7 +224,10 @@ class OverlayRenderer {
 			this._iconCache.set(cacheKey, finalImage);
 			this._dirty = true;
 		} catch (e) {
-			console.warn(`[Overlay] Failed to render icon ${iconName}:`, e.message);
+			console.warn(
+				`[Overlay] Failed to render icon ${iconName}:`,
+				e.message
+			);
 		} finally {
 			this._iconLoading.delete(cacheKey);
 		}
@@ -259,12 +287,16 @@ class OverlayRenderer {
 				const zeroBuf = Buffer.alloc(4096);
 				let written = 0;
 				while (written < SHM_TOTAL_SIZE) {
-					const chunk = Math.min(zeroBuf.length, SHM_TOTAL_SIZE - written);
+					const chunk = Math.min(
+						zeroBuf.length,
+						SHM_TOTAL_SIZE - written
+					);
 					fs.writeSync(fd, zeroBuf, 0, chunk);
 					written += chunk;
 				}
 			}
-			if (fs.fstatSync(fd).size < SHM_TOTAL_SIZE) fs.ftruncateSync(fd, SHM_TOTAL_SIZE);
+			if (fs.fstatSync(fd).size < SHM_TOTAL_SIZE)
+				fs.ftruncateSync(fd, SHM_TOTAL_SIZE);
 
 			this._shmFd = fd;
 			this._headerBuf = Buffer.alloc(SHM_HEADER_SIZE);
@@ -291,7 +323,12 @@ class OverlayRenderer {
 			fs.readSync(this._shmFd, this._readBuf, 0, SHM_HEADER_SIZE, 0);
 			const width = this._readBuf.readUInt32LE(16);
 			const height = this._readBuf.readUInt32LE(20);
-			if (width > 0 && height > 0 && width <= SHM_MAX_WIDTH && height <= SHM_MAX_HEIGHT)
+			if (
+				width > 0 &&
+				height > 0 &&
+				width <= SHM_MAX_WIDTH &&
+				height <= SHM_MAX_HEIGHT
+			)
 				return { width, height };
 		} catch {}
 		return null;
@@ -304,7 +341,13 @@ class OverlayRenderer {
 			this._headerBuf.writeUInt32LE(this._width, 4);
 			this._headerBuf.writeUInt32LE(this._height, 8);
 			fs.writeSync(this._shmFd, this._headerBuf, 0, 16, 0);
-			fs.writeSync(this._shmFd, pixelBuf, 0, pixelBuf.length, SHM_HEADER_SIZE);
+			fs.writeSync(
+				this._shmFd,
+				pixelBuf,
+				0,
+				pixelBuf.length,
+				SHM_HEADER_SIZE
+			);
 			this._headerBuf[0] = SHM_STATE_READY;
 			fs.writeSync(this._shmFd, this._headerBuf, 0, 1, 0);
 			return true;
@@ -461,10 +504,17 @@ class OverlayRenderer {
 		if (!this._initialized) return;
 
 		const gameRes = this._readGameResolution();
-		if (gameRes && (gameRes.width !== this._lastWidth || gameRes.height !== this._lastHeight)) {
+		if (
+			gameRes &&
+			(gameRes.width !== this._lastWidth ||
+				gameRes.height !== this._lastHeight)
+		) {
 			this._lastWidth = gameRes.width;
 			this._lastHeight = gameRes.height;
-			if (gameRes.width !== this._width || gameRes.height !== this._height) {
+			if (
+				gameRes.width !== this._width ||
+				gameRes.height !== this._height
+			) {
 				if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
 				this._resizeDebounce = setTimeout(() => {
 					const current = this._readGameResolution();
@@ -482,7 +532,9 @@ class OverlayRenderer {
 
 		const now = Date.now();
 		const prevCount = this._notifications.length;
-		this._notifications = this._notifications.filter((n) => now - n.createdAt < n.duration);
+		this._notifications = this._notifications.filter(
+			(n) => now - n.createdAt < n.duration
+		);
 		if (this._notifications.length !== prevCount) this._dirty = true;
 
 		for (const n of this._notifications) {
@@ -560,12 +612,19 @@ class OverlayRenderer {
 
 		if (image) {
 			ctx.clip();
-			ctx.drawImage(image, centerX - radius, centerY - radius, radius * 2, radius * 2);
+			ctx.drawImage(
+				image,
+				centerX - radius,
+				centerY - radius,
+				radius * 2,
+				radius * 2
+			);
 		} else {
 			// djb2 hash for determiniuystic palette color from fallback str
 			let hashVal = 5381;
 			for (let i = 0; i < fallback.length; i++)
-				hashVal = ((hashVal << 5) + hashVal + fallback.charCodeAt(i)) >>> 0;
+				hashVal =
+					((hashVal << 5) + hashVal + fallback.charCodeAt(i)) >>> 0;
 			const palette = [
 				[113, 140, 219],
 				[84, 184, 148],
@@ -586,7 +645,11 @@ class OverlayRenderer {
 				ctx.font = this._font(Math.max(10, radius * 0.85), 600);
 				ctx.textAlign = "center";
 				ctx.textBaseline = "middle";
-				ctx.fillText(fallback[0].toUpperCase(), centerX, centerY + this._px(1));
+				ctx.fillText(
+					fallback[0].toUpperCase(),
+					centerX,
+					centerY + this._px(1)
+				);
 			}
 		}
 		ctx.restore();
@@ -659,14 +722,23 @@ class OverlayRenderer {
 					this._px(260),
 					Math.min(maxWidth, padX + textStart + this._px(280) + padX)
 				);
-				const boxH = padY + lineHeight + this._px(6) + lineHeight + padY;
+				const boxH =
+					padY + lineHeight + this._px(6) + lineHeight + padY;
 				const boxX = W - boxW - margin + slideX;
 
 				ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
 				ctx.shadowBlur = this._px(12);
 				ctx.shadowOffsetY = this._px(6);
 
-				this._fillRoundedRect(ctx, boxX, y, boxW, boxH, cornerRadius, "#111214");
+				this._fillRoundedRect(
+					ctx,
+					boxX,
+					y,
+					boxW,
+					boxH,
+					cornerRadius,
+					"#111214"
+				);
 				ctx.shadowColor = "transparent";
 
 				this._fillRoundedRect(
@@ -679,8 +751,18 @@ class OverlayRenderer {
 					notif.isDM ? "#9766de" : "#5865F2"
 				);
 
-				const avatarImage = this._getAvatar(notif.userId, notif.avatarHash);
-				this._drawAvatar(ctx, boxX + padX + avatarRadius, y + boxH * 0.5, avatarRadius, avatarImage, notif.sender);
+				const avatarImage = this._getAvatar(
+					notif.userId,
+					notif.avatarHash
+				);
+				this._drawAvatar(
+					ctx,
+					boxX + padX + avatarRadius,
+					y + boxH * 0.5,
+					avatarRadius,
+					avatarImage,
+					notif.sender
+				);
 
 				const textX = boxX + padX + textStart;
 				const availW = boxW - padX - textStart - padX;
@@ -690,7 +772,11 @@ class OverlayRenderer {
 
 				ctx.font = this._font(fontSize, 600);
 				ctx.fillStyle = "#f2f3f5";
-				const truncName = this._truncate(ctx, notif.sender, availW * 0.55);
+				const truncName = this._truncate(
+					ctx,
+					notif.sender,
+					availW * 0.55
+				);
 				ctx.fillText(truncName, textX, y + padY);
 
 				if (channelStr) {
@@ -781,7 +867,7 @@ class OverlayRenderer {
 		const lineHeight = this._px(fontSize * 1.3);
 		const avatarRadius = this._px(14);
 		const avatarPad = this._px(10);
-		const iconSize = this._px(15);
+		const iconSize = this._px(18);
 		const iconPad = this._px(6);
 		const rowHeight = avatarRadius * 2 + this._px(8);
 		const rowGap = this._px(4);
@@ -789,30 +875,34 @@ class OverlayRenderer {
 		ctx.font = this._font(fontSize, 500);
 		let maxNameWidth = 0;
 		for (const user of this._voiceUsers) {
-			const nameWidth = ctx.measureText(user.username).width + iconSize + this._px(8);
+			const nameWidth =
+				ctx.measureText(user.username).width + iconSize + this._px(8);
 			if (nameWidth > maxNameWidth) maxNameWidth = nameWidth;
 		}
 
 		const panelW = Math.max(
 			this._px(170),
-			Math.min(W * 0.22, padX + avatarRadius * 2 + avatarPad + maxNameWidth + padX + this._px(8))
+			Math.min(
+				W * 0.22,
+				padX +
+					avatarRadius * 2 +
+					avatarPad +
+					maxNameWidth +
+					padX +
+					this._px(8)
+			)
 		);
 		const panelH =
 			padY +
 			this._voiceUsers.length * rowHeight +
-			(this._voiceUsers.length > 1 ? (this._voiceUsers.length - 1) * rowGap : 0) +
+			(this._voiceUsers.length > 1
+				? (this._voiceUsers.length - 1) * rowGap
+				: 0) +
 			padY;
 		const panelX = margin;
 		const panelY = H - panelH - margin;
 
 		ctx.save();
-
-		ctx.shadowColor = "rgba(0, 0, 0, 0.15)";
-		ctx.shadowBlur = this._px(8);
-		ctx.shadowOffsetY = this._px(2);
-
-		this._fillRoundedRect(ctx, panelX, panelY, panelW, panelH, cornerRadius, "rgba(0, 0, 0, 0.25)");
-		ctx.shadowColor = "transparent";
 
 		ctx.globalAlpha = 1.0;
 
@@ -825,7 +915,13 @@ class OverlayRenderer {
 
 			if (user.speaking) {
 				ctx.beginPath();
-				ctx.arc(avatarCX, avatarCY, avatarRadius + this._px(2.5), 0, Math.PI * 2);
+				ctx.arc(
+					avatarCX,
+					avatarCY,
+					avatarRadius + this._px(2.5),
+					0,
+					Math.PI * 2
+				);
 				ctx.strokeStyle = "#23a559";
 				ctx.lineWidth = this._px(2);
 				ctx.stroke();
@@ -834,11 +930,19 @@ class OverlayRenderer {
 			const avatarAlpha = user.deafened ? 0.4 : user.muted ? 0.65 : 1.0;
 			ctx.globalAlpha = avatarAlpha;
 			const avatarImage = this._getAvatar(user.id, user.avatarHash);
-			this._drawAvatar(ctx, avatarCX, avatarCY, avatarRadius, avatarImage, name);
+			this._drawAvatar(
+				ctx,
+				avatarCX,
+				avatarCY,
+				avatarRadius,
+				avatarImage,
+				name
+			);
 			ctx.globalAlpha = 1.0;
 
 			const textX = panelX + padX + avatarRadius * 2 + avatarPad;
-			const textAvailW = panelW - padX - avatarRadius * 2 - avatarPad - padX;
+			const textAvailW =
+				panelW - padX - avatarRadius * 2 - avatarPad - padX;
 
 			let nameColor;
 			if (user.speaking) nameColor = "#23a559";
@@ -846,15 +950,32 @@ class OverlayRenderer {
 			else if (user.muted) nameColor = "#f0b232";
 			else nameColor = "rgba(255, 255, 255, 0.9)";
 
+			const fontWeight = user.speaking ? 700 : 600;
+			ctx.font = this._font(fontSize, fontWeight);
+
+			const iconSpace =
+				user.deafened || user.muted ? iconSize + iconPad : 0;
+			const truncName = this._truncate(ctx, name, textAvailW - iconSpace);
+			const measuredNameW = ctx.measureText(truncName).width;
+
+			// Background sized to actual text + icon only
+			const textBgX = textX - this._px(6);
+			const textBgY = avatarCY - lineHeight * 0.5;
+			const textBgW = measuredNameW + iconSpace + this._px(12);
+			const textBgH = lineHeight;
+			this._fillRoundedRect(
+				ctx,
+				textBgX,
+				textBgY,
+				textBgW,
+				textBgH,
+				this._px(4),
+				"rgba(0,0,0,0.5)"
+			);
+
 			ctx.textAlign = "left";
 			ctx.textBaseline = "middle";
-
-			const fontWeight = user.speaking ? 600 : 500;
-			ctx.font = this._font(fontSize, fontWeight);
 			ctx.fillStyle = nameColor;
-
-			const iconSpace = user.deafened || user.muted ? iconSize + iconPad : 0;
-			const truncName = this._truncate(ctx, name, textAvailW - iconSpace);
 			ctx.fillText(truncName, textX, avatarCY);
 
 			if (user.deafened || user.muted) {
@@ -863,7 +984,14 @@ class OverlayRenderer {
 				const iconY = avatarCY;
 				const iconColor = user.deafened ? "#da373c" : "#f0b232";
 				const iconName = user.deafened ? ICON_DEAFENED : ICON_MUTED;
-				this._drawIcon(ctx, iconName, iconX, iconY, iconSize, iconColor);
+				this._drawIcon(
+					ctx,
+					iconName,
+					iconX,
+					iconY,
+					iconSize,
+					iconColor
+				);
 			}
 
 			rowY += rowHeight + rowGap;

@@ -70,12 +70,8 @@
 			.page {
 				display: none;
 				opacity: 0;
-				scale: 0.98;
-				transform: translateY(12px);
 				transition:
-					opacity 0.1s ease-in,
-					scale 0.2s ease,
-					transform 0.2s ease;
+					opacity 0.2s ease;
 			}
 
 			.page.active {
@@ -84,9 +80,6 @@
 
 			.page.visible {
 				opacity: 1;
-				scale: 1;
-				filter: blur(0);
-				transform: translateY(0px);
 			}
 
 			.nav-sub {
@@ -188,7 +181,7 @@
 				<div
 					class="flex flex-col items-center gap-3 mb-2 px-2 pb-4 border-border-sub border-b"
 				>
-					<img class="h-8 antialiased" src="assets/img/recar.svg" />
+					<img class="h-8 subpixel-antialiased" src="assets/img/recar.svg" />
 					<div id="search" class="relative flex items-center">
 						<span
 							class="top-[10px] left-3 absolute material-symbols-rounded font-medium text-secondary text-4xl pointer-events-none"
@@ -229,7 +222,7 @@
 						></div>
 						<div
 							data-page="general"
-							class="flex items-center gap-2 hover:bg-hover py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item is-active"
+							class="flex items-center gap-2 py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item is-active"
 							onclick="navigateTo('general')"
 						>
 							<span class="material-symbols-rounded font-normal">
@@ -239,7 +232,7 @@
 						</div>
 						<div
 							data-page="client"
-							class="flex items-center gap-2 hover:bg-hover py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item final"
+							class="flex items-center gap-2 py-1 pr-3 pl-7 rounded-lg font-medium text-secondary hover:text-primary text-md transition-colors cursor-pointer select-none nav-item final"
 							onclick="navigateTo('client')"
 						>
 							<span class="material-symbols-rounded font-normal">
@@ -786,7 +779,8 @@
 								<p class="mb-4 text-sm text-secondary">
 									rover++ is a Vulkan implicit layer that
 									renders the notification and voice overlay
-									on top of games. Persists between Recar Installs. Work in progress.
+									on top of games. Persists between Recar
+									Installs. Work in progress.
 								</p>
 								<div
 									class="flex items-center justify-between bg-surface p-4 rounded-xl gap-4"
@@ -1050,7 +1044,6 @@
 					const active = el.dataset.page === pageId;
 					el.classList.toggle("is-active", active);
 					el.classList.toggle("text-secondary", !active);
-					el.classList.toggle("hover:bg-hover", !active);
 					el.classList.toggle("hover:text-primary", !active);
 
 					if (active && el.closest(".nav-sub")) {
@@ -1110,7 +1103,6 @@
 						const active = el.dataset.page === newPageId;
 						el.classList.toggle("is-active", active);
 						el.classList.toggle("text-secondary", !active);
-						el.classList.toggle("hover:bg-hover", !active);
 						el.classList.toggle("hover:text-primary", !active);
 
 						if (active && el.closest(".nav-sub")) {

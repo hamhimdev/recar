@@ -31,4 +31,7 @@ todo
 
 ## License
 
-MIT
+**recar & [roverpp](https://github.com/TheUnium/roverpp) (overlay)**  
+MIT License  
+[recar License](./LICENSE)  
+[roverpp License](https://github.com/TheUnium/roverpp/blob/main/LICENSE/)

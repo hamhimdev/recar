@@ -48,7 +48,7 @@ function install(appPath) {
 	fs.chmodSync(soDest, 0o755);
 
 	const manifest = {
-		file_format_version: "1.3.0",
+		file_format_version: "1.0.0", // 1.1.0 was the highest version that worked for me on Proton (DXVK) installed by Steam (it didn't accept 1.3.0), lowered to this for best compatibility. MangoHud does the same (https://github.com/flightlessmango/MangoHud/blob/master/src/mangohud.json.in).
 		layer: {
 			name: "VK_LAYER_RECAR_overlay",
 			type: "GLOBAL",
