@@ -39,9 +39,9 @@ contextBridge.exposeInMainWorld("recarInternalBridge", {
 	getSyncStreamSettings: () => cachedStreamSettings,
 });
 
-(async () => {
+(() => {
 	try {
-		const settings = await ipcRenderer.invoke("get-settings");
+		const settings = ipcRenderer.sendSync("get-settings-sync");
 		const selectedMod = settings.mod || "equicord";
 
 		console.log(`[Preload] Using mod: ${selectedMod}`);

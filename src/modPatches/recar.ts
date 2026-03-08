@@ -176,6 +176,7 @@ function getUsersInMyChannel(): UserVoiceInfo[] {
 let previousRings: Record<string, unknown> = {};
 let themeObserver: MutationObserver | null = null;
 let origGetDisplayMedia: any = null;
+let soundboardSpeakingTimers: Record<string, any> = {};
 
 function startThemeObserver() {
 	if (document.documentElement) {
@@ -259,9 +260,49 @@ export default definePlugin({
 
 	flux: {
 		CONNECTION_OPEN() {
-			// fired when Discord finishes connecting / the user is available
 			const info = getCurrentUserInfo();
 			if (info) (window as any).recarBridge?.sendUserInfo(info);
+		},
+
+		GUILD_SOUNDBOARD_SOUND_PLAY_START({
+			soundId,
+			userId,
+		}: {
+			soundId: number;
+			userId: string;
+		}) {
+			const myChanId = SelectedChannelStore.getVoiceChannelId();
+			if (!myChanId) return;
+
+			const myGuildId = SelectedGuildStore.getGuildId();
+			const user = UserStore.getUser(userId);
+			const displayName =
+				GuildMemberStore.getNick(myGuildId!, userId) ??
+				user?.globalName ??
+				user?.username ??
+				userId;
+			const avatarUrl = getUserAvatarUrl(userId, myGuildId);
+
+			if (soundboardSpeakingTimers[userId]) {
+				clearTimeout(soundboardSpeakingTimers[userId]);
+			}
+
+			(window as any).statusBridge?.vcSpeaking({
+				userId,
+				displayName,
+				avatarUrl,
+				speaking: true,
+			});
+
+			soundboardSpeakingTimers[userId] = setTimeout(() => {
+				(window as any).statusBridge?.vcSpeaking({
+					userId,
+					displayName,
+					avatarUrl,
+					speaking: false,
+				});
+				delete soundboardSpeakingTimers[userId];
+			}, 5000);
 		},
 
 		CALL_UPDATE(event: any) {
@@ -389,17 +430,9 @@ export default definePlugin({
 			}
 		},
 
-		SPEAKING({
-			userId,
-			channelId,
-			speakingFlags,
-		}: {
-			userId: string;
-			channelId: string;
-			speakingFlags: number;
-		}) {
+		SPEAKING({ userId, channelId, speakingFlags }) {
 			const myChanId = SelectedChannelStore.getVoiceChannelId();
-			if (!myChanId || channelId !== myChanId) return;
+			if (!myChanId) return;
 
 			const isSpeaking = speakingFlags !== 0;
 			const myGuildId = SelectedGuildStore.getGuildId();
@@ -411,9 +444,6 @@ export default definePlugin({
 				userId;
 			const avatarUrl = getUserAvatarUrl(userId, myGuildId);
 
-			console.log(
-				`[Recar] 🎙️ ${displayName} ${isSpeaking ? "started" : "stopped"} speaking`
-			);
 			(window as any).statusBridge?.vcSpeaking({
 				userId,
 				displayName,
@@ -575,6 +605,11 @@ export default definePlugin({
 
 	stop() {
 		previousRings = {};
+
+		Object.values(soundboardSpeakingTimers).forEach((timer) =>
+			clearTimeout(timer)
+		);
+		soundboardSpeakingTimers = {};
 
 		try {
 			if (origGetDisplayMedia && navigator?.mediaDevices) {

@@ -139,6 +139,7 @@ app.commandLine.appendSwitch(
 	"single-fullscreen,single-on-top,underlay"
 );
 app.commandLine.appendSwitch("renderer-process-limit", "3");
+app.commandLine.appendSwitch("disable-print-preview");
 
 app.userAgentFallback =
 	"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36";
@@ -626,6 +627,10 @@ ipcMain.on("user-info", (event, data) => {
 
 ipcMain.handle("get-user-info", () => currentUserInfo);
 
+ipcMain.on("get-settings-sync", (event) => {
+	event.returnValue = { ...settings, isFirstLaunch };
+});
+
 ipcMain.handle("get-settings", () => ({ ...settings, isFirstLaunch }));
 ipcMain.handle("save-settings", (event, newSettings) => {
 	settings = { ...settings, ...newSettings };
@@ -636,11 +641,11 @@ ipcMain.handle("save-settings", (event, newSettings) => {
 
 /*
 
-    SO! Turns out exclusion is broken. It's broken on Vesktop too so this is purely an assumption, but it's possible to be venmic, since I referenced Equibop's implementation to do this, which likely has a very close implementation of it to Vesktop's who has it broken. Atleast on Wayland KDE Plasma (don't see how its related though... :/).
+	SO! Turns out exclusion is broken. It's broken on Vesktop too so this is purely an assumption, but it's possible to be venmic, since I referenced Equibop's implementation to do this, which likely has a very close implementation of it to Vesktop's who has it broken. Atleast on Wayland KDE Plasma (don't see how its related though... :/).
 
-    Ignore all of my attempts trying to get exclusion working, keeping for future's sake
+	Ignore all of my attempts trying to get exclusion working, keeping for future's sake
 
-    -- hamhim
+	-- hamhim
 
 */
 
@@ -1119,10 +1124,14 @@ ipcMain.on("vc-state-change", (event, data) => {
 });
 
 ipcMain.on("vc-speaking", (event, data) => {
-	// fires when someone starts or stops speaking. use this to update that person's
-	// status in the vc ui without rebuilding the entire thing
-	// will be for the overlay in future
-	console.log("[VC Speaking]", data);
+	if (!settings.enableOverlay) return;
+	const uid = data?.userId;
+	if (!uid) return;
+	if (data.speaking) {
+		OvRn.voiceStartedSpeaking({ uid });
+	} else {
+		OvRn.voiceStoppedSpeaking({ uid });
+	}
 });
 
 ipcMain.on("open-settings", () => {
@@ -1259,6 +1268,7 @@ app.whenReady().then(async () => {
 	registerDiscordProtocol();
 
 	const { session } = require("electron");
+
 	session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
 		const responseHeaders = Object.assign({}, details.responseHeaders);
 		const toDelete = [
