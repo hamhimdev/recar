@@ -524,30 +524,41 @@ class OverlayRenderer {
 	}
 
 	_prebakeNotification(notif) {
-		const fontSize = 18;
-		const lineHeight = this._px(fontSize * 1.15);
-		const cornerRadius = this._px(12);
 		const shadowBlur = this._px(12);
 		const shadowOffsetY = this._px(6);
 		const extraPad = shadowBlur + shadowOffsetY;
+		const W = this._width;
+		const H = this._height;
 
-		const tempCtx = this._canvas.getContext("2d");
-		tempCtx.font = this._font(fontSize);
+		const measure = createCanvas(1, 1).getContext("2d");
+		const fontSize = 18;
+		const lineHeight = this._px(fontSize * 1.15);
+		const maxWidth = Math.min(W * 0.35, this._px(450));
+
+		const padX_sender = this._px(14);
+		const avatarRadius_n = this._px(20);
+		const textStart_n = avatarRadius_n * 2 + this._px(12);
+		const boxW_sender = Math.max(
+			this._px(260),
+			Math.min(
+				maxWidth,
+				padX_sender + textStart_n + this._px(280) + padX_sender
+			)
+		);
+		const availW_sender =
+			boxW_sender - padX_sender - textStart_n - padX_sender;
 
 		let boxW, boxH;
-
 		if (notif.sender) {
-			const padX = this._px(14);
 			const padY = this._px(10);
-			const avatarRadius = this._px(20);
-			const textStart = avatarRadius * 2 + this._px(12);
-			const maxWidth = Math.min(this._width * 0.35, this._px(450));
-			boxW = Math.max(
-				this._px(260),
-				Math.min(maxWidth, padX + textStart + this._px(280) + padX)
+			measure.font = this._font(fontSize);
+			const msgLines = this._wrapText(
+				measure,
+				notif.message,
+				availW_sender,
+				2
 			);
-			const availW = boxW - padX - textStart - padX;
-			const msgLines = this._wrapText(tempCtx, notif.message, availW, 2);
+			boxW = boxW_sender;
 			boxH =
 				padY +
 				lineHeight +
@@ -555,21 +566,20 @@ class OverlayRenderer {
 				lineHeight * msgLines.length +
 				padY;
 		} else {
-			const padX = this._px(20);
 			const padY = this._px(14);
-			const maxWidth = Math.min(this._width * 0.35, this._px(450));
+			measure.font = this._font(fontSize);
 			const msgLines = this._wrapText(
-				tempCtx,
+				measure,
 				notif.message,
-				maxWidth - padX * 2,
+				maxWidth - this._px(48),
 				2
 			);
 			const msgWidth = Math.max(
-				...msgLines.map((l) => tempCtx.measureText(l).width)
+				...msgLines.map((l) => measure.measureText(l).width)
 			);
 			boxW = Math.max(
 				this._px(160),
-				Math.min(maxWidth, padX * 2 + msgWidth + this._px(8))
+				Math.min(maxWidth, this._px(40) + msgWidth + this._px(8))
 			);
 			boxH =
 				padY * 2 +
@@ -577,58 +587,33 @@ class OverlayRenderer {
 				(msgLines.length > 1 ? this._px(4) : 0);
 		}
 
+		notif._boxW = boxW;
+		notif._boxH = boxH;
+
 		const canvasW = boxW + extraPad * 2;
 		const canvasH = boxH + extraPad * 2;
 		const offscreen = createCanvas(canvasW, canvasH);
 		const ctx = offscreen.getContext("2d");
 		ctx.imageSmoothingEnabled = true;
 		ctx.imageSmoothingQuality = "high";
+		ctx.textRendering = "geometricPrecision";
+		ctx.fontKerning = "normal";
 
-		const ox = extraPad;
-		const oy = extraPad;
+		ctx.translate(extraPad, extraPad);
 
-		ctx.shadowColor = "rgba(0,0,0,0.4)";
-		ctx.shadowBlur = shadowBlur;
-		ctx.shadowOffsetY = shadowOffsetY;
+		const boxX = 0;
+		const currentY = 0;
+		const cornerRadius = this._px(12);
 
 		if (notif.sender) {
-			const padX = this._px(14);
+			const padX = padX_sender;
 			const padY = this._px(10);
-			const avatarRadius = this._px(20);
-			const textStart = avatarRadius * 2 + this._px(12);
-			const availW = boxW - padX - textStart - padX;
-			const fontSize = 18;
+			const avatarRadius = avatarRadius_n;
+			const textStart = textStart_n;
+			const availW = availW_sender;
+
+			ctx.font = this._font(fontSize);
 			const msgLines = this._wrapText(ctx, notif.message, availW, 2);
-
-			this._fillRoundedRect(
-				ctx,
-				ox,
-				oy,
-				boxW,
-				boxH,
-				cornerRadius,
-				"#151417"
-			);
-			ctx.shadowColor = "transparent";
-
-			const avatarImage = this._getAvatar(notif.userId, notif.avatarHash);
-			this._drawAvatar(
-				ctx,
-				ox + padX + avatarRadius,
-				oy + padY + avatarRadius,
-				avatarRadius,
-				avatarImage,
-				notif.sender
-			);
-
-			const textX = ox + padX + textStart;
-			ctx.textAlign = "left";
-			ctx.textBaseline = "top";
-
-			ctx.font = this._font(fontSize, 600);
-			ctx.fillStyle = "#f2f3f5";
-			const truncName = this._truncate(ctx, notif.sender, availW * 0.55);
-			ctx.fillText(truncName, textX, oy + padY);
 
 			let channelStr = "";
 			if (notif.isDM) channelStr = "DM";
@@ -639,6 +624,40 @@ class OverlayRenderer {
 					channelStr += notif.server;
 				}
 			}
+
+			ctx.shadowColor = "rgba(0,0,0,0.4)";
+			ctx.shadowBlur = shadowBlur;
+			ctx.shadowOffsetY = shadowOffsetY;
+			this._fillRoundedRect(
+				ctx,
+				boxX,
+				currentY,
+				boxW,
+				boxH,
+				cornerRadius,
+				"#151417"
+			);
+			ctx.shadowColor = "transparent";
+
+			const avatarImage = this._getAvatar(notif.userId, notif.avatarHash);
+			this._drawAvatar(
+				ctx,
+				boxX + padX + avatarRadius,
+				currentY + padY + avatarRadius,
+				avatarRadius,
+				avatarImage,
+				notif.sender
+			);
+
+			const textX = boxX + padX + textStart;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "top";
+
+			ctx.font = this._font(fontSize, 500);
+			ctx.fillStyle = "#f2f3f5";
+			const truncName = this._truncate(ctx, notif.sender, availW * 0.55);
+			ctx.fillText(truncName, textX, currentY + padY);
+
 			if (channelStr) {
 				const nameWidth = ctx.measureText(truncName).width;
 				ctx.font = this._font(fontSize - 4);
@@ -648,7 +667,7 @@ class OverlayRenderer {
 					ctx.fillText(
 						this._truncate(ctx, channelStr, channelAvailW),
 						textX + nameWidth + this._px(10),
-						oy + padY + this._px(4)
+						currentY + padY + this._px(4)
 					);
 			}
 
@@ -658,26 +677,36 @@ class OverlayRenderer {
 				ctx.fillText(
 					line,
 					textX,
-					oy + padY + lineHeight + this._px(2) + lineHeight * i
+					currentY + padY + lineHeight + this._px(2) + lineHeight * i
 				);
 			});
 		} else {
 			const padX = this._px(20);
 			const padY = this._px(14);
-			const fontSize = 18;
-			const maxWidth = Math.min(this._width * 0.35, this._px(450));
+
+			ctx.font = this._font(fontSize);
 			const msgLines = this._wrapText(
 				ctx,
 				notif.message,
 				maxWidth - padX * 2,
 				2
 			);
+			const msgWidth = Math.max(
+				...msgLines.map((l) => ctx.measureText(l).width)
+			);
+			const actualBoxW = Math.max(
+				this._px(160),
+				Math.min(maxWidth, padX * 2 + msgWidth + this._px(8))
+			);
 
+			ctx.shadowColor = "rgba(0,0,0,0.4)";
+			ctx.shadowBlur = shadowBlur;
+			ctx.shadowOffsetY = shadowOffsetY;
 			this._fillRoundedRect(
 				ctx,
-				ox,
-				oy,
-				boxW,
+				boxX,
+				currentY,
+				actualBoxW,
 				boxH,
 				cornerRadius,
 				notif.type === "system" ? "#111214" : "#1e1f22"
@@ -686,8 +715,8 @@ class OverlayRenderer {
 
 			this._fillRoundedRect(
 				ctx,
-				ox,
-				oy,
+				boxX,
+				currentY,
 				this._px(4),
 				boxH,
 				this._px(4),
@@ -700,15 +729,14 @@ class OverlayRenderer {
 			msgLines.forEach((line, i) => {
 				ctx.fillText(
 					line,
-					ox + padX,
-					oy + padY + (lineHeight + this._px(4)) * i
+					boxX + padX,
+					currentY + padY + (lineHeight + this._px(4)) * i
 				);
 			});
 		}
 
 		notif._canvas = offscreen;
-		notif._canvasOffsetX = -extraPad;
-		notif._canvasOffsetY = -extraPad;
+		notif._extraPad = extraPad;
 		this._dirty = true;
 	}
 
@@ -1194,17 +1222,15 @@ class OverlayRenderer {
 
 			ctx.save();
 			ctx.globalAlpha = alpha;
-
 			if (notif._canvas) {
 				ctx.drawImage(
 					notif._canvas,
-					margin + notif._canvasOffsetX,
-					currentY + notif._canvasOffsetY
+					margin - notif._extraPad,
+					currentY - notif._extraPad
 				);
 			} else {
 				this._prebakeNotification(notif);
 			}
-
 			ctx.restore();
 		}
 	}
