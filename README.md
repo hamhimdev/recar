@@ -25,9 +25,7 @@ https://recar.loxodrome.app/
 
 ## Installing Recar
 
-https://recar.loxodrome.app/install
-
-todo
+https://recar.loxodrome.app/docs/info/install/
 
 ## License
 

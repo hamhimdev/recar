@@ -18,9 +18,7 @@ const SOCK_PATH = "/tmp/recar_overlay.sock";
 function getBundledSo(appPath) {
 	const arch = process.arch; // 'x64' or 'arm64'
 	const soName =
-		arch === "arm64"
-			? "librecar_overlay_arm64.so"
-			: "librecar_overlay.so";
+		arch === "arm64" ? "librecar_overlay_arm64.so" : "librecar_overlay.so";
 	return path.join(appPath, "dist", "roverpp", soName);
 }
 

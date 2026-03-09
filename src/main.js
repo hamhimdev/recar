@@ -1038,20 +1038,34 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			await new Promise((resolve, reject) => {
 				const file = fs.createWriteStream(tmpFile);
 				const request = (url, redirects = 0) => {
-					if (redirects > 5) return reject(new Error("Too many redirects"));
-					https.get(url, (res) => {
-						if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-							res.resume();
-							return request(res.headers.location, redirects + 1);
-						}
-						if (res.statusCode !== 200) {
-							res.resume();
-							return reject(new Error(`HTTP ${res.statusCode}`));
-						}
-						res.pipe(file);
-						file.on("finish", () => file.close(() => resolve()));
-						file.on("error", reject);
-					}).on("error", reject);
+					if (redirects > 5)
+						return reject(new Error("Too many redirects"));
+					https
+						.get(url, (res) => {
+							if (
+								res.statusCode >= 300 &&
+								res.statusCode < 400 &&
+								res.headers.location
+							) {
+								res.resume();
+								return request(
+									res.headers.location,
+									redirects + 1
+								);
+							}
+							if (res.statusCode !== 200) {
+								res.resume();
+								return reject(
+									new Error(`HTTP ${res.statusCode}`)
+								);
+							}
+							res.pipe(file);
+							file.on("finish", () =>
+								file.close(() => resolve())
+							);
+							file.on("error", reject);
+						})
+						.on("error", reject);
 				};
 				request(iconUrl);
 			});
@@ -1068,19 +1082,37 @@ async function sendDesktopNotification(parsed, iconUrl) {
 					.composite([{ input: circle, blend: "dest-in" }])
 					.png()
 					.toBuffer();
-				circleFile = path.join(os.tmpdir(), `recar-notif-circle-${Date.now()}.png`);
+				circleFile = path.join(
+					os.tmpdir(),
+					`recar-notif-circle-${Date.now()}.png`
+				);
 				fs.writeFileSync(circleFile, buf);
 				iconPath_ = circleFile;
-				console.log("[Notification] Circle avatar written to", circleFile);
+				console.log(
+					"[Notification] Circle avatar written to",
+					circleFile
+				);
 			} catch (sharpErr) {
-				console.error("[Notification] sharp circle clip failed:", sharpErr);
+				console.error(
+					"[Notification] sharp circle clip failed:",
+					sharpErr
+				);
 				iconPath_ = tmpFile;
 			}
 		}
 	} catch (downloadErr) {
-		console.error("[Notification] Avatar download/processing failed:", downloadErr);
-		if (tmpFile) try { fs.unlinkSync(tmpFile); } catch {}
-		if (circleFile) try { fs.unlinkSync(circleFile); } catch {}
+		console.error(
+			"[Notification] Avatar download/processing failed:",
+			downloadErr
+		);
+		if (tmpFile)
+			try {
+				fs.unlinkSync(tmpFile);
+			} catch {}
+		if (circleFile)
+			try {
+				fs.unlinkSync(circleFile);
+			} catch {}
 		tmpFile = null;
 		circleFile = null;
 	}
@@ -1090,8 +1122,14 @@ async function sendDesktopNotification(parsed, iconUrl) {
 	else if (parsed.server) titleParts.push(parsed.server);
 
 	const cleanup = () => {
-		if (tmpFile) try { fs.unlink(tmpFile, () => {}); } catch {}
-		if (circleFile) try { fs.unlink(circleFile, () => {}); } catch {}
+		if (tmpFile)
+			try {
+				fs.unlink(tmpFile, () => {});
+			} catch {}
+		if (circleFile)
+			try {
+				fs.unlink(circleFile, () => {});
+			} catch {}
 	};
 
 	let bus;
@@ -1110,18 +1148,19 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			supportsInlineReply = caps.includes("inline-reply");
 		} catch {}
 
-		const actions = supportsInlineReply
-			// inline-reply supported: body click opens app, mark-as-read button, reply via textbox
-			? ["default", "Open", "mark-read", "Mark as Read"]
-			// no inline-reply: body click opens app, reply button, mark-as-read button
-			: ["default", "Open", "reply", "Reply", "mark-read", "Mark as Read"];
+		// inline-reply supported: body click opens app, mark-as-read button, reply via textbox
+		// no inline-reply: body click opens app, reply button, mark-as-read button
+		const actions = [
+			"default",
+			"Open",
+			...(supportsInlineReply ? [] : ["reply", "Reply"]),
+			"mark-read",
+			"Mark as Read",
+			...(supportsInlineReply ? ["inline-reply", ""] : []),
+		];
 
 		const hints = {
 			"image-path": new dbus.Variant("s", iconPath_),
-			...(supportsInlineReply ? {
-				"inline-reply": new dbus.Variant("b", true),
-				"inline-reply-placeholder": new dbus.Variant("s", "Reply..."),
-			} : {}),
 		};
 
 		console.log("[Notification] Sending with icon:", iconPath_);
@@ -1144,18 +1183,26 @@ async function sendDesktopNotification(parsed, iconUrl) {
 				if (mainWindow && !mainWindow.isDestroyed()) {
 					mainWindow.show();
 					mainWindow.focus();
-					mainWindow.webContents.send("notification-open-reply", { parsed, focusOnly: true });
+					mainWindow.webContents.send("notification-open-reply", {
+						parsed,
+						focusOnly: true,
+					});
 				}
 			} else if (actionKey === "reply") {
 				// focus the app and open the reply bar
 				if (mainWindow && !mainWindow.isDestroyed()) {
 					mainWindow.show();
 					mainWindow.focus();
-					mainWindow.webContents.send("notification-open-reply", { parsed, focusOnly: false });
+					mainWindow.webContents.send("notification-open-reply", {
+						parsed,
+						focusOnly: false,
+					});
 				}
 			} else if (actionKey === "mark-read") {
 				if (mainWindow && !mainWindow.isDestroyed()) {
-					mainWindow.webContents.send("notification-mark-read", { parsed });
+					mainWindow.webContents.send("notification-mark-read", {
+						parsed,
+					});
 				}
 			}
 		};
@@ -1164,7 +1211,10 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			if (id !== notifId) return;
 			console.log(`[Notification] Inline reply: ${replyText}`);
 			if (mainWindow && !mainWindow.isDestroyed()) {
-				mainWindow.webContents.send("notification-reply", { replyText, parsed });
+				mainWindow.webContents.send("notification-reply", {
+					replyText,
+					parsed,
+				});
 			}
 		};
 
@@ -1182,7 +1232,10 @@ async function sendDesktopNotification(parsed, iconUrl) {
 		iface.on("NotificationClosed", onClosed);
 	} catch (e) {
 		console.error("[Notification] D-Bus error:", e);
-		if (bus) try { bus.disconnect(); } catch {}
+		if (bus)
+			try {
+				bus.disconnect();
+			} catch {}
 		cleanup();
 	}
 }
@@ -1219,7 +1272,17 @@ function pnfo(data) {
 	const channelId = data?.channelId ?? msg?.channel_id ?? null;
 	const messageId = msg?.id ?? null;
 
-	return { sender, message: body, channel, server, isDM, userId, avatarHash, channelId, messageId };
+	return {
+		sender,
+		message: body,
+		channel,
+		server,
+		isDM,
+		userId,
+		avatarHash,
+		channelId,
+		messageId,
+	};
 }
 
 ipcMain.on("notification", (event, data) => {

@@ -495,74 +495,117 @@ export default definePlugin({
 		syncArRPCSettings();
 		startThemeObserver();
 
-		(window as any).statusBridge?.onNotificationReply(async ({ replyText, parsed }: { replyText: string; parsed: any }) => {
-			if (!parsed?.channelId || !parsed?.messageId || !replyText?.trim()) return;
-			try {
-				const channel = ChannelStore.getChannel(parsed.channelId);
-				const message = MessageStore.getMessage(parsed.channelId, parsed.messageId);
-				if (!channel || !message) return;
+		(window as any).statusBridge?.onNotificationReply(
+			async ({
+				replyText,
+				parsed,
+			}: {
+				replyText: string;
+				parsed: any;
+			}) => {
+				if (
+					!parsed?.channelId ||
+					!parsed?.messageId ||
+					!replyText?.trim()
+				)
+					return;
+				try {
+					const channel = ChannelStore.getChannel(parsed.channelId);
+					const message = MessageStore.getMessage(
+						parsed.channelId,
+						parsed.messageId
+					);
+					if (!channel || !message) return;
 
-				FluxDispatcher.dispatch({
-					type: "CREATE_PENDING_REPLY",
-					channel,
-					message,
-					shouldMention: true,
-					showMentionToggle: channel.guild_id !== null,
-				});
-
-				const replyOptions = MessageActions.getSendMessageOptionsForReply(
-					PendingReplyStore.getPendingReply(channel.id)
-				);
-
-				await sendMessage(channel.id, { content: replyText }, true, replyOptions);
-
-				FluxDispatcher.dispatch({ type: "DELETE_PENDING_REPLY", channelId: channel.id });
-			} catch (e) {
-				console.error("[Recar] Failed to send notification reply:", e);
-			}
-		});
-
-		(window as any).statusBridge?.onNotificationOpenReply(({ parsed, focusOnly }: { parsed: any; focusOnly?: boolean }) => {
-			if (!parsed?.channelId || !parsed?.messageId) return;
-			try {
-				const channel = ChannelStore.getChannel(parsed.channelId);
-				const message = MessageStore.getMessage(parsed.channelId, parsed.messageId);
-				if (!channel) return;
-
-				FluxDispatcher.dispatch({ type: "CHANNEL_SELECT", channelId: channel.id, guildId: channel.guild_id ?? null });
-
-				if (!focusOnly && message) {
 					FluxDispatcher.dispatch({
 						type: "CREATE_PENDING_REPLY",
 						channel,
 						message,
 						shouldMention: true,
 						showMentionToggle: channel.guild_id !== null,
-						_isQuickReply: true,
 					});
-					ComponentDispatch.dispatchToLastSubscribed("TEXTAREA_FOCUS");
-				}
-			} catch (e) {
-				console.error("[Recar] Failed to open reply:", e);
-			}
-		});
 
-		(window as any).statusBridge?.onNotificationMarkRead(({ parsed }: { parsed: any }) => {
-			if (!parsed?.channelId) return;
-			try {
-				FluxDispatcher.dispatch({
-					type: "BULK_ACK",
-					context: "APP",
-					channels: [{
-						channelId: parsed.channelId,
-						messageId: parsed.messageId ?? undefined,
-						readStateType: 0,
-					}],
-				});
-			} catch (e) {
-				console.error("[Recar] Failed to mark channel as read:", e);
+					const replyOptions =
+						MessageActions.getSendMessageOptionsForReply(
+							PendingReplyStore.getPendingReply(channel.id)
+						);
+
+					await sendMessage(
+						channel.id,
+						{ content: replyText },
+						true,
+						replyOptions
+					);
+
+					FluxDispatcher.dispatch({
+						type: "DELETE_PENDING_REPLY",
+						channelId: channel.id,
+					});
+				} catch (e) {
+					console.error(
+						"[Recar] Failed to send notification reply:",
+						e
+					);
+				}
 			}
-		});
+		);
+
+		(window as any).statusBridge?.onNotificationOpenReply(
+			({ parsed, focusOnly }: { parsed: any; focusOnly?: boolean }) => {
+				if (!parsed?.channelId || !parsed?.messageId) return;
+				try {
+					const channel = ChannelStore.getChannel(parsed.channelId);
+					const message = MessageStore.getMessage(
+						parsed.channelId,
+						parsed.messageId
+					);
+					if (!channel) return;
+
+					FluxDispatcher.dispatch({
+						type: "CHANNEL_SELECT",
+						channelId: channel.id,
+						guildId: channel.guild_id ?? null,
+					});
+
+					if (!focusOnly && message) {
+						FluxDispatcher.dispatch({
+							type: "CREATE_PENDING_REPLY",
+							channel,
+							message,
+							shouldMention: true,
+							showMentionToggle: channel.guild_id !== null,
+							_isQuickReply: true,
+						});
+						ComponentDispatch.dispatchToLastSubscribed(
+							"TEXTAREA_FOCUS"
+						);
+					}
+				} catch (e) {
+					console.error("[Recar] Failed to open reply:", e);
+				}
+			}
+		);
+
+		(window as any).statusBridge?.onNotificationMarkRead(
+			({ parsed }: { parsed: any }) => {
+				if (!parsed?.channelId) return;
+				try {
+					FluxDispatcher.dispatch({
+						type: "BULK_ACK",
+						context: "APP",
+						channels: [
+							{
+								channelId: parsed.channelId,
+								messageId: parsed.messageId ?? undefined,
+								readStateType: 0,
+							},
+						],
+					});
+				} catch (e) {
+					console.error("[Recar] Failed to mark channel as read:", e);
+				}
+			}
+		);
 
 		// send current user info to main process immediately and on demand
 		const sendUserInfo = () => {
