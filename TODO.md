@@ -36,3 +36,5 @@
 - [ ] normal semver versioning (do this when most of the above items are done!
       first normal version will be 1.2.0)
 - [ ] optimize the fuck out of recar
+- [ ] have everything documented in the docs by 1.2.0
+- [ ] download page
