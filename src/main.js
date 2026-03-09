@@ -6,9 +6,8 @@ const {
 	Tray,
 	Menu,
 	screen,
-	Notification,
-	nativeImage,
 } = require("electron");
+const dbus = require("dbus-next");
 const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
@@ -1031,75 +1030,161 @@ async function fah(userId) {
 async function sendDesktopNotification(parsed, iconUrl) {
 	let iconPath_ = iconPath;
 	let tmpFile = null;
+	let circleFile = null;
 	try {
 		if (iconUrl) {
-			const pngUrl = iconUrl.replace(/\.webp(\?|$)/, ".png$1");
 			tmpFile = path.join(os.tmpdir(), `recar-notif-${Date.now()}.png`);
+			console.log("[Notification] Downloading avatar:", iconUrl);
 			await new Promise((resolve, reject) => {
 				const file = fs.createWriteStream(tmpFile);
 				const request = (url, redirects = 0) => {
-					if (redirects > 5)
-						return reject(new Error("Too many redirects"));
-					https
-						.get(url, (res) => {
-							if (
-								res.statusCode >= 300 &&
-								res.statusCode < 400 &&
-								res.headers.location
-							) {
-								res.resume();
-								return request(
-									res.headers.location,
-									redirects + 1
-								);
-							}
-							if (res.statusCode !== 200) {
-								res.resume();
-								return reject(
-									new Error(`HTTP ${res.statusCode}`)
-								);
-							}
-							res.pipe(file);
-							file.on("finish", () => file.close(resolve));
-							file.on("error", reject);
-						})
-						.on("error", reject);
+					if (redirects > 5) return reject(new Error("Too many redirects"));
+					https.get(url, (res) => {
+						if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+							res.resume();
+							return request(res.headers.location, redirects + 1);
+						}
+						if (res.statusCode !== 200) {
+							res.resume();
+							return reject(new Error(`HTTP ${res.statusCode}`));
+						}
+						res.pipe(file);
+						file.on("finish", () => file.close(() => resolve()));
+						file.on("error", reject);
+					}).on("error", reject);
 				};
-				request(pngUrl);
+				request(iconUrl);
 			});
-			iconPath_ = tmpFile;
-		}
-	} catch {
-		// fall through to app icon
-		if (tmpFile)
+			console.log("[Notification] Avatar downloaded to", tmpFile);
+
 			try {
-				fs.unlinkSync(tmpFile);
-			} catch {}
+				const sharp = require("sharp");
+				const size = 256;
+				const circle = Buffer.from(
+					`<svg><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}"/></svg>`
+				);
+				const buf = await sharp(tmpFile)
+					.resize(size, size)
+					.composite([{ input: circle, blend: "dest-in" }])
+					.png()
+					.toBuffer();
+				circleFile = path.join(os.tmpdir(), `recar-notif-circle-${Date.now()}.png`);
+				fs.writeFileSync(circleFile, buf);
+				iconPath_ = circleFile;
+				console.log("[Notification] Circle avatar written to", circleFile);
+			} catch (sharpErr) {
+				console.error("[Notification] sharp circle clip failed:", sharpErr);
+				iconPath_ = tmpFile;
+			}
+		}
+	} catch (downloadErr) {
+		console.error("[Notification] Avatar download/processing failed:", downloadErr);
+		if (tmpFile) try { fs.unlinkSync(tmpFile); } catch {}
+		if (circleFile) try { fs.unlinkSync(circleFile); } catch {}
 		tmpFile = null;
+		circleFile = null;
 	}
 
 	const titleParts = [parsed.sender];
 	if (parsed.channel) titleParts.push(parsed.channel);
 	else if (parsed.server) titleParts.push(parsed.server);
 
-	const notif = new Notification({
-		title: titleParts.join(" \u2022 "),
-		body: parsed.message,
-		icon: nativeImage.createFromPath(iconPath_),
-	});
-	notif.on("click", () => {
-		if (mainWindow && !mainWindow.isDestroyed()) {
-			mainWindow.show();
-			mainWindow.focus();
-		}
-	});
-	notif.once("close", () => {
-		if (tmpFile)
-			try {
-				fs.unlink(tmpFile, () => {});
-			} catch {}
-	});
-	notif.show();
+	const cleanup = () => {
+		if (tmpFile) try { fs.unlink(tmpFile, () => {}); } catch {}
+		if (circleFile) try { fs.unlink(circleFile, () => {}); } catch {}
+	};
+
+	let bus;
+	try {
+		bus = dbus.sessionBus();
+		const obj = await bus.getProxyObject(
+			"org.freedesktop.Notifications",
+			"/org/freedesktop/Notifications"
+		);
+		const iface = obj.getInterface("org.freedesktop.Notifications");
+
+		// check if the notif daemon supports inline-reply
+		let supportsInlineReply = false;
+		try {
+			const caps = await iface.GetCapabilities();
+			supportsInlineReply = caps.includes("inline-reply");
+		} catch {}
+
+		const actions = supportsInlineReply
+			// inline-reply supported: body click opens app, mark-as-read button, reply via textbox
+			? ["default", "Open", "mark-read", "Mark as Read"]
+			// no inline-reply: body click opens app, reply button, mark-as-read button
+			: ["default", "Open", "reply", "Reply", "mark-read", "Mark as Read"];
+
+		const hints = {
+			"image-path": new dbus.Variant("s", iconPath_),
+			...(supportsInlineReply ? {
+				"inline-reply": new dbus.Variant("b", true),
+				"inline-reply-placeholder": new dbus.Variant("s", "Reply..."),
+			} : {}),
+		};
+
+		console.log("[Notification] Sending with icon:", iconPath_);
+		const notifId = await iface.Notify(
+			"recar",
+			0,
+			iconPath_,
+			titleParts.join(" \u2022 "),
+			parsed.message,
+			actions,
+			hints,
+			-1
+		);
+
+		const onAction = (id, actionKey) => {
+			if (id !== notifId) return;
+			console.log(`[Notification] Action invoked: ${actionKey}`);
+			if (actionKey === "default") {
+				// just focus the app and navigate to the channel
+				if (mainWindow && !mainWindow.isDestroyed()) {
+					mainWindow.show();
+					mainWindow.focus();
+					mainWindow.webContents.send("notification-open-reply", { parsed, focusOnly: true });
+				}
+			} else if (actionKey === "reply") {
+				// focus the app and open the reply bar
+				if (mainWindow && !mainWindow.isDestroyed()) {
+					mainWindow.show();
+					mainWindow.focus();
+					mainWindow.webContents.send("notification-open-reply", { parsed, focusOnly: false });
+				}
+			} else if (actionKey === "mark-read") {
+				if (mainWindow && !mainWindow.isDestroyed()) {
+					mainWindow.webContents.send("notification-mark-read", { parsed });
+				}
+			}
+		};
+
+		const onReplied = (id, replyText) => {
+			if (id !== notifId) return;
+			console.log(`[Notification] Inline reply: ${replyText}`);
+			if (mainWindow && !mainWindow.isDestroyed()) {
+				mainWindow.webContents.send("notification-reply", { replyText, parsed });
+			}
+		};
+
+		const onClosed = (id) => {
+			if (id !== notifId) return;
+			iface.removeListener("ActionInvoked", onAction);
+			iface.removeListener("NotificationReplied", onReplied);
+			iface.removeListener("NotificationClosed", onClosed);
+			bus.disconnect();
+			cleanup();
+		};
+
+		iface.on("ActionInvoked", onAction);
+		iface.on("NotificationReplied", onReplied);
+		iface.on("NotificationClosed", onClosed);
+	} catch (e) {
+		console.error("[Notification] D-Bus error:", e);
+		if (bus) try { bus.disconnect(); } catch {}
+		cleanup();
+	}
 }
 
 function pnfo(data) {
@@ -1131,7 +1216,10 @@ function pnfo(data) {
 
 	const { userId, avatarHash } = gaai(author);
 
-	return { sender, message: body, channel, server, isDM, userId, avatarHash };
+	const channelId = data?.channelId ?? msg?.channel_id ?? null;
+	const messageId = msg?.id ?? null;
+
+	return { sender, message: body, channel, server, isDM, userId, avatarHash, channelId, messageId };
 }
 
 ipcMain.on("notification", (event, data) => {

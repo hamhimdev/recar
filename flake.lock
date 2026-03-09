@@ -1,5 +1,21 @@
 {
   "nodes": {
+    "dpprpc-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1773093221,
+        "narHash": "sha256-zNPE6DkbKF4IzUKWHTIGygITn+aVsDXRHExXg65jH0w=",
+        "owner": "TheUnium",
+        "repo": "dpprpc",
+        "rev": "194498db6e36a604a6f3350354b5d92aae26f358",
+        "type": "github"
+      },
+      "original": {
+        "owner": "TheUnium",
+        "repo": "dpprpc",
+        "type": "github"
+      }
+    },
     "equicord-src": {
       "flake": false,
       "locked": {
@@ -52,6 +68,7 @@
     },
     "root": {
       "inputs": {
+        "dpprpc-src": "dpprpc-src",
         "equicord-src": "equicord-src",
         "flake-utils": "flake-utils",
         "nixpkgs": "nixpkgs",

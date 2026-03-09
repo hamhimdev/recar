@@ -28,6 +28,9 @@ contextBridge.exposeInMainWorld("statusBridge", {
 	vcLeave: (data) => ipcRenderer.send("vc-leave", data),
 	vcStateChange: (data) => ipcRenderer.send("vc-state-change", data),
 	vcSpeaking: (data) => ipcRenderer.send("vc-speaking", data),
+	onNotificationReply: (cb) => ipcRenderer.on("notification-reply", (_, data) => cb(data)),
+	onNotificationOpenReply: (cb) => ipcRenderer.on("notification-open-reply", (_, data) => cb(data)),
+	onNotificationMarkRead: (cb) => ipcRenderer.on("notification-mark-read", (_, data) => cb(data)),
 });
 
 let cachedStreamSettings = null;

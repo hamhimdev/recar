@@ -20,7 +20,7 @@ function getBundledSo(appPath) {
 	const soName =
 		arch === "arm64"
 			? "librecar_overlay_arm64.so"
-			: "librecar_overlay_x64.so";
+			: "librecar_overlay.so";
 	return path.join(appPath, "dist", "roverpp", soName);
 }
 
