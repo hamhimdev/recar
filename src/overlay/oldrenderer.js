@@ -2,7 +2,7 @@ const net = require("net");
 const fs = require("fs");
 const path = require("path");
 const { parentPort } = require("worker_threads");
-const { Canvas, FontLibrary, Image, loadImage } = require("skia-canvas");
+const { createCanvas, GlobalFonts, loadImage } = require("@napi-rs/canvas");
 
 let fontFamily = "sans-serif";
 
@@ -34,7 +34,7 @@ function initFonts(assetsDir) {
 			const fontPath = path.join(fontDir, filename);
 			if (fs.existsSync(fontPath)) {
 				try {
-					FontLibrary.use(family, fontPath);
+					GlobalFonts.registerFromPath(fontPath, family);
 					console.log(
 						`[Overlay] Loaded font: ${fontPath} as "${family}"`
 					);
@@ -69,7 +69,7 @@ function initFonts(assetsDir) {
 	for (const [fontPath, familyName] of systemFonts) {
 		if (fs.existsSync(fontPath)) {
 			try {
-				FontLibrary.use(familyName, fontPath);
+				GlobalFonts.registerFromPath(fontPath, familyName);
 				fontFamily = familyName;
 				console.log(`[Overlay] Loaded system font: ${fontPath}`);
 				return;
@@ -112,6 +112,7 @@ class OverlayRenderer {
 		this._resizeDebounce = null;
 		this._avatarCache = new Map();
 		this._assetsDir = null;
+		this._svgCache = new Map();
 		this._iconCache = new Map();
 		this._iconLoading = new Set();
 		this._layerSocket = null;
@@ -124,6 +125,7 @@ class OverlayRenderer {
 
 		this._assetsDir = assetsDir;
 		initFonts(assetsDir);
+		this._loadIconSvgs();
 		this._connectLayerSocket();
 
 		this._width = Math.min(width, SHM_MAX_WIDTH);
@@ -192,13 +194,15 @@ class OverlayRenderer {
 		this._height = height;
 		this._dpr = dpr;
 		this._updateScale();
-		this._canvas = new Canvas(width * dpr, height * dpr);
+		this._canvas = createCanvas(width * dpr, height * dpr);
 		this._ctx = this._canvas.getContext("2d");
 		this._ctx.scale(dpr, dpr);
 		this._ctx.imageSmoothingEnabled = true;
 		this._ctx.imageSmoothingQuality = "high";
 		this._ctx.textRendering = "geometricPrecision";
 		this._ctx.fontKerning = "normal";
+		this._iconCache.clear();
+		this._iconLoading.clear();
 		this._fontCache = {};
 		this._markDirty();
 
@@ -210,33 +214,74 @@ class OverlayRenderer {
 		}, 0);
 	}
 
+	_loadIconSvgs() {
+		if (!this._assetsDir) return;
+
+		const icons = {
+			[ICON_MUTED]: "muted.svg",
+			[ICON_DEAFENED]: "deafened.svg",
+		};
+
+		for (const [name, filename] of Object.entries(icons)) {
+			const svgPath = path.join(
+				this._assetsDir,
+				"img",
+				"overlay",
+				filename
+			);
+			if (!fs.existsSync(svgPath)) {
+				console.warn(`[Overlay] Icon not found: ${svgPath}`);
+				continue;
+			}
+			try {
+				const svgData = fs.readFileSync(svgPath, "utf-8");
+				this._svgCache.set(name, svgData);
+				console.log(`[Overlay] Loaded SVG source: ${filename}`);
+			} catch (e) {
+				console.warn(
+					`[Overlay] Failed to read ${filename}:`,
+					e.message
+				);
+			}
+		}
+	}
+
 	async _renderIcon(iconName, size, color) {
 		const cacheKey = `${iconName}_${size}_${color}`;
 		if (this._iconCache.has(cacheKey) || this._iconLoading.has(cacheKey))
 			return;
-		if (!this._assetsDir) return;
 
-		const filename = iconName === ICON_MUTED ? "muted.svg" : "deafened.svg";
-		const svgPath = path.join(this._assetsDir, "img", "overlay", filename);
-		if (!fs.existsSync(svgPath)) {
-			console.warn(`[Overlay] Icon not found: ${svgPath}`);
-			return;
-		}
+		const svgSource = this._svgCache.get(iconName);
+		if (!svgSource) return;
 
 		this._iconLoading.add(cacheKey);
+
 		try {
-			const dpr = this._dpr || 2;
-			const renderSize = Math.round(size * dpr);
+			const dpr = this._dpr || 1;
+			const renderSize = size * dpr;
+			// strp existing fill attr from <svg> tag, set explicit w/h
+			// then prepend a new fill attr so all child paths inherit it
+			let svg = svgSource;
+			svg = svg.replace(/(<svg[^>]*)\sfill="[^"]*"/i, "$1");
+			svg = svg.replace(/width="[^"]*"/, `width="${renderSize}"`);
+			svg = svg.replace(/height="[^"]*"/, `height="${renderSize}"`);
+			svg = svg.replace(/<svg/, `<svg fill="${color}"`);
 
-			const svgSource = fs.readFileSync(svgPath, "utf-8");
-			const svg = svgSource.replace(/<svg([^>]*)>/, (match, attrs) => {
-				attrs = attrs.replace(/\s*(width|height|fill)="[^"]*"/gi, "");
-				return `<svg${attrs} fill="${color}" width="${renderSize}" height="${renderSize}">`;
-			});
+			// svg -> temp cvs -> png buff -> img
+			// why? bc napi-rs is a prick with direct svg rendering :p
+			const tempCanvas = createCanvas(renderSize, renderSize);
+			const tempCtx = tempCanvas.getContext("2d");
+			tempCtx.imageSmoothingEnabled = true;
+			tempCtx.imageSmoothingQuality = "high";
+			const svgImage = await loadImage(Buffer.from(svg));
+			tempCtx.drawImage(svgImage, 0, 0, renderSize, renderSize);
+			const pngBuffer = tempCanvas.toBuffer("image/png");
+			const finalImage = await loadImage(pngBuffer);
 
-			const finalImage = await loadImage(Buffer.from(svg));
-			this._iconCache.set(cacheKey, finalImage);
-			this._markDirty();
+			if (this._dpr === dpr) {
+				this._iconCache.set(cacheKey, finalImage);
+				this._markDirty();
+			}
 		} catch (e) {
 			console.warn(
 				`[Overlay] Failed to render icon ${iconName}:`,
@@ -425,10 +470,7 @@ class OverlayRenderer {
 		}
 
 		try {
-			const resp = await fetch(url);
-			if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-			const buf = await resp.arrayBuffer();
-			const image = await loadImage(Buffer.from(buf));
+			const image = await loadImage(url);
 			this._avatarCache.set(key, image);
 			for (const n of this._notifications) {
 				if (n.userId === userId) n._canvas = null;
@@ -488,7 +530,7 @@ class OverlayRenderer {
 		const W = this._width;
 		const H = this._height;
 
-		const measure = new Canvas(1, 1).getContext("2d");
+		const measure = createCanvas(1, 1).getContext("2d");
 		const fontSize = 18;
 		const lineHeight = this._px(fontSize * 1.15);
 		const maxWidth = Math.min(W * 0.35, this._px(450));
@@ -550,7 +592,7 @@ class OverlayRenderer {
 
 		const canvasW = boxW + extraPad * 2;
 		const canvasH = boxH + extraPad * 2;
-		const offscreen = new Canvas(canvasW, canvasH);
+		const offscreen = createCanvas(canvasW, canvasH);
 		const ctx = offscreen.getContext("2d");
 		ctx.imageSmoothingEnabled = true;
 		ctx.imageSmoothingQuality = "high";
@@ -570,7 +612,7 @@ class OverlayRenderer {
 			const textStart = textStart_n;
 			const availW = availW_sender;
 
-			ctx.font = this._font(fontSize, 400);
+			ctx.font = this._font(fontSize);
 			const msgLines = this._wrapText(ctx, notif.message, availW, 2);
 
 			let channelStr = "";
@@ -629,7 +671,7 @@ class OverlayRenderer {
 					);
 			}
 
-			ctx.font = this._font(fontSize, 400);
+			ctx.font = this._font(fontSize);
 			ctx.fillStyle = "#dbdee1";
 			msgLines.forEach((line, i) => {
 				ctx.fillText(
@@ -642,7 +684,7 @@ class OverlayRenderer {
 			const padX = this._px(20);
 			const padY = this._px(14);
 
-			ctx.font = this._font(fontSize, 500);
+			ctx.font = this._font(fontSize);
 			const msgLines = this._wrapText(
 				ctx,
 				notif.message,
@@ -891,8 +933,13 @@ class OverlayRenderer {
 
 		const bufW = this._canvas.width;
 		const bufH = this._canvas.height;
-		const imageData = ctx.getImageData(0, 0, bufW, bufH);
-		const pixelBuf = Buffer.from(imageData.data.buffer);
+		let pixelBuf;
+		if (typeof this._canvas.data === "function") {
+			pixelBuf = this._canvas.data();
+		} else {
+			const imageData = ctx.getImageData(0, 0, bufW, bufH);
+			pixelBuf = Buffer.from(imageData.data.buffer);
+		}
 
 		if (this._writeShm(pixelBuf, bufW, bufH)) {
 			this._signalLayer();
@@ -1056,7 +1103,6 @@ class OverlayRenderer {
 	}
 
 	// https://pomax.github.io/bezierinfo/
-	// i made this and it literalyl went unused
 	_cubicBezierEase(t) {
 		const p1x = 0.2,
 			p1y = 0.0;
@@ -1329,7 +1375,7 @@ class OverlayRenderer {
 			ctx.closePath();
 			ctx.fillStyle = "rgba(0,0,0,0.55)";
 			ctx.fill();
-			ctx.strokeStyle = "rgba(255,255,255,0.1)";
+			ctx.strokeStyle = "rgba(30,30,30,0.7)";
 			ctx.lineWidth = this._px(1);
 			ctx.stroke();
 
