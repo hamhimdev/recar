@@ -11,8 +11,8 @@ const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
 
-const { OverlayRenderer } = require("./rcRvRndr.js");
-const RvInst = require("./rcRvInst.js");
+const { OverlayRenderer } = require("./overlay/renderer.js");
+const RvInst = require("./overlay/installer.js");
 const OvRn = new OverlayRenderer();
 
 let _venmic;
@@ -49,6 +49,7 @@ function getAudioServicePid() {
 
 // register this app as the handler for discord:// links
 // uses xdg-mime instead of xdg-settings to avoid a long-standing ubuntu bug where xdg-settings would also register the app as the default browser
+// of course its an ubuntu bug
 function registerDiscordProtocol() {
 	if (process.platform !== "linux") return;
 
