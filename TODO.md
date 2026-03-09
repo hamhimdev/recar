@@ -30,6 +30,7 @@
 - [ ] mod rebuild/update system
 - [ ] easy userplugin installation (blocked by above item)
 - [ ] redo settings ui to theme with discord, and template it because oh my god having everything in one html file is annoying, same for stream ui (and also replace material symbols with loxodrome icons)
+- [ ] make call ui use the static fonts and remove the variable fonts, since the static fonts are needed for overlay, variable font is kinda redundant, oh and also remove inter
 
 ---
 
