@@ -1296,6 +1296,7 @@ app.whenReady().then(async () => {
 	createTray();
 	setTimeout(async () => {
 		createMainWindow();
+		/*
 		try {
 			const { default: Server } = await import("arrpc");
 			const { WebSocketServer } = await import("ws");
@@ -1346,6 +1347,7 @@ app.whenReady().then(async () => {
 		} catch (e) {
 			console.error("[arRPC] Failed to start:", e);
 		}
+			*/
 	}, 500);
 });
 
