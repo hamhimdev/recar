@@ -376,7 +376,7 @@ class OverlayRenderer {
 			this._layerSocketReady = true;
 		});
 		client.on("error", (e) => {
-			console.warn("[Overlay] Layer socket error:", e.message);
+			// console.warn("[Overlay] Layer socket error:", e.message);
 			client.destroy();
 		});
 		client.on("close", () => {

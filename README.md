@@ -31,7 +31,8 @@ todo
 
 ## License
 
-**recar & [roverpp](https://github.com/TheUnium/roverpp) (overlay)**  
+**recar, [dppRPC](https://github.com/TheUnium/dpprpc) & [roverpp](https://github.com/TheUnium/roverpp) (overlay)**  
 MIT License  
 [recar License](./LICENSE)  
 [roverpp License](https://github.com/TheUnium/roverpp/blob/main/LICENSE/)
+[dppRPC](https://github.com/TheUnium/dpprpc/blob/main/LICENSE/)

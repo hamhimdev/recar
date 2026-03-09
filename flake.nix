@@ -15,6 +15,10 @@
 			url = "github:TheUnium/roverpp";
 			flake = false;
 		};
+		dpprpc-src = {
+			url = "github:TheUnium/dpprpc";
+			flake = false;
+		};
 	};
 	outputs =
 		{
@@ -24,6 +28,7 @@
 			vencord-src,
 			equicord-src,
 			roverpp-src,
+			dpprpc-src,
 		}:
 		flake-utils.lib.eachDefaultSystem (
 			system:
@@ -76,9 +81,46 @@
 					};
 				};
 
+				dpprpc = pkgs.stdenv.mkDerivation {
+					pname = "dpprpc";
+					version = "0-unstable";
+					src = dpprpc-src;
+
+					nativeBuildInputs = [
+						pkgs.gnumake
+					];
+
+					buildInputs = [
+						pkgs.libwebsockets
+						pkgs.rapidjson
+					];
+
+					buildPhase = ''
+						runHook preBuild
+						make
+						runHook postBuild
+					'';
+
+					installPhase = ''
+						runHook preInstall
+
+						mkdir -p $out/dpprpc/bin
+						cp dpprpc/bin/dpprpc $out/dpprpc/bin/
+
+						runHook postInstall
+					'';
+
+					meta = with lib; {
+						description = "Discord Rich Presence for Linux";
+						homepage = "https://github.com/TheUnium/dpprpc";
+						license = licenses.mit;
+						platforms = [ "x86_64-linux" "aarch64-linux" ];
+					};
+				};
+
 				recar = pkgs.stdenv.mkDerivation rec {
 					pname = "recar";
-					version = "1.1.13";
+					version = "1.1.15";
 
 					src = pkgs.runCommand "recar-src" { } ''
 						mkdir -p $out
@@ -169,6 +211,10 @@
 						cp ${roverpp}/lib/recar-overlay/librecar_overlay.so \
 							$out/share/recar/dist/roverpp/${roverppSoName}
 
+						# bundle dpprpc binary
+						mkdir -p $out/share/recar/dpprpc/bin
+						cp ${dpprpc}/dpprpc/bin/dpprpc $out/share/recar/dpprpc/bin/
+
 						mkdir -p $out/bin
 						makeWrapper ${pkgs.electron}/bin/electron $out/bin/recar \
 							--add-flags "$out/share/recar/src/main.js" \
@@ -215,6 +261,7 @@ EOF
 				packages = {
 					recar = recar;
 					roverpp = roverpp;
+					dpprpc = dpprpc;
 					default = recar;
 				};
 				devShells.default = pkgs.mkShell {

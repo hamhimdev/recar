@@ -7,3 +7,6 @@
 [submodule "roverpp"]
 	path = roverpp
 	url = https://github.com/TheUnium/roverpp.git
+[submodule "dpprpc"]
+	path = dpprpc
+	url = https://github.com/TheUnium/dpprpc

@@ -51,6 +51,91 @@ function getAudioServicePid() {
 	}
 }
 
+let dpprpcProcess = null;
+
+function startDpprpc() {
+	if (dpprpcProcess) return;
+
+	try {
+		const dpprpcPath = path.join(
+			__dirname,
+			"..",
+			"dpprpc",
+			"bin",
+			"dpprpc"
+		);
+		console.log("[recar > dppRPC] Starting process");
+
+		const { spawn } = require("child_process");
+
+		dpprpcProcess = spawn(dpprpcPath, [], {
+			stdio: ["ignore", "pipe", "pipe"],
+			detached: false,
+		});
+
+		dpprpcProcess.on("error", (err) => {
+			console.error("[recar > dppRPC] Local binary failed:", err.message);
+			console.log("[recar > dppRPC] Trying global installation");
+
+			dpprpcProcess = spawn("dpprpc", [], {
+				stdio: ["ignore", "pipe", "pipe"],
+				detached: false,
+			});
+
+			dpprpcProcess.on("error", (err) => {
+				console.error(
+					"[recar > dppRPC] Global install failed:",
+					err.message
+				);
+				dpprpcProcess = null;
+			});
+
+			attachDpprpcHandlers();
+		});
+
+		attachDpprpcHandlers();
+	} catch (e) {
+		console.error("[recar > dppRPC] Error starting process:", e);
+		dpprpcProcess = null;
+	}
+}
+
+function attachDpprpcHandlers() {
+	if (!dpprpcProcess) return;
+
+	dpprpcProcess.stdout.on("data", (data) => {
+		console.log(`[recar > dppRPC] ${data.toString().trim()}`);
+	});
+
+	dpprpcProcess.stderr.on("data", (data) => {
+		console.error(`[recar > dppRPC] ${data.toString().trim()}`);
+	});
+
+	dpprpcProcess.on("exit", (code) => {
+		console.log(`[recar > dppRPC] Process exited with code ${code}`);
+		dpprpcProcess = null;
+	});
+}
+
+function stopDpprpc() {
+	if (dpprpcProcess) {
+		console.log("[recar > dppRPC] Stopping");
+		try {
+			dpprpcProcess.kill("SIGTERM");
+
+			setTimeout(() => {
+				if (dpprpcProcess && !dpprpcProcess.killed) {
+					console.log("[recar > dppRPC] Force killing");
+					dpprpcProcess.kill("SIGKILL");
+				}
+			}, 2000);
+		} catch (e) {
+			console.error("[recar > dppRPC] Error stopping process:", e);
+		}
+		dpprpcProcess = null;
+	}
+}
+
 // register this app as the handler for discord:// links
 // uses xdg-mime instead of xdg-settings to avoid a long-standing ubuntu bug where xdg-settings would also register the app as the default browser
 // of course its an ubuntu bug
@@ -503,7 +588,7 @@ const createMainWindow = () => {
 		if (matches) {
 			const count = parseInt(matches[1], 10);
 			console.log(`[Main] Badge count detected: ${count}`);
-			const success = console.log(`Should set badge count ${count}`) // app.setBadgeCount(count);
+			const success = console.log(`Should set badge count ${count}`); // app.setBadgeCount(count);
 			// While I was optimizing overlay I noticed my audio would cut off for like a millisecond or something everytime I got a notif. I though this was because, well, the overlay had to render the notification but it seems to be this lol. Electron!!!! Rahh!!!!
 			// Overlay did contribute a bit, but still. Why??? I added prerendering of notifs to the overlay and it does not do that at all anymore, but turn this on, woo it does it!!!!! Yay!!!
 			// Eventually we should use a better solution, similar to libvesktop (atleast i think libvesktop handles it, but i'm not entirely sure) as this doesn't work in KDE Plasma anyway, yk one of the most used desktops. Supposed to work in Gnome though? not sure...
@@ -953,20 +1038,32 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			await new Promise((resolve, reject) => {
 				const file = fs.createWriteStream(tmpFile);
 				const request = (url, redirects = 0) => {
-					if (redirects > 5) return reject(new Error("Too many redirects"));
-					https.get(url, (res) => {
-						if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-							res.resume();
-							return request(res.headers.location, redirects + 1);
-						}
-						if (res.statusCode !== 200) {
-							res.resume();
-							return reject(new Error(`HTTP ${res.statusCode}`));
-						}
-						res.pipe(file);
-						file.on("finish", () => file.close(resolve));
-						file.on("error", reject);
-					}).on("error", reject);
+					if (redirects > 5)
+						return reject(new Error("Too many redirects"));
+					https
+						.get(url, (res) => {
+							if (
+								res.statusCode >= 300 &&
+								res.statusCode < 400 &&
+								res.headers.location
+							) {
+								res.resume();
+								return request(
+									res.headers.location,
+									redirects + 1
+								);
+							}
+							if (res.statusCode !== 200) {
+								res.resume();
+								return reject(
+									new Error(`HTTP ${res.statusCode}`)
+								);
+							}
+							res.pipe(file);
+							file.on("finish", () => file.close(resolve));
+							file.on("error", reject);
+						})
+						.on("error", reject);
 				};
 				request(pngUrl);
 			});
@@ -974,7 +1071,10 @@ async function sendDesktopNotification(parsed, iconUrl) {
 		}
 	} catch {
 		// fall through to app icon
-		if (tmpFile) try { fs.unlinkSync(tmpFile); } catch {}
+		if (tmpFile)
+			try {
+				fs.unlinkSync(tmpFile);
+			} catch {}
 		tmpFile = null;
 	}
 
@@ -994,7 +1094,10 @@ async function sendDesktopNotification(parsed, iconUrl) {
 		}
 	});
 	notif.once("close", () => {
-		if (tmpFile) try { fs.unlink(tmpFile, () => {}); } catch {}
+		if (tmpFile)
+			try {
+				fs.unlink(tmpFile, () => {});
+			} catch {}
 	});
 	notif.show();
 }
@@ -1088,16 +1191,25 @@ ipcMain.on("vc-update", async (event, data) => {
 		if (!prev) {
 			OvRn.postMessage({
 				type: "VOICE_JOIN",
-				payload: { uid, username, avatarHash, muted, deafened }
+				payload: { uid, username, avatarHash, muted, deafened },
 			});
 		} else {
 			if (avatarHash && !prev.avatarHash) {
-				OvRn.postMessage({ type: "VOICE_UPDATE_AVATAR", payload: { uid, avatarHash } });
+				OvRn.postMessage({
+					type: "VOICE_UPDATE_AVATAR",
+					payload: { uid, avatarHash },
+				});
 			}
 			if (prev.muted !== muted)
-				OvRn.postMessage({ type: muted ? "VOICE_MUTED" : "VOICE_UNMUTED", payload: { uid } });
+				OvRn.postMessage({
+					type: muted ? "VOICE_MUTED" : "VOICE_UNMUTED",
+					payload: { uid },
+				});
 			if (prev.deafened !== deafened)
-				OvRn.postMessage({ type: deafened ? "VOICE_DEAFENED" : "VOICE_UNDEAFENED", payload: { uid } });
+				OvRn.postMessage({
+					type: deafened ? "VOICE_DEAFENED" : "VOICE_UNDEAFENED",
+					payload: { uid },
+				});
 		}
 
 		vcMembers.set(uid, {
@@ -1146,7 +1258,10 @@ ipcMain.on("vc-join", async (event, data) => {
 		speaking: false,
 		avatarHash,
 	});
-	OvRn.postMessage({ type: "VOICE_JOIN", payload: { uid, username, avatarHash, muted, deafened } });
+	OvRn.postMessage({
+		type: "VOICE_JOIN",
+		payload: { uid, username, avatarHash, muted, deafened },
+	});
 });
 
 ipcMain.on("vc-leave", (event, data) => {
@@ -1177,9 +1292,15 @@ ipcMain.on("vc-state-change", (event, data) => {
 	const deafened = !!(data?.deafened || data?.deaf || data?.selfDeaf);
 
 	if (prev.deafened !== deafened)
-		OvRn.postMessage({ type: deafened ? "VOICE_DEAFENED" : "VOICE_UNDEAFENED", payload: { uid } });
+		OvRn.postMessage({
+			type: deafened ? "VOICE_DEAFENED" : "VOICE_UNDEAFENED",
+			payload: { uid },
+		});
 	if (prev.muted !== muted)
-		OvRn.postMessage({ type: muted ? "VOICE_MUTED" : "VOICE_UNMUTED", payload: { uid } });
+		OvRn.postMessage({
+			type: muted ? "VOICE_MUTED" : "VOICE_UNMUTED",
+			payload: { uid },
+		});
 
 	vcMembers.set(uid, { ...prev, username, muted, deafened });
 });
@@ -1324,14 +1445,21 @@ app.whenReady().then(async () => {
 	const primaryDisplay = screen.getPrimaryDisplay();
 	const { width, height } = primaryDisplay.size;
 	const assetsDir = path.join(__dirname, "assets");
-	await new Promise((resolve) => {
-		OvRn.once("message", (msg) => {
-			if (msg.type === "INIT_DONE") resolve(msg.success);
-		});
-		OvRn.postMessage({
-			type: "INIT",
-			payload: { width, height, assetsDir },
-		});
+
+	const overlayTimeout = setTimeout(() => {
+		console.log("[Overlay] 3s gone, continuing anyway");
+	}, 3000);
+
+	OvRn.once("message", (msg) => {
+		if (msg.type === "INIT_DONE") {
+			clearTimeout(overlayTimeout);
+			console.log("[Overlay] Initialized successfully");
+		}
+	});
+
+	OvRn.postMessage({
+		type: "INIT",
+		payload: { width, height, assetsDir },
 	});
 
 	registerDiscordProtocol();
@@ -1362,62 +1490,21 @@ app.whenReady().then(async () => {
 	}
 	createSplashWindow();
 	createTray();
-	setTimeout(async () => {
-		createMainWindow();
-		try {
-			const { default: Server } = await import("arrpc");
-			const { WebSocketServer } = await import("ws");
+	createMainWindow();
 
-			const portAvailable = await isPortUsed(1337);
+	if (settings.autoEnableWebRPC) {
+		setTimeout(() => {
+			startDpprpc();
+		}, 200);
+	}
+});
 
-			if (portAvailable) {
-				const wss = new WebSocketServer({ port: 1337 });
-				const clients = new Set();
-				wss.on("connection", (ws) => {
-					console.log("[arRPC Bridge] Client connected");
-					clients.add(ws);
-					ws.on("close", () => {
-						console.log("[arRPC Bridge] Client disconnected");
-						clients.delete(ws);
-					});
-				});
-				console.log(
-					"[arRPC Bridge] WebSocket server started on port 1337"
-				);
-
-				const arrpc = await new Server();
-				arrpc.on("activity", (data) => {
-					console.log("[arRPC] Activity received:", data);
-					const message = JSON.stringify(data);
-					for (const client of clients) {
-						client.send(message);
-					}
-					console.log(
-						"[arRPC] Activity broadcasted to",
-						clients.size,
-						"clients"
-					);
-				});
-				console.log("[arRPC] Rich Presence server started");
-			} else {
-				console.log(
-					"[arRPC Bridge] Port 1337 is already in use, skipping websocket"
-				);
-				const arrpc = await new Server();
-				arrpc.on("activity", (data) => {
-					console.log("[arRPC] Activity received:", data);
-				});
-				console.log(
-					"[arRPC] Rich Presence server started (without websocket)"
-				);
-			}
-		} catch (e) {
-			console.error("[arRPC] Failed to start:", e);
-		}
-	}, 500);
+app.on("before-quit", () => {
+	stopDpprpc();
 });
 
 app.on("window-all-closed", () => {
+	stopDpprpc();
 	app.quit();
 });
 

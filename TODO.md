@@ -26,7 +26,7 @@
 - [ ] simpler onboardings [WIP -ham]
 - [ ] new notification engine (relying on flux dispatcher than discord's notif calls, for more control over messages)
 - [ ] add overlay to settings (new tab as it is a pretty important feature), stuffs to add in overlay section
-- [ ] replace arRPC [unium]
+- [x] replace arRPC
 - [ ] mod rebuild/update system
 - [ ] easy userplugin installation (blocked by above item)
 - [ ] redo settings ui to theme with discord, and template it because oh my god having everything in one html file is annoying, same for stream ui (and also replace material symbols with loxodrome icons)
