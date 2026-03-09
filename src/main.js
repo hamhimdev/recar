@@ -11,9 +11,9 @@ const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
 
-const { OverlayRenderer } = require("./overlay/renderer.js");
+const { Worker } = require("worker_threads");
 const RvInst = require("./overlay/installer.js");
-const OvRn = new OverlayRenderer();
+const OvRn = new Worker(path.join(__dirname, "overlay", "renderer.js"));
 
 let _venmic;
 const getVenmic = () => {
@@ -499,8 +499,10 @@ const createMainWindow = () => {
 		if (matches) {
 			const count = parseInt(matches[1], 10);
 			console.log(`[Main] Badge count detected: ${count}`);
-			const success = app.setBadgeCount(count);
-			console.log(`[Main] setBadgeCount(${count}) result: ${success}`);
+			const success = console.log(`Should set badge count ${count}`) // app.setBadgeCount(count);
+			// While I was optimizing overlay I noticed my audio would cut off for like a millisecond or something everytime I got a notif. I though this was because, well, the overlay had to render the notification but it seems to be this lol. Electron!!!! Rahh!!!!
+			// Overlay did contribute a bit, but still. Why??? I added prerendering of notifs to the overlay and it does not do that at all anymore, but turn this on, woo it does it!!!!! Yay!!!
+			// Eventually we should use a better solution, similar to libvesktop (atleast i think libvesktop handles it, but i'm not entirely sure) as this doesn't work in KDE Plasma anyway, yk one of the most used desktops. Supposed to work in Gnome though? not sure...
 		} else {
 			app.setBadgeCount(0);
 		}
@@ -973,7 +975,7 @@ ipcMain.on("notification", (event, data) => {
 	if (!settings.enableOverlay) return;
 	const parsed = pnfo(data);
 	if (parsed) {
-		OvRn.addNotification(parsed);
+		OvRn.postMessage({ type: "ADD_NOTIFICATION", payload: parsed });
 	}
 });
 
@@ -982,7 +984,7 @@ ipcMain.on("vc-update", async (event, data) => {
 
 	if (data?.inVoice === false) {
 		vcMembers.clear();
-		OvRn.voiceClear();
+		OvRn.postMessage({ type: "VOICE_CLEAR" });
 		return;
 	}
 
@@ -1021,21 +1023,18 @@ ipcMain.on("vc-update", async (event, data) => {
 		}
 
 		if (!prev) {
-			OvRn.voiceJoin({
-				uid,
-				username,
-				avatarHash,
-				muted,
-				deafened,
+			OvRn.postMessage({
+				type: "VOICE_JOIN",
+				payload: { uid, username, avatarHash, muted, deafened }
 			});
 		} else {
 			if (avatarHash && !prev.avatarHash) {
-				OvRn.voiceUpdateAvatar({ uid, avatarHash });
+				OvRn.postMessage({ type: "VOICE_UPDATE_AVATAR", payload: { uid, avatarHash } });
 			}
 			if (prev.muted !== muted)
-				OvRn[muted ? "voiceMuted" : "voiceUnmuted"]({ uid });
+				OvRn.postMessage({ type: muted ? "VOICE_MUTED" : "VOICE_UNMUTED", payload: { uid } });
 			if (prev.deafened !== deafened)
-				OvRn[deafened ? "voiceDeafened" : "voiceUndeafened"]({ uid });
+				OvRn.postMessage({ type: deafened ? "VOICE_DEAFENED" : "VOICE_UNDEAFENED", payload: { uid } });
 		}
 
 		vcMembers.set(uid, {
@@ -1050,7 +1049,7 @@ ipcMain.on("vc-update", async (event, data) => {
 
 	for (const [uid, info] of vcMembers) {
 		if (!newIds.has(uid)) {
-			OvRn.voiceLeave({ uid });
+			OvRn.postMessage({ type: "VOICE_LEAVE", payload: { uid } });
 			vcMembers.delete(uid);
 		}
 	}
@@ -1084,7 +1083,7 @@ ipcMain.on("vc-join", async (event, data) => {
 		speaking: false,
 		avatarHash,
 	});
-	OvRn.voiceJoin({ uid, username, avatarHash, muted, deafened });
+	OvRn.postMessage({ type: "VOICE_JOIN", payload: { uid, username, avatarHash, muted, deafened } });
 });
 
 ipcMain.on("vc-leave", (event, data) => {
@@ -1093,7 +1092,7 @@ ipcMain.on("vc-leave", (event, data) => {
 	if (!uid) return;
 
 	vcMembers.delete(uid);
-	OvRn.voiceLeave({ uid });
+	OvRn.postMessage({ type: "VOICE_LEAVE", payload: { uid } });
 });
 
 ipcMain.on("vc-state-change", (event, data) => {
@@ -1115,11 +1114,9 @@ ipcMain.on("vc-state-change", (event, data) => {
 	const deafened = !!(data?.deafened || data?.deaf || data?.selfDeaf);
 
 	if (prev.deafened !== deafened)
-		OvRn[deafened ? "voiceDeafened" : "voiceUndeafened"]({
-			uid,
-		});
+		OvRn.postMessage({ type: deafened ? "VOICE_DEAFENED" : "VOICE_UNDEAFENED", payload: { uid } });
 	if (prev.muted !== muted)
-		OvRn[muted ? "voiceMuted" : "voiceUnmuted"]({ uid });
+		OvRn.postMessage({ type: muted ? "VOICE_MUTED" : "VOICE_UNMUTED", payload: { uid } });
 
 	vcMembers.set(uid, { ...prev, username, muted, deafened });
 });
@@ -1129,9 +1126,9 @@ ipcMain.on("vc-speaking", (event, data) => {
 	const uid = data?.userId;
 	if (!uid) return;
 	if (data.speaking) {
-		OvRn.voiceStartedSpeaking({ uid });
+		OvRn.postMessage({ type: "VOICE_STARTED_SPEAKING", payload: { uid } });
 	} else {
-		OvRn.voiceStoppedSpeaking({ uid });
+		OvRn.postMessage({ type: "VOICE_STOPPED_SPEAKING", payload: { uid } });
 	}
 });
 
@@ -1264,7 +1261,15 @@ app.whenReady().then(async () => {
 	const primaryDisplay = screen.getPrimaryDisplay();
 	const { width, height } = primaryDisplay.size;
 	const assetsDir = path.join(__dirname, "assets");
-	await OvRn.init(width, height, assetsDir);
+	await new Promise((resolve) => {
+		OvRn.once("message", (msg) => {
+			if (msg.type === "INIT_DONE") resolve(msg.success);
+		});
+		OvRn.postMessage({
+			type: "INIT",
+			payload: { width, height, assetsDir },
+		});
+	});
 
 	registerDiscordProtocol();
 
@@ -1296,7 +1301,6 @@ app.whenReady().then(async () => {
 	createTray();
 	setTimeout(async () => {
 		createMainWindow();
-		/*
 		try {
 			const { default: Server } = await import("arrpc");
 			const { WebSocketServer } = await import("ws");
@@ -1347,7 +1351,6 @@ app.whenReady().then(async () => {
 		} catch (e) {
 			console.error("[arRPC] Failed to start:", e);
 		}
-			*/
 	}, 500);
 });
 

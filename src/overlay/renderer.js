@@ -1,7 +1,8 @@
-const { createCanvas, GlobalFonts, loadImage } = require("@napi-rs/canvas");
 const net = require("net");
 const fs = require("fs");
 const path = require("path");
+const { parentPort } = require("worker_threads");
+const { createCanvas, GlobalFonts, loadImage } = require("@napi-rs/canvas");
 
 let fontFamily = "sans-serif";
 
@@ -100,7 +101,8 @@ class OverlayRenderer {
 		this._width = 0;
 		this._height = 0;
 		this._dirty = false;
-		this._renderTimer = null;
+		this._renderPending = false;
+		this._heartbeatTimer = null;
 		this._initialized = false;
 		this._notifications = [];
 		this._voiceUsers = [];
@@ -115,6 +117,7 @@ class OverlayRenderer {
 		this._iconLoading = new Set();
 		this._layerSocket = null;
 		this._layerSocketReady = false;
+		this._fontCache = {};
 	}
 
 	async init(width = 1920, height = 1080, assetsDir = null) {
@@ -143,23 +146,38 @@ class OverlayRenderer {
 		this._initialized = true;
 		this._lastFrameTime = Date.now();
 
-		this._renderTimer = setInterval(() => {
-			try {
-				this._renderFrame();
-			} catch (e) {
-				console.error("[Overlay] Render error:", e);
-			}
-		}, 16);
+		await this._waitForGameResolution();
 
-		this._heartbeatTimer = setInterval(() => {
-			this._dirty = true;
-		}, 2000);
+		this._scheduleRender();
 
 		return true;
 	}
 
+	async _waitForGameResolution(attempts = 20, intervalMs = 100) {
+		for (let i = 0; i < attempts; i++) {
+			const gameRes = this._readGameResolution();
+			if (
+				gameRes &&
+				(gameRes.width !== this._width ||
+					gameRes.height !== this._height)
+			) {
+				console.log(
+					`[Overlay] Got game resolution: ${gameRes.width}x${gameRes.height}`
+				);
+				this._lastWidth = gameRes.width;
+				this._lastHeight = gameRes.height;
+				this._recreateCanvas(gameRes.width, gameRes.height);
+				return;
+			}
+			if (gameRes) return;
+			await new Promise((r) => setTimeout(r, intervalMs));
+		}
+		console.warn(
+			"[Overlay] Could not read game resolution after init, using default"
+		);
+	}
+
 	destroy() {
-		if (this._renderTimer) clearInterval(this._renderTimer);
 		if (this._heartbeatTimer) clearInterval(this._heartbeatTimer);
 		if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
 		this._closeShm();
@@ -171,11 +189,7 @@ class OverlayRenderer {
 	}
 
 	_recreateCanvas(width, height) {
-		const maxDpr = Math.min(
-			Math.floor(SHM_MAX_WIDTH / width),
-			Math.floor(SHM_MAX_HEIGHT / height)
-		);
-		const dpr = Math.max(1, Math.min(2, maxDpr));
+		const dpr = 1;
 		this._width = width;
 		this._height = height;
 		this._dpr = dpr;
@@ -189,7 +203,15 @@ class OverlayRenderer {
 		this._ctx.fontKerning = "normal";
 		this._iconCache.clear();
 		this._iconLoading.clear();
-		this._dirty = true;
+		this._fontCache = {};
+		this._markDirty();
+
+		setTimeout(() => {
+			const iconSize = this._px(24);
+			const color = "#d3d3d3";
+			this._renderIcon(ICON_MUTED, iconSize, color);
+			this._renderIcon(ICON_DEAFENED, iconSize, color);
+		}, 0);
 	}
 
 	_loadIconSvgs() {
@@ -256,8 +278,10 @@ class OverlayRenderer {
 			const pngBuffer = tempCanvas.toBuffer("image/png");
 			const finalImage = await loadImage(pngBuffer);
 
-			this._iconCache.set(cacheKey, finalImage);
-			this._dirty = true;
+			if (this._dpr === dpr) {
+				this._iconCache.set(cacheKey, finalImage);
+				this._markDirty();
+			}
 		} catch (e) {
 			console.warn(
 				`[Overlay] Failed to render icon ${iconName}:`,
@@ -375,49 +399,64 @@ class OverlayRenderer {
 			this._headerBuf[0] = SHM_STATE_WRITING;
 			this._headerBuf.writeUInt32LE(bufW, 4);
 			this._headerBuf.writeUInt32LE(bufH, 8);
-			fs.writeSync(this._shmFd, this._headerBuf, 0, 16, 0);
-			fs.writeSync(
-				this._shmFd,
-				pixelBuf,
-				0,
-				pixelBuf.length,
-				SHM_HEADER_SIZE
-			);
+			fs.writevSync(this._shmFd, [this._headerBuf, pixelBuf], 0);
 			this._headerBuf[0] = SHM_STATE_READY;
 			fs.writeSync(this._shmFd, this._headerBuf, 0, 1, 0);
+			//console.log("[Overlay] SHM write ok, arming heartbeat");
+			this._armHeartbeat();
 			return true;
 		} catch (e) {
+			console.error("[Overlay] SHM write failed:", e);
 			return false;
 		}
 	}
 
 	_connectLayerSocket() {
+		if (this._reconnecting) return;
 		const client = net.createConnection(SOCKET_PATH);
 		client.on("connect", () => {
+			//console.log("[Overlay] Layer socket connected");
+			this._reconnecting = false;
 			this._layerSocket = client;
 			this._layerSocketReady = true;
 		});
-		client.on("error", () => {
-			this._layerSocketReady = false;
-			this._layerSocket = null;
-			setTimeout(() => this._connectLayerSocket(), 1000);
+		client.on("error", (e) => {
+			console.warn("[Overlay] Layer socket error:", e.message);
+			client.destroy();
 		});
 		client.on("close", () => {
+			//console.log("[Overlay] Layer socket closed, reconnecting in 2s");
 			this._layerSocketReady = false;
 			this._layerSocket = null;
-			setTimeout(() => this._connectLayerSocket(), 1000);
+			if (!this._reconnecting) {
+				this._reconnecting = true;
+				setTimeout(() => {
+					this._reconnecting = false;
+					this._connectLayerSocket();
+				}, 2000);
+			}
 		});
 	}
 
 	_signalLayer() {
-		if (this._layerSocketReady)
-			this._layerSocket.write('{"op":"FRAME_UPDATE"}');
+		if (this._signalingPending) return;
+		this._signalingPending = true;
+		const client = net.createConnection(SOCKET_PATH);
+		client.on("connect", () => {
+			client.write("FRAME_UPDATE", () => {
+				client.destroy();
+				this._signalingPending = false;
+			});
+		});
+		client.on("error", () => {
+			client.destroy();
+			this._signalingPending = false;
+		});
 	}
 
 	async _loadAvatar(userId, avatarHash) {
 		if (!userId) return;
 		const key = `${userId}_${avatarHash || "default"}`;
-
 		if (this._avatarCache.has(key)) return;
 		this._avatarCache.set(key, null);
 
@@ -433,24 +472,28 @@ class OverlayRenderer {
 		try {
 			const image = await loadImage(url);
 			this._avatarCache.set(key, image);
+			for (const n of this._notifications) {
+				if (n.userId === userId) n._canvas = null;
+			}
 			this._dirty = true;
 		} catch (e) {
 			console.warn(
 				`[Overlay] Failed to load avatar for ${userId}:`,
 				e.message
 			);
-			this._avatarCache.delete(key);
+			this._avatarCache.set(key, false);
 		}
 	}
 
 	_getAvatar(userId, avatarHash) {
 		if (!userId) return null;
 		const key = `${userId}_${avatarHash || "default"}`;
-		return this._avatarCache.get(key) || null;
+		const cached = this._avatarCache.get(key);
+		return cached || null;
 	}
 
 	addNotification(data) {
-		this._notifications.unshift({
+		const notif = {
 			message: data.message || "",
 			sender: data.sender || null,
 			channel: data.channel || null,
@@ -461,9 +504,211 @@ class OverlayRenderer {
 			type: data.type || "generic",
 			createdAt: Date.now(),
 			duration: data.duration || 5000,
-		});
+			_canvas: null,
+		};
+		this._notifications.unshift(notif);
 
 		if (data.userId) this._loadAvatar(data.userId, data.avatarHash);
+
+		setTimeout(() => this._prebakeNotification(notif), 50);
+
+		this._dirty = true;
+		setTimeout(() => {
+			this._dirty = true;
+			this._renderFrame();
+		}, notif.duration - 100);
+		setTimeout(() => {
+			this._dirty = true;
+			this._renderFrame();
+		}, notif.duration + 50);
+	}
+
+	_prebakeNotification(notif) {
+		const fontSize = 18;
+		const lineHeight = this._px(fontSize * 1.15);
+		const cornerRadius = this._px(12);
+		const shadowBlur = this._px(12);
+		const shadowOffsetY = this._px(6);
+		const extraPad = shadowBlur + shadowOffsetY;
+
+		const tempCtx = this._canvas.getContext("2d");
+		tempCtx.font = this._font(fontSize);
+
+		let boxW, boxH;
+
+		if (notif.sender) {
+			const padX = this._px(14);
+			const padY = this._px(10);
+			const avatarRadius = this._px(20);
+			const textStart = avatarRadius * 2 + this._px(12);
+			const maxWidth = Math.min(this._width * 0.35, this._px(450));
+			boxW = Math.max(
+				this._px(260),
+				Math.min(maxWidth, padX + textStart + this._px(280) + padX)
+			);
+			const availW = boxW - padX - textStart - padX;
+			const msgLines = this._wrapText(tempCtx, notif.message, availW, 2);
+			boxH =
+				padY +
+				lineHeight +
+				this._px(6) +
+				lineHeight * msgLines.length +
+				padY;
+		} else {
+			const padX = this._px(20);
+			const padY = this._px(14);
+			const maxWidth = Math.min(this._width * 0.35, this._px(450));
+			const msgLines = this._wrapText(
+				tempCtx,
+				notif.message,
+				maxWidth - padX * 2,
+				2
+			);
+			const msgWidth = Math.max(
+				...msgLines.map((l) => tempCtx.measureText(l).width)
+			);
+			boxW = Math.max(
+				this._px(160),
+				Math.min(maxWidth, padX * 2 + msgWidth + this._px(8))
+			);
+			boxH =
+				padY * 2 +
+				lineHeight * msgLines.length +
+				(msgLines.length > 1 ? this._px(4) : 0);
+		}
+
+		const canvasW = boxW + extraPad * 2;
+		const canvasH = boxH + extraPad * 2;
+		const offscreen = createCanvas(canvasW, canvasH);
+		const ctx = offscreen.getContext("2d");
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = "high";
+
+		const ox = extraPad;
+		const oy = extraPad;
+
+		ctx.shadowColor = "rgba(0,0,0,0.4)";
+		ctx.shadowBlur = shadowBlur;
+		ctx.shadowOffsetY = shadowOffsetY;
+
+		if (notif.sender) {
+			const padX = this._px(14);
+			const padY = this._px(10);
+			const avatarRadius = this._px(20);
+			const textStart = avatarRadius * 2 + this._px(12);
+			const availW = boxW - padX - textStart - padX;
+			const fontSize = 18;
+			const msgLines = this._wrapText(ctx, notif.message, availW, 2);
+
+			this._fillRoundedRect(
+				ctx,
+				ox,
+				oy,
+				boxW,
+				boxH,
+				cornerRadius,
+				"#151417"
+			);
+			ctx.shadowColor = "transparent";
+
+			const avatarImage = this._getAvatar(notif.userId, notif.avatarHash);
+			this._drawAvatar(
+				ctx,
+				ox + padX + avatarRadius,
+				oy + padY + avatarRadius,
+				avatarRadius,
+				avatarImage,
+				notif.sender
+			);
+
+			const textX = ox + padX + textStart;
+			ctx.textAlign = "left";
+			ctx.textBaseline = "top";
+
+			ctx.font = this._font(fontSize, 600);
+			ctx.fillStyle = "#f2f3f5";
+			const truncName = this._truncate(ctx, notif.sender, availW * 0.55);
+			ctx.fillText(truncName, textX, oy + padY);
+
+			let channelStr = "";
+			if (notif.isDM) channelStr = "DM";
+			else {
+				if (notif.channel) channelStr = "#" + notif.channel;
+				if (notif.server) {
+					if (channelStr) channelStr += " · ";
+					channelStr += notif.server;
+				}
+			}
+			if (channelStr) {
+				const nameWidth = ctx.measureText(truncName).width;
+				ctx.font = this._font(fontSize - 4);
+				ctx.fillStyle = "#949ba4";
+				const channelAvailW = availW - nameWidth - this._px(12);
+				if (channelAvailW > this._px(20))
+					ctx.fillText(
+						this._truncate(ctx, channelStr, channelAvailW),
+						textX + nameWidth + this._px(10),
+						oy + padY + this._px(4)
+					);
+			}
+
+			ctx.font = this._font(fontSize);
+			ctx.fillStyle = "#dbdee1";
+			msgLines.forEach((line, i) => {
+				ctx.fillText(
+					line,
+					textX,
+					oy + padY + lineHeight + this._px(2) + lineHeight * i
+				);
+			});
+		} else {
+			const padX = this._px(20);
+			const padY = this._px(14);
+			const fontSize = 18;
+			const maxWidth = Math.min(this._width * 0.35, this._px(450));
+			const msgLines = this._wrapText(
+				ctx,
+				notif.message,
+				maxWidth - padX * 2,
+				2
+			);
+
+			this._fillRoundedRect(
+				ctx,
+				ox,
+				oy,
+				boxW,
+				boxH,
+				cornerRadius,
+				notif.type === "system" ? "#111214" : "#1e1f22"
+			);
+			ctx.shadowColor = "transparent";
+
+			this._fillRoundedRect(
+				ctx,
+				ox,
+				oy,
+				this._px(4),
+				boxH,
+				this._px(4),
+				notif.type === "system" ? "#5865F2" : "#80848e"
+			);
+
+			ctx.textAlign = "left";
+			ctx.textBaseline = "top";
+			ctx.fillStyle = notif.type === "system" ? "#e3e5e8" : "#dbdee1";
+			msgLines.forEach((line, i) => {
+				ctx.fillText(
+					line,
+					ox + padX,
+					oy + padY + (lineHeight + this._px(4)) * i
+				);
+			});
+		}
+
+		notif._canvas = offscreen;
+		notif._canvasOffsetX = -extraPad;
+		notif._canvasOffsetY = -extraPad;
 		this._dirty = true;
 	}
 
@@ -480,28 +725,34 @@ class OverlayRenderer {
 		});
 
 		if (data.uid) this._loadAvatar(data.uid, data.avatarHash);
-		this._dirty = true;
+		this._markDirty();
 	}
 
 	voiceLeave({ uid }) {
+		const user = this._voiceUsers.find((u) => u.id === uid);
+		if (user) {
+			const key = `${uid}_${user.avatarHash || "default"}`;
+			this._avatarCache.delete(key);
+		}
 		this._voiceUsers = this._voiceUsers.filter((u) => u.id !== uid);
-		this._dirty = true;
+		this._markDirty();
 	}
 
 	voiceUpdateAvatar({ uid, avatarHash }) {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user && avatarHash && user.avatarHash !== avatarHash) {
+			const oldKey = `${uid}_${user.avatarHash || "default"}`;
+			this._avatarCache.delete(oldKey);
 			user.avatarHash = avatarHash;
 			this._loadAvatar(uid, avatarHash);
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
-
 	voiceMuted({ uid }) {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.muted = true;
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
 
@@ -509,7 +760,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.muted = false;
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
 
@@ -517,7 +768,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.deafened = true;
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
 
@@ -525,7 +776,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.deafened = false;
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
 
@@ -533,7 +784,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.speaking = true;
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
 
@@ -541,13 +792,44 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.speaking = false;
-			this._dirty = true;
+			this._markDirty();
 		}
 	}
 
 	voiceClear() {
 		this._voiceUsers = [];
+		this._markDirty();
+	}
+
+	_markDirty() {
 		this._dirty = true;
+		this._scheduleRender();
+	}
+
+	_scheduleRender() {
+		if (this._renderPending) return;
+		this._renderPending = true;
+		setTimeout(() => {
+			this._renderPending = false;
+			try {
+				this._renderFrame();
+			} catch (e) {
+				console.error("[Overlay] Render error:", e);
+			}
+		}, 16);
+	}
+
+	_armHeartbeat() {
+		if (this._heartbeatTimer) {
+			//console.log("[Overlay] Heartbeat already armed, skipping");
+			return;
+		}
+		//console.log("[Overlay] Heartbeat armed");
+		this._heartbeatTimer = setInterval(() => {
+			if (this._wasEmpty) return;
+			this._dirty = true;
+			this._renderFrame();
+		}, 2000);
 	}
 
 	_renderFrame() {
@@ -558,30 +840,18 @@ class OverlayRenderer {
 		if (this._currentDt <= 0) this._currentDt = 0.016;
 		this._lastFrameTime = now;
 
-		const gameRes = this._readGameResolution();
-		if (
-			gameRes &&
-			(gameRes.width !== this._lastWidth ||
-				gameRes.height !== this._lastHeight)
-		) {
-			this._lastWidth = gameRes.width;
-			this._lastHeight = gameRes.height;
+		if (!this._lastGameResTime || now - this._lastGameResTime > 1000) {
+			this._lastGameResTime = now;
+			const gameRes = this._readGameResolution();
 			if (
-				gameRes.width !== this._width ||
-				gameRes.height !== this._height
+				gameRes &&
+				(gameRes.width !== this._width ||
+					gameRes.height !== this._height)
 			) {
-				if (this._resizeDebounce) clearTimeout(this._resizeDebounce);
-				this._resizeDebounce = setTimeout(() => {
-					const current = this._readGameResolution();
-					if (
-						current &&
-						current.width === this._lastWidth &&
-						current.height === this._lastHeight
-					) {
-						this._recreateCanvas(current.width, current.height);
-					}
-					this._resizeDebounce = null;
-				}, 200);
+				console.log(
+					`[Overlay] Resolution changed to ${gameRes.width}x${gameRes.height}, recreating canvas`
+				);
+				this._recreateCanvas(gameRes.width, gameRes.height);
 			}
 		}
 
@@ -589,19 +859,41 @@ class OverlayRenderer {
 		this._notifications = this._notifications.filter(
 			(n) => now - n.createdAt < n.duration
 		);
-		if (this._notifications.length !== prevCount) this._dirty = true;
+		if (this._notifications.length !== prevCount) this._markDirty();
+
+		const next = this._notifications.reduce((min, n) => {
+			const expiresIn = n.createdAt + n.duration - now;
+			return Math.min(min, expiresIn);
+		}, Infinity);
+		if (next < Infinity && next > 0) {
+			setTimeout(() => this._markDirty(), next + 16);
+		}
 
 		for (const n of this._notifications) {
 			const elapsed = now - n.createdAt;
 			const remaining = n.duration - elapsed;
 			if (elapsed < 300 || remaining < 500) {
 				this._dirty = true;
+				setTimeout(() => {
+					this._dirty = true;
+					this._renderFrame();
+				}, 16);
 				break;
 			}
 		}
 
-		if (!this._dirty) return;
+		if (!this._dirty) {
+			// console.log("[Overlay] renderFrame > not dirty, skipping");
+			return;
+		}
 		this._dirty = false;
+
+		const isEmpty =
+			this._notifications.length === 0 && this._voiceUsers.length === 0;
+		//console.log(`[Overlay] Rendering > isEmpty:${isEmpty} wasEmpty:${this._wasEmpty} notifs:${this._notifications.length} voice:${this._voiceUsers.length}`);
+
+		if (isEmpty && this._wasEmpty) return;
+		this._wasEmpty = isEmpty;
 
 		const ctx = this._ctx;
 		const w = this._width;
@@ -632,6 +924,8 @@ class OverlayRenderer {
 
 	_font(size, weight = 500) {
 		if (typeof weight === "boolean") weight = weight ? 500 : 400;
+		const cacheKey = `${size}_${weight}`;
+		if (this._fontCache[cacheKey]) return this._fontCache[cacheKey];
 
 		let family;
 		if (fontFamily.startsWith("Source Sans 3 W")) {
@@ -645,7 +939,9 @@ class OverlayRenderer {
 			family = `"${fontFamily}", sans-serif`;
 		}
 
-		return `${weight} ${this._px(size)}px/${this._px(size * 1.2)}px ${family}`;
+		const fontStr = `${weight} ${this._px(size)}px/${this._px(size * 1.2)}px ${family}`;
+		this._fontCache[cacheKey] = fontStr;
+		return fontStr;
 	}
 
 	_getNotifAlpha(notif) {
@@ -879,8 +1175,8 @@ class OverlayRenderer {
 				notif._velY = 0;
 			}
 
-			const stiffness = 300;
-			const damping = 22;
+			const stiffness = 160;
+			const damping = 16;
 			const dt = Math.min((this._currentDt || 0.016) * 1.5, 0.05);
 
 			const springF = (targetY - notif._animY) * stiffness;
@@ -892,172 +1188,21 @@ class OverlayRenderer {
 				Math.abs(notif._animY - targetY) > 0.15 ||
 				Math.abs(notif._velY) > 0.5
 			)
-				this._dirty = true;
+				this._markDirty();
 
 			const currentY = notif._animY;
 
 			ctx.save();
 			ctx.globalAlpha = alpha;
 
-			ctx.beginPath();
-			ctx.rect(0, 0, W, H);
-			ctx.clip();
-
-			const boxX = margin;
-
-			if (notif.sender) {
-				const padX = padX_sender;
-				const padY = this._px(10);
-				const avatarRadius = avatarRadius_n;
-				const textStart = textStart_n;
-				const boxW = boxW_sender;
-				const availW = availW_sender;
-
-				ctx.font = this._font(fontSize);
-				const msgLines = this._wrapText(ctx, notif.message, availW, 2);
-				const boxH_actual =
-					padY +
-					lineHeight +
-					this._px(6) +
-					lineHeight * msgLines.length +
-					padY;
-
-				let channelStr = "";
-				if (notif.isDM) channelStr = "DM";
-				else {
-					if (notif.channel) channelStr = "#" + notif.channel;
-					if (notif.server) {
-						if (channelStr) channelStr += " · ";
-						channelStr += notif.server;
-					}
-				}
-
-				ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-				ctx.shadowBlur = this._px(12);
-				ctx.shadowOffsetY = this._px(6);
-
-				this._fillRoundedRect(
-					ctx,
-					boxX,
-					currentY,
-					boxW,
-					boxH_actual,
-					cornerRadius,
-					"#151417"
+			if (notif._canvas) {
+				ctx.drawImage(
+					notif._canvas,
+					margin + notif._canvasOffsetX,
+					currentY + notif._canvasOffsetY
 				);
-				ctx.shadowColor = "transparent";
-
-				const avatarImage = this._getAvatar(
-					notif.userId,
-					notif.avatarHash
-				);
-				this._drawAvatar(
-					ctx,
-					boxX + padX + avatarRadius,
-					currentY + padY + avatarRadius,
-					avatarRadius,
-					avatarImage,
-					notif.sender
-				);
-
-				const textX = boxX + padX + textStart;
-
-				ctx.textAlign = "left";
-				ctx.textBaseline = "top";
-
-				ctx.font = this._font(fontSize, 600);
-				ctx.fillStyle = "#f2f3f5";
-				const truncName = this._truncate(
-					ctx,
-					notif.sender,
-					availW * 0.55
-				);
-				ctx.fillText(truncName, textX, currentY + padY);
-
-				if (channelStr) {
-					const nameWidth = ctx.measureText(truncName).width;
-					ctx.font = this._font(fontSize - 4);
-					ctx.fillStyle = "#949ba4";
-					const channelAvailW = availW - nameWidth - this._px(12);
-					if (channelAvailW > this._px(20))
-						ctx.fillText(
-							this._truncate(ctx, channelStr, channelAvailW),
-							textX + nameWidth + this._px(10),
-							currentY + padY + this._px(4)
-						);
-				}
-
-				ctx.font = this._font(fontSize);
-				ctx.fillStyle = "#dbdee1";
-				msgLines.forEach((line, i) => {
-					ctx.fillText(
-						line,
-						textX,
-						currentY +
-							padY +
-							lineHeight +
-							this._px(2) +
-							lineHeight * i
-					);
-				});
 			} else {
-				const padX = this._px(20);
-				const padY = this._px(14);
-
-				ctx.font = this._font(fontSize);
-				const msgLines = this._wrapText(
-					ctx,
-					notif.message,
-					maxWidth - padX * 2,
-					2
-				);
-				const msgWidth = Math.max(
-					...msgLines.map((l) => ctx.measureText(l).width)
-				);
-				const boxW = Math.max(
-					this._px(160),
-					Math.min(maxWidth, padX * 2 + msgWidth + this._px(8))
-				);
-				const boxH_actual =
-					padY * 2 +
-					lineHeight * msgLines.length +
-					(msgLines.length > 1 ? this._px(4) : 0);
-
-				ctx.shadowColor = "rgba(0, 0, 0, 0.4)";
-				ctx.shadowBlur = this._px(12);
-				ctx.shadowOffsetY = this._px(6);
-
-				this._fillRoundedRect(
-					ctx,
-					boxX,
-					currentY,
-					boxW,
-					boxH_actual,
-					cornerRadius,
-					notif.type === "system" ? "#111214" : "#1e1f22"
-				);
-				ctx.shadowColor = "transparent";
-
-				this._fillRoundedRect(
-					ctx,
-					boxX,
-					currentY,
-					this._px(4),
-					boxH_actual,
-					this._px(4),
-					notif.type === "system" ? "#5865F2" : "#80848e"
-				);
-
-				ctx.textAlign = "left";
-				ctx.textBaseline = "top";
-				ctx.fillStyle = notif.type === "system" ? "#e3e5e8" : "#dbdee1";
-				msgLines.forEach((line, i) => {
-					ctx.fillText(
-						line,
-						boxX + padX,
-						currentY + padY + (lineHeight + this._px(4)) * i
-					);
-				});
+				this._prebakeNotification(notif);
 			}
 
 			ctx.restore();
@@ -1074,7 +1219,7 @@ class OverlayRenderer {
 		const fontSize = 16;
 		const lineHeight = this._px(fontSize * 1.3);
 		const avatarRadius = this._px(18);
-		const avatarPad = this._px(16);
+		const avatarPad = this._px(18);
 		const iconSize = this._px(24);
 		const iconPad = this._px(6);
 		const rowHeight = avatarRadius * 2 + this._px(8);
@@ -1237,4 +1382,54 @@ class OverlayRenderer {
 	}
 }
 
-module.exports = { OverlayRenderer };
+const renderer = new OverlayRenderer();
+
+parentPort.on("message", async (msg) => {
+	switch (msg.type) {
+		case "INIT":
+			const success = await renderer.init(
+				msg.payload.width,
+				msg.payload.height,
+				msg.payload.assetsDir
+			);
+			parentPort.postMessage({ type: "INIT_DONE", success });
+			break;
+		case "DESTROY":
+			renderer.destroy();
+			process.exit(0);
+			break;
+		case "ADD_NOTIFICATION":
+			renderer.addNotification(msg.payload);
+			break;
+		case "VOICE_JOIN":
+			renderer.voiceJoin(msg.payload);
+			break;
+		case "VOICE_LEAVE":
+			renderer.voiceLeave(msg.payload);
+			break;
+		case "VOICE_UPDATE_AVATAR":
+			renderer.voiceUpdateAvatar(msg.payload);
+			break;
+		case "VOICE_MUTED":
+			renderer.voiceMuted(msg.payload);
+			break;
+		case "VOICE_UNMUTED":
+			renderer.voiceUnmuted(msg.payload);
+			break;
+		case "VOICE_DEAFENED":
+			renderer.voiceDeafened(msg.payload);
+			break;
+		case "VOICE_UNDEAFENED":
+			renderer.voiceUndeafened(msg.payload);
+			break;
+		case "VOICE_STARTED_SPEAKING":
+			renderer.voiceStartedSpeaking(msg.payload);
+			break;
+		case "VOICE_STOPPED_SPEAKING":
+			renderer.voiceStoppedSpeaking(msg.payload);
+			break;
+		case "VOICE_CLEAR":
+			renderer.voiceClear();
+			break;
+	}
+});
