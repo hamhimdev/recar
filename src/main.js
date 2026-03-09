@@ -6,10 +6,14 @@ const {
 	Tray,
 	Menu,
 	screen,
+	Notification,
+	nativeImage,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { execFile } = require("child_process");
+const https = require("https");
+const os = require("os");
 
 const { Worker } = require("worker_threads");
 const RvInst = require("./overlay/installer.js");
@@ -939,6 +943,62 @@ async function fah(userId) {
 	}
 }
 
+async function sendDesktopNotification(parsed, iconUrl) {
+	let iconPath_ = iconPath;
+	let tmpFile = null;
+	try {
+		if (iconUrl) {
+			const pngUrl = iconUrl.replace(/\.webp(\?|$)/, ".png$1");
+			tmpFile = path.join(os.tmpdir(), `recar-notif-${Date.now()}.png`);
+			await new Promise((resolve, reject) => {
+				const file = fs.createWriteStream(tmpFile);
+				const request = (url, redirects = 0) => {
+					if (redirects > 5) return reject(new Error("Too many redirects"));
+					https.get(url, (res) => {
+						if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+							res.resume();
+							return request(res.headers.location, redirects + 1);
+						}
+						if (res.statusCode !== 200) {
+							res.resume();
+							return reject(new Error(`HTTP ${res.statusCode}`));
+						}
+						res.pipe(file);
+						file.on("finish", () => file.close(resolve));
+						file.on("error", reject);
+					}).on("error", reject);
+				};
+				request(pngUrl);
+			});
+			iconPath_ = tmpFile;
+		}
+	} catch {
+		// fall through to app icon
+		if (tmpFile) try { fs.unlinkSync(tmpFile); } catch {}
+		tmpFile = null;
+	}
+
+	const titleParts = [parsed.sender];
+	if (parsed.channel) titleParts.push(parsed.channel);
+	else if (parsed.server) titleParts.push(parsed.server);
+
+	const notif = new Notification({
+		title: titleParts.join(" \u2022 "),
+		body: parsed.message,
+		icon: nativeImage.createFromPath(iconPath_),
+	});
+	notif.on("click", () => {
+		if (mainWindow && !mainWindow.isDestroyed()) {
+			mainWindow.show();
+			mainWindow.focus();
+		}
+	});
+	notif.once("close", () => {
+		if (tmpFile) try { fs.unlink(tmpFile, () => {}); } catch {}
+	});
+	notif.show();
+}
+
 function pnfo(data) {
 	const msg = data?.message;
 	if (!msg) return null;
@@ -972,11 +1032,14 @@ function pnfo(data) {
 }
 
 ipcMain.on("notification", (event, data) => {
-	if (!settings.enableOverlay) return;
 	const parsed = pnfo(data);
-	if (parsed) {
+	if (!parsed) return;
+
+	if (settings.enableOverlay) {
 		OvRn.postMessage({ type: "ADD_NOTIFICATION", payload: parsed });
 	}
+
+	sendDesktopNotification(parsed, data.icon);
 });
 
 ipcMain.on("vc-update", async (event, data) => {

@@ -99,7 +99,24 @@ contextBridge.exposeInMainWorld("recarInternalBridge", {
 					// world 0 = main world
 					code: `window.__recarRpcEnabled = ${settings.autoEnableWebRPC ?? true};
 					window.__discordTitleBarEnabled = ${settings.useDiscordTitleBar ?? false};
-            		${script}`,
+					// stub the web notif api
+					(function() {
+						class NotificationStub {
+							constructor(title, options) {}
+							addEventListener() {}
+							removeEventListener() {}
+							dispatchEvent() { return true; }
+							close() {}
+							static get permission() { return 'denied'; }
+							static requestPermission() { return Promise.resolve('denied'); }
+						}
+						Object.defineProperty(window, 'Notification', {
+							value: NotificationStub,
+							writable: true,
+							configurable: true,
+						});
+					})();
+					${script}`,
 				},
 			])
 			.then(() => {
