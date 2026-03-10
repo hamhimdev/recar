@@ -15,7 +15,7 @@
 - [ ] emoji rendering
 - [ ] custom emoji rendering
 - [ ] opengl support [unium]
-- [ ] reduce data sent over shm (qoi? raw bgra w/ diffing?)
+- [ ] reduce data sent over shm (qoi? raw bgra w/ diffing? let roverpp handle positioning so we only send small "widgets"?)
 
 ## tray
 
