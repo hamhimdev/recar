@@ -15,6 +15,7 @@
 - [ ] emoji rendering
 - [ ] custom emoji rendering
 - [ ] opengl support [unium]
+- [ ] reduce data sent over shm (qoi? raw bgra w/ diffing?)
 
 ## tray
 
@@ -32,10 +33,20 @@
 - [ ] redo settings ui to theme with discord, and template it because oh my god having everything in one html file is annoying, same for stream ui (and also replace material symbols with loxodrome icons)
 - [ ] make call ui use the static fonts and remove the variable fonts, since the static fonts are needed for overlay, variable font is kinda redundant, oh and also remove inter
 
+## vesktop parity
+
+- [ ] spellcheck using the system dict
+- [ ] video accel toggle (web and video separately)
+
+## discord for windows parity
+
+- [ ] rpc (or a subset of it to support [streamkit](https://streamkit.discord.com/overlay))
+
 ---
 
 - [ ] normal semver versioning (do this when most of the above items are done!
       first normal version will be 1.2.0)
 - [ ] optimize the fuck out of recar
+- [ ] organize our code (includes breaking up main.js and recar.ts)
 - [ ] have everything documented in the docs by 1.2.0
 - [ ] download page
