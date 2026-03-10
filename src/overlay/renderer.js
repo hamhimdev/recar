@@ -2,7 +2,7 @@ const net = require("net");
 const fs = require("fs");
 const path = require("path");
 const { parentPort } = require("worker_threads");
-const { Canvas, FontLibrary, Image, loadImage } = require("skia-canvas");
+const { createCanvas, GlobalFonts, loadImage } = require("@napi-rs/canvas");
 
 let fontFamily = "sans-serif";
 
@@ -34,7 +34,7 @@ function initFonts(assetsDir) {
 			const fontPath = path.join(fontDir, filename);
 			if (fs.existsSync(fontPath)) {
 				try {
-					FontLibrary.use(family, fontPath);
+					GlobalFonts.registerFromPath(fontPath, family);
 					console.log(
 						`[Overlay] Loaded font: ${fontPath} as "${family}"`
 					);
@@ -69,7 +69,7 @@ function initFonts(assetsDir) {
 	for (const [fontPath, familyName] of systemFonts) {
 		if (fs.existsSync(fontPath)) {
 			try {
-				FontLibrary.use(familyName, fontPath);
+				GlobalFonts.registerFromPath(fontPath, familyName);
 				fontFamily = familyName;
 				console.log(`[Overlay] Loaded system font: ${fontPath}`);
 				return;
@@ -93,7 +93,10 @@ const SOCKET_PATH = "/tmp/recar_overlay.sock";
 
 class OverlayRenderer {
 	constructor() {
+		this._measureCtx = null;
 		this._shmFd = -1;
+		this._pxCache = {};
+		this._voicePanelCanvas = null;
 		this._headerBuf = null;
 		this._readBuf = null;
 		this._canvas = null;
@@ -112,6 +115,7 @@ class OverlayRenderer {
 		this._resizeDebounce = null;
 		this._avatarCache = new Map();
 		this._assetsDir = null;
+		this._svgCache = new Map();
 		this._iconCache = new Map();
 		this._iconLoading = new Set();
 		this._layerSocket = null;
@@ -124,6 +128,7 @@ class OverlayRenderer {
 
 		this._assetsDir = assetsDir;
 		initFonts(assetsDir);
+		this._loadIconSvgs();
 		this._connectLayerSocket();
 
 		this._width = Math.min(width, SHM_MAX_WIDTH);
@@ -192,14 +197,19 @@ class OverlayRenderer {
 		this._height = height;
 		this._dpr = dpr;
 		this._updateScale();
-		this._canvas = new Canvas(width * dpr, height * dpr);
+		this._canvas = createCanvas(width * dpr, height * dpr);
 		this._ctx = this._canvas.getContext("2d");
 		this._ctx.scale(dpr, dpr);
 		this._ctx.imageSmoothingEnabled = true;
 		this._ctx.imageSmoothingQuality = "high";
 		this._ctx.textRendering = "geometricPrecision";
 		this._ctx.fontKerning = "normal";
+		this._iconCache.clear();
+		this._iconLoading.clear();
 		this._fontCache = {};
+		this._pxCache = {};
+		this._voicePanelCanvas = null;
+		this._measureCtx = null;
 		this._markDirty();
 
 		setTimeout(() => {
@@ -210,33 +220,66 @@ class OverlayRenderer {
 		}, 0);
 	}
 
+	_loadIconSvgs() {
+		if (!this._assetsDir) return;
+
+		const icons = {
+			[ICON_MUTED]: "muted.svg",
+			[ICON_DEAFENED]: "deafened.svg",
+		};
+
+		for (const [name, filename] of Object.entries(icons)) {
+			const svgPath = path.join(
+				this._assetsDir,
+				"img",
+				"overlay",
+				filename
+			);
+			if (!fs.existsSync(svgPath)) {
+				console.warn(`[Overlay] Icon not found: ${svgPath}`);
+				continue;
+			}
+			try {
+				const svgData = fs.readFileSync(svgPath, "utf-8");
+				this._svgCache.set(name, svgData);
+				console.log(`[Overlay] Loaded SVG source: ${filename}`);
+			} catch (e) {
+				console.warn(
+					`[Overlay] Failed to read ${filename}:`,
+					e.message
+				);
+			}
+		}
+	}
+
 	async _renderIcon(iconName, size, color) {
 		const cacheKey = `${iconName}_${size}_${color}`;
 		if (this._iconCache.has(cacheKey) || this._iconLoading.has(cacheKey))
 			return;
-		if (!this._assetsDir) return;
 
-		const filename = iconName === ICON_MUTED ? "muted.svg" : "deafened.svg";
-		const svgPath = path.join(this._assetsDir, "img", "overlay", filename);
-		if (!fs.existsSync(svgPath)) {
-			console.warn(`[Overlay] Icon not found: ${svgPath}`);
-			return;
-		}
+		const svgSource = this._svgCache.get(iconName);
+		if (!svgSource) return;
 
 		this._iconLoading.add(cacheKey);
+
 		try {
-			const dpr = this._dpr || 2;
-			const renderSize = Math.round(size * dpr);
+			const dpr = this._dpr || 1;
+			const renderSize = size * dpr;
 
-			const svgSource = fs.readFileSync(svgPath, "utf-8");
-			const svg = svgSource.replace(/<svg([^>]*)>/, (match, attrs) => {
-				attrs = attrs.replace(/\s*(width|height|fill)="[^"]*"/gi, "");
-				return `<svg${attrs} fill="${color}" width="${renderSize}" height="${renderSize}">`;
-			});
+			let svg = svgSource;
+			svg = svg.replace(/(<svg[^>]*)\sfill="[^"]*"/i, "$1");
+			svg = svg.replace(/width="[^"]*"/, `width="${renderSize}"`);
+			svg = svg.replace(/height="[^"]*"/, `height="${renderSize}"`);
+			svg = svg.replace(/<svg/, `<svg fill="${color}"`);
 
-			const finalImage = await loadImage(Buffer.from(svg));
-			this._iconCache.set(cacheKey, finalImage);
-			this._markDirty();
+			const svgBuffer = Buffer.from(svg);
+			const image = await loadImage(svgBuffer);
+
+			if (this._dpr === dpr) {
+				this._iconCache.set(cacheKey, image);
+				this._invalidateVoicePanel();
+				this._markDirty();
+			}
 		} catch (e) {
 			console.warn(
 				`[Overlay] Failed to render icon ${iconName}:`,
@@ -376,7 +419,7 @@ class OverlayRenderer {
 			this._layerSocketReady = true;
 		});
 		client.on("error", (e) => {
-			// console.warn("[Overlay] Layer socket error:", e.message);
+			console.warn("[Overlay] Layer socket error:", e.message);
 			client.destroy();
 		});
 		client.on("close", () => {
@@ -394,6 +437,12 @@ class OverlayRenderer {
 	}
 
 	_signalLayer() {
+		if (this._layerSocketReady && this._layerSocket) {
+			try {
+				this._layerSocket.write("FRAME_UPDATE");
+			} catch (e) {}
+			return;
+		}
 		if (this._signalingPending) return;
 		this._signalingPending = true;
 		const client = net.createConnection(SOCKET_PATH);
@@ -425,10 +474,7 @@ class OverlayRenderer {
 		}
 
 		try {
-			const resp = await fetch(url);
-			if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-			const buf = await resp.arrayBuffer();
-			const image = await loadImage(Buffer.from(buf));
+			const image = await loadImage(url);
 			this._avatarCache.set(key, image);
 			for (const n of this._notifications) {
 				if (n.userId === userId) n._canvas = null;
@@ -488,7 +534,7 @@ class OverlayRenderer {
 		const W = this._width;
 		const H = this._height;
 
-		const measure = new Canvas(1, 1).getContext("2d");
+		const measure = this._getMeasureCtx();
 		const fontSize = 18;
 		const lineHeight = this._px(fontSize * 1.15);
 		const maxWidth = Math.min(W * 0.35, this._px(450));
@@ -550,7 +596,7 @@ class OverlayRenderer {
 
 		const canvasW = boxW + extraPad * 2;
 		const canvasH = boxH + extraPad * 2;
-		const offscreen = new Canvas(canvasW, canvasH);
+		const offscreen = createCanvas(canvasW, canvasH);
 		const ctx = offscreen.getContext("2d");
 		ctx.imageSmoothingEnabled = true;
 		ctx.imageSmoothingQuality = "high";
@@ -570,7 +616,7 @@ class OverlayRenderer {
 			const textStart = textStart_n;
 			const availW = availW_sender;
 
-			ctx.font = this._font(fontSize, 400);
+			ctx.font = this._font(fontSize);
 			const msgLines = this._wrapText(ctx, notif.message, availW, 2);
 
 			let channelStr = "";
@@ -629,7 +675,7 @@ class OverlayRenderer {
 					);
 			}
 
-			ctx.font = this._font(fontSize, 400);
+			ctx.font = this._font(fontSize);
 			ctx.fillStyle = "#dbdee1";
 			msgLines.forEach((line, i) => {
 				ctx.fillText(
@@ -642,7 +688,7 @@ class OverlayRenderer {
 			const padX = this._px(20);
 			const padY = this._px(14);
 
-			ctx.font = this._font(fontSize, 500);
+			ctx.font = this._font(fontSize);
 			const msgLines = this._wrapText(
 				ctx,
 				notif.message,
@@ -711,7 +757,7 @@ class OverlayRenderer {
 		});
 
 		if (data.uid) this._loadAvatar(data.uid, data.avatarHash);
-		this._markDirty();
+		this._invalidateVoicePanel();
 	}
 
 	voiceLeave({ uid }) {
@@ -721,7 +767,7 @@ class OverlayRenderer {
 			this._avatarCache.delete(key);
 		}
 		this._voiceUsers = this._voiceUsers.filter((u) => u.id !== uid);
-		this._markDirty();
+		this._invalidateVoicePanel();
 	}
 
 	voiceUpdateAvatar({ uid, avatarHash }) {
@@ -731,14 +777,14 @@ class OverlayRenderer {
 			this._avatarCache.delete(oldKey);
 			user.avatarHash = avatarHash;
 			this._loadAvatar(uid, avatarHash);
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 	voiceMuted({ uid }) {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.muted = true;
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 
@@ -746,7 +792,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.muted = false;
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 
@@ -754,7 +800,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.deafened = true;
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 
@@ -762,7 +808,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.deafened = false;
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 
@@ -770,7 +816,7 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.speaking = true;
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 
@@ -778,13 +824,13 @@ class OverlayRenderer {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
 			user.speaking = false;
-			this._markDirty();
+			this._invalidateVoicePanel();
 		}
 	}
 
 	voiceClear() {
 		this._voiceUsers = [];
-		this._markDirty();
+		this._invalidateVoicePanel();
 	}
 
 	_markDirty() {
@@ -891,8 +937,15 @@ class OverlayRenderer {
 
 		const bufW = this._canvas.width;
 		const bufH = this._canvas.height;
-		const imageData = ctx.getImageData(0, 0, bufW, bufH);
-		const pixelBuf = Buffer.from(imageData.data.buffer);
+
+		let pixelBuf;
+		if (typeof this._canvas.data === "function") {
+			pixelBuf = this._canvas.data();
+		} else {
+			pixelBuf = Buffer.from(
+				ctx.getImageData(0, 0, bufW, bufH).data.buffer
+			);
+		}
 
 		if (this._writeShm(pixelBuf, bufW, bufH)) {
 			this._signalLayer();
@@ -1056,7 +1109,6 @@ class OverlayRenderer {
 	}
 
 	// https://pomax.github.io/bezierinfo/
-	// i made this and it literalyl went unused
 	_cubicBezierEase(t) {
 		const p1x = 0.2,
 			p1y = 0.0;
@@ -1116,35 +1168,38 @@ class OverlayRenderer {
 			const alpha = this._getNotifAlpha(notif);
 			if (alpha <= 0.01) continue;
 
-			let boxH;
-			if (notif.sender) {
-				const padY = this._px(10);
-				ctx.font = this._font(fontSize);
-				const msgLines = this._wrapText(
-					ctx,
-					notif.message,
-					availW_sender,
-					2
-				);
-				boxH =
-					padY +
-					lineHeight +
-					this._px(6) +
-					lineHeight * msgLines.length +
-					padY;
-			} else {
-				const padY = this._px(14);
-				ctx.font = this._font(fontSize);
-				const msgLines = this._wrapText(
-					ctx,
-					notif.message,
-					maxWidth - this._px(48),
-					2
-				);
-				boxH =
-					padY * 2 +
-					lineHeight * msgLines.length +
-					(msgLines.length > 1 ? this._px(4) : 0);
+			let boxH = notif._boxH;
+			if (!boxH) {
+				if (notif.sender) {
+					const padY = this._px(10);
+					ctx.font = this._font(fontSize, 400);
+					const msgLines = this._wrapText(
+						ctx,
+						notif.message,
+						availW_sender,
+						2
+					);
+					boxH =
+						padY +
+						lineHeight +
+						this._px(6) +
+						lineHeight * msgLines.length +
+						padY;
+				} else {
+					const padY = this._px(14);
+					ctx.font = this._font(fontSize, 400);
+					const msgLines = this._wrapText(
+						ctx,
+						notif.message,
+						maxWidth - this._px(48),
+						2
+					);
+					boxH =
+						padY * 2 +
+						lineHeight * msgLines.length +
+						(msgLines.length > 1 ? this._px(4) : 0);
+				}
+				notif._boxH = boxH;
 			}
 
 			visible.push({ notif, targetY: runningY, boxH, alpha });
@@ -1166,11 +1221,10 @@ class OverlayRenderer {
 			notif._velY += (springF + dampF) * dt;
 			notif._animY += notif._velY * dt;
 
-			if (
-				Math.abs(notif._animY - targetY) > 0.15 ||
-				Math.abs(notif._velY) > 0.5
-			)
-				this._markDirty();
+			const settled =
+				Math.abs(notif._animY - targetY) < 0.5 &&
+				Math.abs(notif._velY) < 1.0;
+			if (!settled) this._markDirty();
 
 			const currentY = notif._animY;
 
@@ -1189,13 +1243,24 @@ class OverlayRenderer {
 		}
 	}
 
-	_drawVoicePanel(ctx, W, H) {
-		if (!this._voiceUsers || this._voiceUsers.length === 0) return;
+	_invalidateVoicePanel() {
+		this._voicePanelCanvas = null;
+		this._markDirty();
+	}
+
+	_getMeasureCtx() {
+		if (!this._measureCtx) {
+			this._measureCtx = createCanvas(1, 1).getContext("2d");
+		}
+		return this._measureCtx;
+	}
+
+	_buildVoicePanelCanvas() {
+		if (!this._voiceUsers || this._voiceUsers.length === 0) return null;
 
 		const margin = this._px(20);
 		const padX = this._px(12);
 		const padY = this._px(10);
-		const cornerRadius = this._px(10);
 		const fontSize = 16;
 		const lineHeight = this._px(fontSize * 1.3);
 		const avatarRadius = this._px(18);
@@ -1205,18 +1270,21 @@ class OverlayRenderer {
 		const rowHeight = avatarRadius * 2 + this._px(8);
 		const rowGap = this._px(4);
 
-		ctx.font = this._font(fontSize, 500);
+		const measure = this._getMeasureCtx();
+		measure.font = this._font(fontSize, 500);
 		let maxNameWidth = 0;
 		for (const user of this._voiceUsers) {
-			const nameWidth =
-				ctx.measureText(user.username).width + iconSize + this._px(8);
-			if (nameWidth > maxNameWidth) maxNameWidth = nameWidth;
+			const w =
+				measure.measureText(user.username).width +
+				iconSize +
+				this._px(8);
+			if (w > maxNameWidth) maxNameWidth = w;
 		}
 
 		const panelW = Math.max(
 			this._px(320),
 			Math.min(
-				W * 0.5,
+				this._width * 0.5,
 				padX +
 					avatarRadius * 2 +
 					avatarPad +
@@ -1232,18 +1300,18 @@ class OverlayRenderer {
 				? (this._voiceUsers.length - 1) * rowGap
 				: 0) +
 			padY;
-		const panelX = margin;
-		const panelY = H - panelH - margin;
 
-		ctx.save();
+		const offscreen = createCanvas(panelW + margin, panelH + margin);
+		const ctx = offscreen.getContext("2d");
+		ctx.imageSmoothingEnabled = true;
+		ctx.imageSmoothingQuality = "high";
+		ctx.textRendering = "geometricPrecision";
 
-		ctx.globalAlpha = 1.0;
-
-		let rowY = panelY + padY;
+		let rowY = padY;
 
 		for (const user of this._voiceUsers) {
 			const name = user.username || "Unknown";
-			const avatarCX = panelX + padX + avatarRadius;
+			const avatarCX = padX + avatarRadius;
 			const avatarCY = rowY + rowHeight * 0.5;
 
 			if (user.speaking) {
@@ -1261,30 +1329,23 @@ class OverlayRenderer {
 			}
 
 			const rowAlpha = user.speaking ? 1.0 : 0.6;
-			const avatarAlpha = user.deafened ? 0.6 : user.muted ? 0.6 : 1.0;
+			const avatarAlpha = user.deafened || user.muted ? 0.6 : 1.0;
 			ctx.globalAlpha = rowAlpha * avatarAlpha;
-			const avatarImage = this._getAvatar(user.id, user.avatarHash);
 			this._drawAvatar(
 				ctx,
 				avatarCX,
 				avatarCY,
 				avatarRadius,
-				avatarImage,
+				this._getAvatar(user.id, user.avatarHash),
 				name
 			);
 			ctx.globalAlpha = 1.0;
 
-			const textX = panelX + padX + avatarRadius * 2 + avatarPad;
+			const textX = padX + avatarRadius * 2 + avatarPad;
 			const textAvailW =
 				panelW - padX - avatarRadius * 2 - avatarPad - padX;
 
-			let nameColor;
-			if (user.speaking) nameColor = "rgba(255, 255, 255, 1)";
-			else if (user.deafened) nameColor = "rgba(255, 255, 255, 1)";
-			else if (user.muted) nameColor = "rgba(255, 255, 255, 1)";
-			else nameColor = "rgba(255, 255, 255, 1)";
-
-			ctx.font = this._font(fontSize, 500);
+			ctx.font = this._font(fontSize, 400);
 
 			const iconsToShow = [];
 			if (user.deafened) {
@@ -1307,10 +1368,9 @@ class OverlayRenderer {
 			const textBgH = lineHeight + textBgPadY * 2;
 			const textBgY = avatarCY - textBgH * 0.5;
 			const textBgW = measuredNameW + iconSpace + textBgPadX * 2;
+			const pillR = textBgH / 2;
 
 			ctx.globalAlpha = rowAlpha;
-
-			const pillR = textBgH / 2;
 			ctx.beginPath();
 			ctx.arc(
 				textBgX + pillR,
@@ -1329,24 +1389,23 @@ class OverlayRenderer {
 			ctx.closePath();
 			ctx.fillStyle = "rgba(0,0,0,0.55)";
 			ctx.fill();
-			ctx.strokeStyle = "rgba(255,255,255,0.1)";
+			ctx.strokeStyle = "rgba(0,0,0,0.75)";
 			ctx.lineWidth = this._px(1);
 			ctx.stroke();
 
 			ctx.textAlign = "left";
 			ctx.textBaseline = "middle";
-			ctx.fillStyle = nameColor;
+			ctx.fillStyle = "rgba(255,255,255,1)";
 			ctx.fillText(truncName, textX, avatarCY);
 
 			if (iconsToShow.length > 0) {
 				const nameW = ctx.measureText(truncName).width;
 				let iconOffsetX = textX + nameW + iconPad;
 				for (const icon of iconsToShow) {
-					const iconX = iconOffsetX + iconSize / 2;
 					this._drawIcon(
 						ctx,
 						icon.name,
-						iconX,
+						iconOffsetX + iconSize / 2,
 						avatarCY,
 						iconSize,
 						icon.color
@@ -1358,7 +1417,24 @@ class OverlayRenderer {
 			rowY += rowHeight + rowGap;
 		}
 
-		ctx.restore();
+		return {
+			canvas: offscreen,
+			x: margin,
+			y: this._height - panelH - margin,
+		};
+	}
+
+	_drawVoicePanel(ctx, W, H) {
+		if (!this._voiceUsers || this._voiceUsers.length === 0) return;
+		if (!this._voicePanelCanvas) {
+			this._voicePanelCanvas = this._buildVoicePanelCanvas();
+		}
+		if (!this._voicePanelCanvas) return;
+		ctx.drawImage(
+			this._voicePanelCanvas.canvas,
+			this._voicePanelCanvas.x,
+			this._voicePanelCanvas.y
+		);
 	}
 }
 
