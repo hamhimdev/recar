@@ -1,6 +1,6 @@
 {
 	"name": "recar",
-	"version": "1.1.17",
+	"version": "1.1.18",
 	"description": "A Discord client for Linux with client mods and extra functionality.",
 	"main": "src/main.js",
 	"keywords": [],

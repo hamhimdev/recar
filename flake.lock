@@ -5,15 +5,15 @@
       "locked": {
         "lastModified": 1773093221,
         "narHash": "sha256-zNPE6DkbKF4IzUKWHTIGygITn+aVsDXRHExXg65jH0w=",
-        "owner": "TheUnium",
-        "repo": "dpprpc",
+        "ref": "refs/heads/main",
         "rev": "194498db6e36a604a6f3350354b5d92aae26f358",
-        "type": "github"
+        "revCount": 5,
+        "type": "git",
+        "url": "https://codeberg.org/TheUnium/dpprpc"
       },
       "original": {
-        "owner": "TheUnium",
-        "repo": "dpprpc",
-        "type": "github"
+        "type": "git",
+        "url": "https://codeberg.org/TheUnium/dpprpc"
       }
     },
     "equicord-src": {
@@ -79,17 +79,17 @@
     "roverpp-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1772782129,
-        "narHash": "sha256-aySE69ZW7udVGMDQGmP2usFNvlnks4Zdz7ngta80Hpk=",
-        "owner": "TheUnium",
-        "repo": "roverpp",
-        "rev": "0fa84c6a470e180b7583cd0636b5b982140a0bbd",
-        "type": "github"
+        "lastModified": 1772949189,
+        "narHash": "sha256-0TE2DIsX5rCm/cG9pX66T5LY8NOW1bzrlYXeOfD7uBI=",
+        "ref": "refs/heads/main",
+        "rev": "41f925ecbb5f8f00b43aebe01279826981f2ec7a",
+        "revCount": 8,
+        "type": "git",
+        "url": "https://codeberg.org/TheUnium/roverpp"
       },
       "original": {
-        "owner": "TheUnium",
-        "repo": "roverpp",
-        "type": "github"
+        "type": "git",
+        "url": "https://codeberg.org/TheUnium/roverpp"
       }
     },
     "systems": {
