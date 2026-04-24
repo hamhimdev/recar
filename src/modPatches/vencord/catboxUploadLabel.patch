@@ -1,5 +1,5 @@
---- a/src/plugins/catboxUpload_recar/index.tsx
-+++ b/src/plugins/catboxUpload_recar/index.tsx
+--- a/src/plugins/catboxUpload.recar/index.tsx
++++ b/src/plugins/catboxUpload.recar/index.tsx
 @@ -1,4 +1,4 @@
 -const NAME = "CatboxUpload";
 +const NAME = "CatboxUpload(Recar)";

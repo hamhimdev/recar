@@ -1,7 +1,7 @@
 --- a/src/plugins/webContextMenus.web/index.ts
 +++ b/src/plugins/webContextMenus.web/index.ts
-@@ -90,7 +90,7 @@ export default definePlugin({
-     description: "Re-adds context menus missing in the web version of Discord: Links & Images (Copy/Open Link/Image), Text Area (Copy, Cut, Paste, SpellCheck)",
+@@ -91,7 +91,7 @@ export default definePlugin({
+     tags: ["Utility"],
      authors: [Devs.Ven],
      enabledByDefault: true,
 -    required: requiredByPlatform,

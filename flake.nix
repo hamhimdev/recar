@@ -5,11 +5,11 @@
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 		flake-utils.url = "github:numtide/flake-utils";
 		vencord-src = {
-			url = "github:Vendicated/Vencord";
+			url = "github:Vendicated/Vencord?ref=refs/tags/v1.14.10";
 			flake = false;
 		};
 		equicord-src = {
-			url = "github:Equicord/Equicord";
+			url = "github:Equicord/Equicord?ref=refs/tags/v1.14.10.0";
 			flake = false;
 		};
 		roverpp-src = {
@@ -153,7 +153,7 @@
 
 				recar = pkgs.stdenv.mkDerivation rec {
 					pname = "recar";
-					version = "1.1.18";
+					version = "1.1.19";
 
 					src = pkgs.runCommand "recar-src" { } ''
 						mkdir -p $out
@@ -180,7 +180,7 @@
 
 					pnpmDeps = pkgs.fetchPnpmDeps {
 						inherit pname version src;
-						hash = "sha256-1hELqJtgI83y2i2l0NAuZKG0iL0KIlaUZK8Mpj7T7UA=";
+						hash = "sha256-lGtbNbi+iP5RKaROfYuSm/PfiqbhlAUuYwvsADEWfrE=";
 						fetcherVersion = 3;
 					};
 

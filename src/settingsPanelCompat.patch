@@ -1,0 +1,40 @@
+--- a/src/plugins/_core/settings.tsx
++++ b/src/plugins/_core/settings.tsx
+@@ -154,20 +154,26 @@ export default definePlugin({
+     buildEntry(options: EntryOptions): SettingsLayoutNode {
+         const { key, title, panelTitle = title, Component, Icon } = options;
+ 
+-        const panel: SettingsLayoutNode = {
++        const custom: SettingsLayoutNode = {
++            type: LayoutTypes.CUSTOM,
++            key: key + "_custom",
++            Component: Component,
++            useSearchTerms: () => [title]
++        };
++
++        const category: SettingsLayoutNode = {
++            type: LayoutTypes.CATEGORY,
++            key: key + "_category",
++            buildLayout: () => [custom]
++        };
++
++        const panel: SettingsLayoutNode & { categories: SettingsLayoutNode[]; } = {
+             key: key + "_panel",
+             type: LayoutTypes.PANEL,
+             useTitle: () => panelTitle,
+-            buildLayout: () => [{
+-                type: LayoutTypes.CATEGORY,
+-                key: key + "_category",
+-                buildLayout: () => [{
+-                    type: LayoutTypes.CUSTOM,
+-                    key: key + "_custom",
+-                    Component: Component,
+-                    useSearchTerms: () => [title]
+-                }]
+-            }]
++            buildLayout: () => [category],
++            // Newer Discord panel validation expects an explicit categories/tabs list.
++            categories: [category]
+         };
+ 
+         return ({

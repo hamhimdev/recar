@@ -1,0 +1,10 @@
+--- a/src/plugins/webKeybinds.web/index.ts
++++ b/src/plugins/webKeybinds.web/index.ts
+@@ -29,6 +29,7 @@ export default definePlugin({
+     tags: ["Shortcuts"],
+     authors: [Devs.Ven],
+     enabledByDefault: true,
++    required: true,
+ 
+     onKey(e: KeyboardEvent) {
+         const hasCtrl = e.ctrlKey || (e.metaKey && IS_MAC);

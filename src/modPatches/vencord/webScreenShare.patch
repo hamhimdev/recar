@@ -1,8 +1,9 @@
 --- a/src/plugins/webScreenShareFixes.web/index.ts
 +++ b/src/plugins/webScreenShareFixes.web/index.ts
-@@ -12,6 +12,7 @@ export default definePlugin({
+@@ -13,6 +13,7 @@ export default definePlugin({
      authors: [Devs.Kaitlyn],
      description: "Removes 2500kbps bitrate cap on chromium and vesktop clients.",
+     tags: ["Voice"],
      enabledByDefault: true,
 +    required: true,
  

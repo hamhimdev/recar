@@ -1,6 +1,6 @@
 {
 	"name": "recar",
-	"version": "1.1.18",
+	"version": "1.1.19",
 	"description": "A Discord client for Linux with client mods and extra functionality.",
 	"main": "src/main.js",
 	"keywords": [],
@@ -79,18 +79,18 @@
 		]
 	},
 	"devDependencies": {
-		"@tailwindcss/cli": "^4.2.1",
-		"electron": "^40.8.0",
+		"@tailwindcss/cli": "^4.2.4",
+		"electron": "^40.9.1",
 		"electron-builder": "^26.8.1",
-		"tailwindcss": "^4.2.1"
+		"tailwindcss": "^4.2.4"
 	},
 	"dependencies": {
-		"@napi-rs/canvas": "^0.1.96",
+		"@napi-rs/canvas": "^0.1.99",
 		"@vencord/venmic": "^6.1.0",
 		"arrpc": "^3.6.0",
 		"dbus-next": "^0.10.2",
 		"sharp": "^0.34.5",
 		"skia-canvas": "^3.0.8",
-		"ws": "^8.19.0"
+		"ws": "^8.20.0"
 	}
 }

@@ -1,4 +1,4 @@
-//PATH=src/plugins/recar/index.ts
+//PATH=src/plugins/recarHelper.recar/index.ts
 import definePlugin from "@utils/types";
 import { sendMessage } from "@utils/discord";
 import { findByPropsLazy, findStoreLazy } from "@webpack";
@@ -250,7 +250,7 @@ function RecarSettingsEntry() {
 }
 
 export default definePlugin({
-	name: "Recar",
+	name: "RecarHelper",
 	description: "Enables some extra features for Recar",
 	authors: [
 		{
