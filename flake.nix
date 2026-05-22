@@ -5,11 +5,11 @@
 		nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 		flake-utils.url = "github:numtide/flake-utils";
 		vencord-src = {
-			url = "github:Vendicated/Vencord?ref=refs/tags/v1.14.10";
+			url = "github:Vendicated/Vencord?ref=refs/tags/v1.14.13";
 			flake = false;
 		};
 		equicord-src = {
-			url = "github:Equicord/Equicord?ref=refs/tags/v1.14.10.0";
+			url = "github:Equicord/Equicord?ref=refs/tags/v1.14.13.0";
 			flake = false;
 		};
 		roverpp-src = {
