@@ -1029,6 +1029,10 @@ async function fah(userId) {
 	}
 }
 
+// Track the last D-Bus notification ID per channel so new ones replace old ones
+// instead of piling up in the notification center.
+const activeNotifIds = new Map(); // channelId (or sender fallback) -> notifId
+
 async function sendDesktopNotification(parsed, iconUrl) {
 	let iconPath_ = iconPath;
 	let tmpFile = null;
@@ -1165,10 +1169,15 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			"image-path": new dbus.Variant("s", iconPath_),
 		};
 
+		// Use channelId as the dedup key so each conversation has at most one
+		// notification at a time. Fall back to sender name for DMs without a channelId.
+		const channelKey = parsed.channelId ?? parsed.sender;
+		const replacesId = activeNotifIds.get(channelKey) ?? 0;
+
 		console.log("[Notification] Sending with icon:", iconPath_);
 		const notifId = await iface.Notify(
 			"recar",
-			0,
+			replacesId,
 			iconPath_,
 			titleParts.join(" \u2022 "),
 			parsed.message,
@@ -1176,6 +1185,8 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			hints,
 			-1
 		);
+
+		activeNotifIds.set(channelKey, notifId);
 
 		const onAction = (id, actionKey) => {
 			if (id !== notifId) return;
@@ -1222,6 +1233,11 @@ async function sendDesktopNotification(parsed, iconUrl) {
 
 		const onClosed = (id) => {
 			if (id !== notifId) return;
+			// Only clear the map entry if it still points to this notification —
+			// a newer message may have already replaced it.
+			if (activeNotifIds.get(channelKey) === notifId) {
+				activeNotifIds.delete(channelKey);
+			}
 			iface.removeListener("ActionInvoked", onAction);
 			iface.removeListener("NotificationReplied", onReplied);
 			iface.removeListener("NotificationClosed", onClosed);
