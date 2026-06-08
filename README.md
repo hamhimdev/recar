@@ -16,11 +16,11 @@ https://recar.loxodrome.app/
 
 ## Features
 
-- arRPC server built in (for Rich Presence)
+- RPC server built in (for Rich Presence)
 - Custom call popup when ringing
 - Switch between Vencord & Equicord
 - Wayland Streaming
-- Desktop Notifications
+- Superior Desktop Notifications
 - Recar exclusive plugins
 
 ## Installing Recar
