@@ -34,6 +34,8 @@ contextBridge.exposeInMainWorld("statusBridge", {
 		ipcRenderer.on("notification-open-reply", (_, data) => cb(data)),
 	onNotificationMarkRead: (cb) =>
 		ipcRenderer.on("notification-mark-read", (_, data) => cb(data)),
+	onNotificationQuickReact: (cb) =>
+		ipcRenderer.on("notification-quick-react", (_, data) => cb(data)),
 });
 
 let cachedStreamSettings = null;

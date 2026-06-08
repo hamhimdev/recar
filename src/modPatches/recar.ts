@@ -5,6 +5,7 @@ import { findByPropsLazy, findStoreLazy } from "@webpack";
 import {
 	ChannelStore,
 	ComponentDispatch,
+	Constants,
 	FluxDispatcher,
 	GuildMemberStore,
 	GuildStore,
@@ -12,6 +13,7 @@ import {
 	MessageStore,
 	PresenceStore,
 	React,
+	RestAPI,
 	SelectedChannelStore,
 	SelectedGuildStore,
 	UserStore,
@@ -97,6 +99,7 @@ function getVoiceInfo(
 // lazy-loaded stores / helpers
 const closeAllModals = findByPropsLazy("closeAllModals");
 const PendingReplyStore = findStoreLazy("PendingReplyStore");
+const EmojiStore = findStoreLazy("EmojiStore");
 
 // ---------- helpers ----------
 
@@ -371,7 +374,13 @@ export default definePlugin({
 		RPC_NOTIFICATION_CREATE(notification: any) {
 			if ((window as any).statusBridge) {
 				const { type: _type, ...notificationData } = notification; // strip flux event type
-				(window as any).statusBridge.notification(notificationData);
+				const e =
+					EmojiStore.emojiReactionFrecencyWithoutFetchingLatest
+						.frequently[0];
+				(window as any).statusBridge.notification({
+					...notificationData,
+					quickReact: e.surrogates ?? `:${e.name}:`,
+				});
 			}
 		},
 
@@ -603,6 +612,34 @@ export default definePlugin({
 					});
 				} catch (e) {
 					console.error("[Recar] Failed to mark channel as read:", e);
+				}
+			}
+		);
+
+		(window as any).statusBridge?.onNotificationQuickReact(
+			async ({ parsed }: { parsed: any }) => {
+				if (!parsed?.channelId || !parsed?.messageId) return;
+				try {
+					const e =
+						EmojiStore.emojiReactionFrecencyWithoutFetchingLatest
+							.frequently[0];
+					if (!e) return;
+
+					// "name:id" for custom emoji, surrogates for native
+					const emojiParam = e.id
+						? `${e.name}:${e.id}`
+						: (e.surrogates ?? e.name);
+
+					await RestAPI.put({
+						url: Constants.Endpoints.REACTION(
+							parsed.channelId,
+							parsed.messageId,
+							emojiParam,
+							"@me"
+						),
+					});
+				} catch (err) {
+					console.error("[Recar] Failed to quick react:", err);
 				}
 			}
 		);

@@ -19,16 +19,16 @@
     "equicord-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1777051515,
-        "narHash": "sha256-tiDLzbzvhOkrUsQAlYx6IclIV5diYj96TuO905j06E4=",
+        "lastModified": 1778256540,
+        "narHash": "sha256-F+aT0XEgxi8lpNqYM9dCdImGg8NJ5h0i0XhGw37GNsM=",
         "owner": "Equicord",
         "repo": "Equicord",
-        "rev": "129e1c53e1483e0a250d95818343fbbc33a49afd",
+        "rev": "d8bbdc8674007a46dc96fc3a8731d98504e86fc9",
         "type": "github"
       },
       "original": {
         "owner": "Equicord",
-        "ref": "refs/tags/v1.14.10.0",
+        "ref": "refs/tags/v1.14.13.0",
         "repo": "Equicord",
         "type": "github"
       }
@@ -111,16 +111,16 @@
     "vencord-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1777053173,
-        "narHash": "sha256-+P0FF7PIJ+z0jBMwQM2JR5d1c05E8EOjUI9j7mAWddQ=",
+        "lastModified": 1778255439,
+        "narHash": "sha256-Xqk/akTa/NcHjSm6h77y6Fkvq7ayBcR0w0HG0Hwfkf8=",
         "owner": "Vendicated",
         "repo": "Vencord",
-        "rev": "f5717842312afe57fa204b1dc4258d22cd6ce7cd",
+        "rev": "909df8b8c22e377aacbab6587db10e952bf1a461",
         "type": "github"
       },
       "original": {
         "owner": "Vendicated",
-        "ref": "refs/tags/v1.14.10",
+        "ref": "refs/tags/v1.14.13",
         "repo": "Vencord",
         "type": "github"
       }

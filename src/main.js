@@ -1163,6 +1163,8 @@ async function sendDesktopNotification(parsed, iconUrl) {
 			"mark-read",
 			"Mark as Read",
 			...(supportsInlineReply ? ["inline-reply", ""] : []),
+			"quick-react",
+			parsed.quickReact,
 		];
 
 		const hints = {
@@ -1191,31 +1193,34 @@ async function sendDesktopNotification(parsed, iconUrl) {
 		const onAction = (id, actionKey) => {
 			if (id !== notifId) return;
 			console.log(`[Notification] Action invoked: ${actionKey}`);
-			if (actionKey === "default") {
-				// just focus the app and navigate to the channel
-				if (mainWindow && !mainWindow.isDestroyed()) {
-					mainWindow.show();
-					mainWindow.focus();
-					mainWindow.webContents.send("notification-open-reply", {
-						parsed,
-						focusOnly: true,
-					});
-				}
-			} else if (actionKey === "reply") {
-				// focus the app and open the reply bar
-				if (mainWindow && !mainWindow.isDestroyed()) {
-					mainWindow.show();
-					mainWindow.focus();
-					mainWindow.webContents.send("notification-open-reply", {
-						parsed,
-						focusOnly: false,
-					});
-				}
-			} else if (actionKey === "mark-read") {
-				if (mainWindow && !mainWindow.isDestroyed()) {
-					mainWindow.webContents.send("notification-mark-read", {
-						parsed,
-					});
+			if (mainWindow && !mainWindow.isDestroyed()) {
+				switch (actionKey) {
+					case "default":
+						mainWindow.show();
+						mainWindow.focus();
+						mainWindow.webContents.send("notification-open-reply", {
+							parsed,
+							focusOnly: true,
+						});
+						break;
+					case "reply":
+						mainWindow.show();
+						mainWindow.focus();
+						mainWindow.webContents.send("notification-open-reply", {
+							parsed,
+							focusOnly: false,
+						});
+						break;
+					case "mark-read":
+						mainWindow.webContents.send("notification-mark-read", {
+							parsed,
+						});
+						break;
+					case "quick-react":
+						mainWindow.webContents.send("notification-quick-react", {
+							parsed,
+						});
+						break;
 				}
 			}
 		};
@@ -1289,6 +1294,7 @@ function pnfo(data) {
 
 	const channelId = data?.channelId ?? msg?.channel_id ?? null;
 	const messageId = msg?.id ?? null;
+	const quickReact = data?.quickReact ?? null;
 
 	return {
 		sender,
@@ -1300,6 +1306,7 @@ function pnfo(data) {
 		avatarHash,
 		channelId,
 		messageId,
+		quickReact,
 	};
 }
 
@@ -1311,6 +1318,7 @@ ipcMain.on("notification", (event, data) => {
 		OvRn.postMessage({ type: "ADD_NOTIFICATION", payload: parsed });
 	}
 
+	console.log(parsed);
 	sendDesktopNotification(parsed, data.icon);
 });
 
