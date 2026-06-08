@@ -29,8 +29,8 @@ https://recar.loxodrome.app/docs/info/install/
 
 ## License
 
-**recar, [dppRPC](https://github.com/TheUnium/dpprpc) & [roverpp](https://github.com/TheUnium/roverpp) (overlay)**  
+**recar, [dppRPC](https://codeberg.org/TheUnium/dpprpc) & [roverpp](https://codeberg.org/TheUnium/roverpp) (overlay)**  
 MIT License  
 [recar License](./LICENSE)  
-[roverpp License](https://github.com/TheUnium/roverpp/blob/main/LICENSE/)
-[dppRPC](https://github.com/TheUnium/dpprpc/blob/main/LICENSE/)
+[roverpp License](https://codeberg.org/TheUnium/roverpp/src/branch/main/LICENSE)
+[dppRPC](https://codeberg.org/TheUnium/dpprpc/src/branch/main/LICENSE)
