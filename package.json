@@ -74,8 +74,8 @@
 			"electron",
 			"electron-winstaller",
 			"esbuild",
-			"skia-canvas",
-			"usocket"
+			"sharp",
+			"skia-canvas"
 		]
 	},
 	"devDependencies": {
