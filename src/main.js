@@ -17,6 +17,7 @@ const os = require("os");
 const { Worker } = require("worker_threads");
 const RvInst = require("./overlay/installer.js");
 const OvRn = new Worker(path.join(__dirname, "overlay", "renderer.js"));
+const assetsDir = path.join(__dirname, "assets");
 
 let _venmic;
 const getVenmic = () => {
@@ -407,6 +408,7 @@ const createSplashWindow = () => {
 		webPreferences: {
 			nodeIntegration: false,
 			contextIsolation: true,
+			preload: path.join(__dirname, "splash.js"),
 		},
 	});
 
@@ -545,7 +547,6 @@ const createMainWindow = () => {
 
 	app.isQuiting = false;
 	mainWindow.on("close", (event) => {
-		clearTimeout(splashTimeout);
 		if (settings.minimizeToTray && !app.isQuiting) {
 			event.preventDefault();
 			mainWindow.hide();
@@ -596,37 +597,21 @@ const createMainWindow = () => {
 		mainWindow.loadURL(getDiscordUrl());
 	}
 
-	mainWindow.on("page-title-updated", (e, title) => {
-		console.log(`[Main] Title updated: ${title}`);
-		const matches = title.match(/^\s*\((\d+)\)/);
-		if (matches) {
-			const count = parseInt(matches[1], 10);
-			console.log(`[Main] Badge count detected: ${count}`);
-			const success = console.log(`Should set badge count ${count}`); // app.setBadgeCount(count);
-			// While I was optimizing overlay I noticed my audio would cut off for like a millisecond or something everytime I got a notif. I though this was because, well, the overlay had to render the notification but it seems to be this lol. Electron!!!! Rahh!!!!
-			// Overlay did contribute a bit, but still. Why??? I added prerendering of notifs to the overlay and it does not do that at all anymore, but turn this on, woo it does it!!!!! Yay!!!
-			// Eventually we should use a better solution, similar to libvesktop (atleast i think libvesktop handles it, but i'm not entirely sure) as this doesn't work in KDE Plasma anyway, yk one of the most used desktops. Supposed to work in Gnome though? not sure...
-		} else {
-			app.setBadgeCount(0);
-		}
-	});
-
 	mainWindow.once("ready-to-show", () => {
-		splashTimeout = setTimeout(() => {
-			if (splashWindow) {
-				splashWindow.close();
-				splashWindow = null;
-			}
-			if (settings.startMaximized) {
-				mainWindow.maximize();
-			}
-			mainWindow.show();
-		}, 1500);
+		if (settings.startMaximized) {
+			mainWindow.maximize();
+		}
 	});
 
 	mainWindow.webContents.on("did-finish-load", () => {
 		extractCSS();
 		mainWindow.webContents.send("request-user-info");
+
+		if (splashWindow) {
+			splashWindow.close();
+			splashWindow = null;
+			mainWindow.show();
+		}
 	});
 };
 
@@ -1197,11 +1182,13 @@ async function sendDesktopNotification(parsed, iconUrl) {
 		const channelKey = parsed.channelId ?? parsed.sender;
 		const replacesId = activeNotifIds.get(channelKey) ?? 0;
 
+		const appIcon = path.join(assetsDir, "img", "recar.png");
+
 		console.log("[Notification] Sending with icon:", iconPath_);
 		const notifId = await iface.Notify(
-			"recar",
+			"Recar",
 			replacesId,
-			iconPath_,
+			appIcon,
 			titleParts.join(" \u2022 "),
 			parsed.message,
 			actions,
@@ -1535,9 +1522,75 @@ ipcMain.handle("open-dev-window", (event, which) => {
 			webPreferences: {
 				nodeIntegration: false,
 				contextIsolation: true,
+				preload: path.join(__dirname, "splash.js"),
 			},
 		});
 		w.loadFile(path.join(__dirname, "splash.html"));
+
+		w.webContents.on("did-finish-load", () => {
+			let isSweepState = true;
+			let progressInterval = null;
+
+			const toggleState = () => {
+				if (progressInterval) {
+					clearInterval(progressInterval);
+					progressInterval = null;
+				}
+
+				if (w.isDestroyed()) return;
+
+				if (isSweepState) {
+					console.log("[Dev Splash] Switching to Sweep State");
+
+					w.webContents.send("splash-status", {
+						mode: "sweep",
+						text: "Checking for updates...",
+					});
+				} else {
+					console.log("[Dev Splash] Switching to Progress Bar State");
+
+					let progressCount = 0;
+
+					w.webContents.send("splash-status", {
+						mode: "determinate",
+						percent: progressCount,
+						text: "Found Recar 1.2",
+					});
+
+					progressInterval = setInterval(() => {
+						if (w.isDestroyed()) {
+							return clearInterval(progressInterval);
+						}
+
+						progressCount += 1;
+
+						if (progressCount <= 100) {
+							w.webContents.send("splash-status", {
+								mode: "determinate",
+								percent: progressCount,
+								text:
+									progressCount < 50
+										? "Downloading Recar 1.2"
+										: "Installing Recar 1.2",
+							});
+						}
+					}, 100);
+				}
+
+				isSweepState = !isSweepState;
+			};
+
+			toggleState();
+
+			const stateTimer = setInterval(() => {
+				if (w.isDestroyed()) {
+					clearInterval(stateTimer);
+					if (progressInterval) clearInterval(progressInterval);
+					return;
+				}
+				toggleState();
+			}, 10000);
+		});
 	} else if (which === "call") {
 		const w = new BrowserWindow({
 			width: 232,
@@ -1645,7 +1698,6 @@ app.whenReady().then(async () => {
 
 	const primaryDisplay = screen.getPrimaryDisplay();
 	const { width, height } = primaryDisplay.size;
-	const assetsDir = path.join(__dirname, "assets");
 
 	const overlayTimeout = setTimeout(() => {
 		console.log("[Overlay] 3s gone, continuing anyway");

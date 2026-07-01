@@ -12,7 +12,7 @@
 		style="-webkit-app-region: drag"
 	>
 		<div
-			class="w-full h-full flex flex-col justify-center items-center relative bg-base"
+			class="w-full h-full flex flex-col justify-center items-center relative bg-linear-0 from-base to-surface"
 		>
 			<div class="flex flex-col justify-center items-center">
 				<img
@@ -20,9 +20,77 @@
 					class="w-[70%] h-[70%] items-center justify-center object-fit rounded-[40px]"
 				/>
 			</div>
-			<div class="progress-bar-container bg-border-sub">
-				<div class="progress-bar bg-accent"></div>
+			<span
+				id="status-text"
+				class="font-medium text-lg text-primary"
+			></span>
+
+			<div class="absolute bottom-0 left-0 w-full">
+				<div
+					id="status-container"
+					class="flex justify-center items-center px-4 pb-2 text-sm text-gray-300 opacity-0 transition-opacity duration-200"
+				>
+					<span
+						id="status-percentage"
+						class="font-semibold text-secondary/50 text-lg"
+					></span>
+				</div>
+
+				<div class="relative overflow-hidden w-full h-2 bg-border-sub">
+					<div id="progress" class="progress-bar bg-accent"></div>
+				</div>
 			</div>
 		</div>
+
+		<script>
+			window.electronAPI?.onSplashUpdate((status) => {
+				const progressBar = document.getElementById("progress");
+				const statusContainer =
+					document.getElementById("status-container");
+				const statusText = document.getElementById("status-text");
+				const statusPercentage =
+					document.getElementById("status-percentage");
+
+				if (!progressBar || !statusContainer) return;
+
+				let mode = "determinate";
+				let percent = 0;
+				let message = "";
+
+				if (status === "sweep") {
+					mode = "sweep";
+				} else if (typeof status === "number") {
+					percent = status;
+				} else if (status && typeof status === "object") {
+					mode = status.mode === "sweep" ? "sweep" : "determinate";
+					percent =
+						typeof status.percent === "number" ? status.percent : 0;
+					message = status.text || "";
+				} else {
+					return;
+				}
+
+				if (mode === "sweep") {
+					progressBar.classList.remove("determinate");
+					progressBar.style.removeProperty("--progress");
+				} else {
+					progressBar.classList.add("determinate");
+					progressBar.style.setProperty("--progress", `${percent}%`);
+				}
+
+				if (message) {
+					statusText.textContent = message;
+					statusPercentage.textContent =
+						mode === "sweep" ? "" : `${percent}%`;
+					statusContainer.classList.remove("opacity-0");
+				} else if (mode !== "sweep") {
+					statusText.textContent = "Loading...";
+					statusPercentage.textContent = `${percent}%`;
+					statusContainer.classList.remove("opacity-0");
+				} else {
+					statusContainer.classList.add("opacity-0");
+				}
+			});
+		</script>
 	</body>
 </html>

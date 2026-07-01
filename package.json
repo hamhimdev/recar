@@ -6,8 +6,8 @@
 	"keywords": [],
 	"author": {
 		"name": "hamhim",
-		"email": "hamhimdev@proton.me",
-		"url": "https://cutely.strangled.net/"
+		"email": "hamhim@loxodrome.app",
+		"url": "https://loxodrome.app/"
 	},
 	"homepage": "https://recar.loxodrome.app/",
 	"repository": {
@@ -22,8 +22,10 @@
 		"build:equicord": "node ./scripts/patch-mod.js equicord && EQUICORD_HASH=equicord pnpm -C equicord buildWeb && node ./scripts/discard-changes.js equicord",
 		"build:vencord": "node ./scripts/patch-mod.js vencord && VENCORD_HASH=vencord pnpm -C vencord buildWeb && node ./scripts/discard-changes.js vencord",
 		"build:mods": "pnpm build:equicord && pnpm build:vencord",
+		"build:dpprpc": "node ./scripts/build-projects.js dpprpc",
+		"build:roverpp": "node ./scripts/build-projects.js roverpp",
+		"build:projects": "pnpm build:roverpp && pnpm build:dpprpc",
 		"dist": "electron-builder --linux",
-		"test": "echo \"Error: no test specified\" && exit 1",
 		"format": "pnpx prettier . -w"
 	},
 	"build": {

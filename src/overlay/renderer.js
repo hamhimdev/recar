@@ -89,7 +89,7 @@ const SHM_PIXEL_SIZE = SHM_MAX_WIDTH * SHM_MAX_HEIGHT * 4;
 const SHM_TOTAL_SIZE = SHM_HEADER_SIZE + SHM_PIXEL_SIZE;
 const SHM_STATE_WRITING = 1;
 const SHM_STATE_READY = 2;
-const SOCKET_PATH = "/tmp/recar_overlay.sock";
+const SOCKET_PATH = process.env.RECAR_SOCKET_PATH || "/tmp/recar_overlay.sock";
 
 const DEFAULT_LAYOUT = {
 	notifications: "top-left",

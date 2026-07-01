@@ -184,18 +184,6 @@
 						class="h-8 subpixel-antialiased"
 						src="assets/img/recar.svg"
 					/>
-					<div id="search" class="relative flex items-center">
-						<span
-							class="top-[10px] left-3 absolute material-symbols-rounded font-medium text-secondary text-4xl pointer-events-none"
-						>
-							search
-						</span>
-						<input
-							class="bg-transparent pr-2 pl-9 border border-border-sub focus:border-transparent rounded-lg focus:outline-none focus:ring focus:ring-accent w-44 h-9 font-sans text-md text-secondary placeholder:text-secondary/50 transition-all"
-							placeholder="Search settings..."
-							type="text"
-						/>
-					</div>
 				</div>
 
 				<nav class="flex flex-col gap-0.5">
@@ -262,7 +250,7 @@
 						<span class="material-symbols-rounded font-normal">
 							info
 						</span>
-						About Recar
+						About
 					</div>
 				</nav>
 
@@ -310,12 +298,14 @@
 				</div>
 			</aside>
 
-			<div class="flex flex-col flex-1 bg-base min-w-0 overflow-hidden">
+			<div
+				class="flex flex-col flex-1 bg-base min-w-0 overflow-hidden w-full"
+			>
 				<div
-					class="flex flex-row items-center gap-3 shadow-md p-2 px-7 border-border-sub border-b shrink-0"
+					class="fixed flex flex-row items-center gap-3 shadow-lg px-7 border-border-sub backdrop-blur-2xl border-b shrink-0 w-150 z-20 bg-base/70 px-4 py-2"
 				>
 					<div
-						class="flex flex-row items-center gap-2 p-1 pr-3 pl-3 bg-border-sub rounded-lg font-semibold text-md text-primary tracking-tight"
+						class="flex flex-row items-center gap-2 p-1 rounded-lg font-semibold text-md text-primary tracking-tight"
 						id="page-title"
 					>
 						<span
@@ -331,15 +321,39 @@
 					>
 						Configure Recar
 					</div>
-					<span
-						class="right-0 absolute mr-7 material-symbols-rounded font-thin text-muted hover:text-secondary transition-colors cursor-pointer"
-						style="font-size: 22px"
-						>info</span
+					<div
+						id="search"
+						class="absolute flex items-end right-0 mr-7.5"
 					>
+						<span
+							class="top-[11px] left-3 absolute material-symbols-rounded font-medium text-secondary/50 text-4xl pointer-events-none"
+						>
+							search
+						</span>
+						<input
+							class="bg-transparent pr-2 pl-9 border border-border-sub focus:border-transparent rounded-lg focus:outline-none focus:ring focus:ring-accent h-9 font-sans text-md text-secondary placeholder:text-secondary/50"
+							placeholder="Search settings..."
+							type="text"
+						/>
+						<div
+							class="flex gap-1 absolute right-0 mr-1.5 h-full items-center"
+						>
+							<div
+								class="bg-surface/50 border border-border text-sm px-1 py-0.5 text-secondary/50 font-semibold rounded-sm"
+							>
+								CTRL
+							</div>
+							<div
+								class="bg-surface/50 border border-border text-sm px-1 py-0.5 text-secondary/50 font-semibold rounded-sm"
+							>
+								F
+							</div>
+						</div>
+					</div>
 				</div>
 
 				<div
-					class="flex-1 px-7 py-5 pb-24 overflow-y-auto"
+					class="flex-1 px-7 pb-24 pt-16 overflow-y-auto"
 					id="scroll-container"
 				>
 					<div class="page active" id="page-settings">
@@ -695,50 +709,54 @@
 								</div>
 							</div>
 						</div>
-					</div>
-					<!-- /client mods -->
 
-					<!-- overlay section -->
-					<div
-						id="section-overlay"
-						class="relative mb-7 searchable-chunk"
-					>
+						<!-- /client mods -->
+
+						<!-- overlay section -->
 						<div
-							class="flex items-center gap-2 mb-1 font-semibold text-md text-muted uppercase tracking-wide"
+							id="section-overlay"
+							class="relative mb-7 searchable-chunk"
 						>
-							<span class="material-symbols-rounded text-lg"
-								>layers</span
+							<div
+								class="flex items-center gap-2 mb-1 font-semibold text-md text-muted uppercase tracking-wide"
 							>
-							Overlay Customization
-						</div>
-						<p class="mb-4 text-secondary text-sm">
-							Drag and drop the overlay components inside the
-							screen mockup below to position them.
-						</p>
+								<span class="material-symbols-rounded text-lg"
+									>layers</span
+								>
+								Overlay Customization
+							</div>
+							<p class="mb-4 text-secondary text-sm">
+								Drag and drop the overlay components inside the
+								screen mockup below to position them.
+							</p>
 
-						<div class="flex flex-col items-center">
 							<div
 								id="mockup-screen"
-								class="relative w-full aspect-16/10 p-1 bg-base border-2 border-border rounded-lg overflow-hidden shadow-inner select-none"
+								class="relative w-full aspect-video p-1 bg-base border-2 border-border rounded-lg overflow-hidden shadow-inner select-none"
 							>
+								<img
+									src="assets/img/minecraft.png"
+									class="absolute inset-0 w-full h-full object-fit opacity-50 z-0 pointer-events-none"
+								/>
+
 								<div
-									class="absolute inset-0 flex justify-center pointer-events-none"
+									class="absolute inset-0 flex justify-center pointer-events-none z-10"
 								>
 									<div
-										class="h-full w-2 border-l border-dashed border-border-sub/50"
+										class="h-full w-1 border-r border-dashed border-black/50"
 									></div>
 								</div>
 								<div
-									class="absolute inset-0 flex items-center pointer-events-none"
+									class="absolute inset-0 flex items-center pointer-events-none z-10"
 								>
 									<div
-										class="w-full h-2 border-t border-dashed border-border-sub/50"
+										class="w-full h-1 border-t border-dashed border-black/50"
 									></div>
 								</div>
 
 								<div
 									id="mockup-voicePanel"
-									class="absolute active:border-accent cursor-grab active:cursor-grabbing transition-transform duration-150 ease-out select-none p-2 rounded bg-base border border-green-500 w-32"
+									class="absolute active:border-accent cursor-grab active:cursor-grabbing transition-transform duration-150 ease-out select-none p-2 rounded bg-base border border-green-500 w-32 z-20"
 								>
 									<div class="flex gap-2 mb-2">
 										<div class="flex flex-col gap-1.5">
@@ -790,7 +808,7 @@
 
 								<div
 									id="mockup-notifications"
-									class="absolute active:border-accent cursor-grab active:cursor-grabbing transition-transform duration-150 ease-out select-none p-2 rounded bg-base border border-red-500 w-40"
+									class="absolute active:border-accent cursor-grab active:cursor-grabbing transition-transform duration-150 ease-out select-none p-2 rounded bg-base border border-red-500 w-40 z-20"
 								>
 									<div class="flex gap-2 mb-2 items-center">
 										<div
@@ -820,99 +838,111 @@
 								</div>
 							</div>
 						</div>
+						<!-- /overlay section -->
 					</div>
-					<!-- /overlay section -->
 
 					<!-- about -->
-					<div class="page" id="page-about">
+					<div class="page relative overflow-hidden" id="page-about">
+						<video
+							loop
+							autoplay
+							muted
+							playsinline
+							class="absolute inset-0 w-full h-full object-cover object-top rounded-xl opacity-30 mt-3"
+							style="
+								-webkit-mask-image: linear-gradient(
+									to bottom,
+									black 30%,
+									transparent 80%
+								);
+								mask-image: linear-gradient(
+									to bottom,
+									black 30%,
+									transparent 80%
+								);
+							"
+							src="assets/img/vid.webm"
+						></video>
+
 						<div
-							class="flex flex-col items-center mb-6 py-8 text-center"
+							class="relative flex flex-col items-center mb-4 py-6 text-center"
 						>
-							<img
-								src="assets/img/banner.png"
-								class="mb-2 w-64"
-							/>
-							<div class="mt-1.5 text-md text-secondary">
-								A Discord client for Linux with client mods and
-								extra functionality.
-							</div>
-							<div class="flex gap-2 mt-4">
-								<a
-									href="https://codeberg.org/hamhim/recar/"
-									class="flex justify-center items-center gap-2 bg-accent px-4 py-2 rounded-lg font-medium text-md text-white transition-all hover:bg-accent-dim cursor-pointer"
-								>
-									<span class="material-symbols-rounded"
-										>rebase</span
-									>
-									Codeberg Repository
-								</a>
-								<a
-									href="https://recar.loxodrome.app/"
-									class="flex justify-center items-center gap-2 bg-accent px-4 py-2 rounded-lg font-medium text-md text-white transition-all hover:bg-accent-dim cursor-pointer"
-								>
-									<span class="material-symbols-rounded"
-										>captive_portal</span
-									>
-									Website
-								</a>
+							<svg
+								class="w-72 mb-6 mt-10 text-white mix-blend-difference"
+								viewBox="0 0 727.527 128"
+								xmlns="http://www.w3.org/2000/svg"
+							>
+								<path
+									d="M22.543 0C22.543 0 1.75391 48.7783 0.375 67.8945L51.5117 65.6084L0.0351562 82.1904C-0.0195312 84.6699 -0.0117188 84.7266 0.0546875 85.2002C0.101563 85.5332 0.179688 86.0732 0.285156 87.8135L49.832 89.5039L1.07812 100.87L12.2344 119.123C12.2344 119.123 48.8867 128 85.5391 128C122.191 128 158.844 119.123 158.844 119.123L171.699 100.874L122.934 89.5029L172.484 87.8135C172.59 86.0498 172.668 85.4893 172.711 85.1504C172.777 84.666 172.781 84.6338 172.727 82.1904L121.254 65.6084L172.379 67.8965C170.859 46.9863 148.535 0 148.535 0L109.594 28.6357C109.594 28.6357 103.895 31.6309 85.5391 31.6309C67.1836 31.6309 63.7773 28.6357 63.7773 28.6357L22.543 0L22.543 0ZM317.32 119.828C326.508 125.276 337.043 128 348.934 128C358.238 128 366.508 126.708 373.746 124.123C380.984 121.499 387.246 117.741 392.535 112.85C397.863 107.959 402.238 102.253 405.656 95.7314L381.441 85.4727C378.656 90.8809 374.82 95.2549 369.93 98.5947C365.078 101.935 358.895 103.604 351.379 103.604C342.113 103.604 334.102 100.683 327.34 94.8369C320.582 88.9521 316.785 80.8799 315.949 70.6211L408.102 70.6211C408.102 55.9482 405.535 43.3232 400.406 32.7451C395.277 22.1289 388.301 14.0166 379.473 8.41016C370.684 2.80371 360.844 0 349.945 0C337.898 0 327.184 2.72363 317.797 8.17188C308.453 13.6191 301.078 21.1543 295.668 30.7773C290.301 40.4004 287.617 51.4746 287.617 64C287.617 76.5254 290.262 87.5996 295.551 97.2227C300.879 106.846 308.137 114.381 317.32 119.828L317.32 119.828ZM445.934 119.828C455.555 125.276 466.629 128 479.156 128C491.402 128 502.359 124.918 512.02 118.755C521.723 112.552 528.941 103.903 533.672 92.8086L508.262 83.0273C505.641 89.0713 501.645 93.8428 496.273 97.3418C490.906 100.841 484.805 102.591 477.965 102.591C471.281 102.591 465.297 100.921 460.012 97.5811C454.723 94.2402 450.566 89.6875 447.543 83.9219C444.523 78.1162 443.012 71.4756 443.012 64C443.012 56.5244 444.48 49.9033 447.426 44.1377C450.367 38.332 454.441 33.7598 459.652 30.4189C464.859 27.0791 470.805 25.4092 477.484 25.4092C484.324 25.4092 490.43 27.0391 495.797 30.2998C501.164 33.5605 505.16 37.875 507.785 43.2432L533.195 33.4609C528.465 22.7246 521.207 14.4736 511.426 8.70801C501.645 2.90234 490.727 0 478.68 0C466.312 0 455.359 2.72363 445.812 8.17188C436.312 13.6191 428.816 21.1543 423.328 30.7773C417.879 40.4004 415.156 51.4746 415.156 64C415.156 76.5254 417.879 87.5996 423.328 97.2227C428.816 106.846 436.352 114.381 445.934 119.828L445.934 119.828ZM552.461 118.218C560.531 124.739 571.883 128 586.516 128C594.668 128 601.629 126.469 607.395 123.407C613.199 120.306 617.73 115.892 620.992 110.166L621.707 125.077L646.879 125.077L647.594 58.1543C647.594 45.9072 645.688 35.4697 641.867 26.8408C638.051 18.2119 632.148 11.5908 624.152 6.97852C616.16 2.32617 606.219 0 594.332 0C585.066 0 577.133 1.3916 570.531 4.1748C563.93 6.91895 558.465 10.6172 554.129 15.2695C549.836 19.9219 546.395 24.9316 543.812 30.2998L567.73 39.0684C570.832 33.8594 574.57 30.042 578.941 27.6162C583.355 25.1504 588.484 23.918 594.332 23.918C602.324 23.918 608.348 26.2842 612.402 31.0156C616.5 35.748 619.043 42.5869 620.039 51.5342L588.965 51.5342C573.652 51.5342 561.727 54.874 553.176 61.5547C544.625 68.2344 540.352 77.917 540.352 90.6016C540.352 102.491 544.387 111.697 552.461 118.218L552.461 118.218ZM215.438 2.92285L215.438 125.077L242.816 125.077L242.816 59.5859C242.816 52.1104 244.844 46.0859 248.898 41.5137C252.996 36.9404 258.324 33.6396 264.883 31.6123C271.484 29.584 278.543 28.5703 286.059 28.5703L286.059 2.44531C277.746 2.44531 269.676 4.31445 261.844 8.05176C254.047 11.79 247.707 17.4961 242.816 25.1699L242.816 2.92285L215.438 2.92285L215.438 2.92285ZM656.906 125.077L684.285 125.077L684.285 59.5859C684.285 52.1104 686.312 46.0859 690.367 41.5137C694.465 36.9404 699.793 33.6396 706.352 31.6123C712.953 29.584 720.012 28.5703 727.527 28.5703L727.527 2.44531C719.215 2.44531 711.145 4.31445 703.312 8.05176C695.516 11.79 689.176 17.4961 684.285 25.1699L684.285 2.92285L656.906 2.92285L656.906 125.077L656.906 125.077ZM378.516 49.5654L317.676 49.5654C318.312 43.7197 320.262 38.8486 323.52 34.9521C326.781 31.0156 330.738 28.1123 335.391 26.2441C340.043 24.375 344.637 23.4404 349.168 23.4404C353.902 23.4404 358.375 24.415 362.59 26.3633C366.844 28.3115 370.441 31.2139 373.387 35.0713C376.328 38.8887 378.039 43.7197 378.516 49.5654L378.516 49.5654ZM605.957 101.04C601.305 103.704 595.977 105.036 589.973 105.036C583.133 105.036 577.785 103.704 573.93 101.04C570.113 98.3359 568.203 94.6182 568.203 89.8867C568.203 84.3594 570.391 80.084 574.766 77.0625C579.18 74.04 586.852 72.5293 597.789 72.5293L620.512 72.5293L620.512 74.9746C620.512 80.542 619.238 85.6113 616.695 90.1846C614.191 94.7178 610.609 98.3359 605.957 101.04L605.957 101.04Z"
+									fill="currentColor"
+									fill-rule="evenodd"
+								/>
+							</svg>
+
+							<div
+								class="text-lg font-semibold text-secondary px-24"
+							>
+								A Discord client for Linux with client mods,
+								good performance and extra functionality.
 							</div>
 						</div>
-						<div class="gap-3 grid grid-cols-2 mb-4">
+
+						<div class="relative gap-3 grid grid-cols-2 mb-4 px-4">
 							<div
-								class="bg-surface p-4 border border-border rounded-xl"
+								class="bg-surface/30 backdrop-blur-sm backdrop-saturate-50 px-6 py-4 border border-border/50 rounded-lg"
 							>
 								<div
-									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+									class="mb-1.5 font-semibold text-muted text-md uppercase tracking-wide"
 								>
 									Recar Version
 								</div>
 								<div
-									class="font-sans font-semibold text-primary text-sm"
+									class="font-sans font-semibold text-primary text-md"
 									id="about-recar-ver"
 								>
 									-
 								</div>
 							</div>
 							<div
-								class="bg-surface p-4 border border-border rounded-xl"
+								class="bbg-surface/30 backdrop-blur-sm backdrop-saturate-50 px-6 py-4 border border-border/50 rounded-lg"
 							>
 								<div
-									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+									class="mb-1.5 font-semibold text-muted text-md uppercase tracking-wide"
 								>
 									Electron
 								</div>
 								<div
-									class="font-sans font-semibold text-primary text-sm"
+									class="font-sans font-semibold text-primary text-md"
 									id="about-electron-ver"
 								>
 									-
 								</div>
 							</div>
 							<div
-								class="bg-surface p-4 border border-border rounded-xl"
+								class="bg-surface/30 backdrop-blur-sm backdrop-saturate-50 px-6 py-4 border border-border/50 rounded-lg"
 							>
 								<div
-									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+									class="mb-1.5 font-semibold text-muted text-md uppercase tracking-wide"
 								>
 									Platform
 								</div>
 								<div
-									class="font-sans font-semibold text-primary text-sm"
+									class="font-sans font-semibold text-primary text-md"
 									id="about-platform"
 								>
 									-
 								</div>
 							</div>
 							<div
-								class="bg-surface p-4 border border-border rounded-xl"
+								class="bg-surface/30 backdrop-blur-sm backdrop-saturate-50 px-6 py-4 border border-border/50 rounded-lg"
 							>
 								<div
-									class="mb-1.5 font-semibold text-muted text-sm uppercase tracking-wide"
+									class="mb-1.5 font-semibold text-muted text-md uppercase tracking-wide"
 								>
 									Branch
 								</div>
 								<div
-									class="font-sans font-semibold text-primary text-sm"
+									class="font-sans font-semibold text-primary text-md"
 									id="about-branch"
 								>
 									-
@@ -920,13 +950,11 @@
 							</div>
 						</div>
 					</div>
-					<!-- /about -->
-
 					<!-- developer -->
 					<div class="page" id="page-developer">
 						<div class="mb-5">
 							<div
-								id="section-overlay"
+								id="section-overlay-install"
 								class="relative mb-7 searchable-chunk"
 							>
 								<div
@@ -1008,7 +1036,7 @@
 				</div>
 
 				<div
-					class="right-0 bottom-4 left-[24.5%] absolute flex items-center gap-2 bg-base shadow-md mr-auto ml-auto p-2 border border-border-sub rounded-2xl w-md shrink-0"
+					class="right-0 bottom-4 left-[24.5%] absolute flex items-center gap-2 bg-base drop-shadow-md mr-auto ml-auto p-2 border border-border-sub rounded-2xl w-md shrink-0 z-50"
 					id="normalFooter"
 				>
 					<button
@@ -1107,13 +1135,13 @@
 				},
 				about: {
 					icon: "info",
-					title: "About Recar",
-					subtitle: "Version information and credits",
+					title: "About",
+					subtitle: "About the Recar project",
 				},
 				developer: {
 					icon: "data_object",
 					title: "Dev Tools",
-					subtitle: "Developer utilities and preview tools",
+					subtitle: "Developer utilities",
 				},
 			};
 
