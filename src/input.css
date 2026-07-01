@@ -141,3 +141,38 @@ body {
 	--color-danger: #ed4245;
 	--color-danger-dim: #c03537;
 }
+
+.mockup-glow::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	box-shadow: inset 0 0 0px rgba(87, 100, 242, 0);
+	transition: box-shadow 0.15s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.glow-top-left::before {
+	box-shadow: inset 5px 5px 1px 0px springgreen;
+}
+.glow-top-right::before {
+	box-shadow: inset -5px 5px 1px 0px yellow;
+}
+.glow-bottom-left::before {
+	box-shadow: inset 5px -5px 1px 0px yellow;
+}
+.glow-bottom-right::before {
+	box-shadow: inset -5px -5px 1px 0px springgreen;
+}
+
+.glow-top-center::before {
+	box-shadow: inset 0 10px 1px -5px white;
+}
+.glow-bottom-center::before {
+	box-shadow: inset 0 -10px 1px -5px white;
+}
+.glow-middle-left::before {
+	box-shadow: inset 10px 0 1px -5px white;
+}
+.glow-middle-right::before {
+	box-shadow: inset -10px 0 1px -5px white;
+}

@@ -91,6 +91,43 @@ const SHM_STATE_WRITING = 1;
 const SHM_STATE_READY = 2;
 const SOCKET_PATH = "/tmp/recar_overlay.sock";
 
+const DEFAULT_LAYOUT = {
+	notifications: "top-left",
+	voicePanel: "bottom-left",
+};
+
+function resolveSlotOrigin(slot, panelW, panelH, screenW, screenH, margin) {
+	const cx = (screenW - panelW) / 2;
+
+	switch (slot) {
+		case "middle-left":
+			return { x: margin, y: (screenH - panelH) / 2 };
+		case "middle-right":
+			return { x: screenW - panelW - margin, y: (screenH - panelH) / 2 };
+		case "top-left":
+			return { x: margin, y: margin };
+		case "top-center":
+			return { x: cx, y: margin };
+		case "top-right":
+			return { x: screenW - panelW - margin, y: margin };
+		case "bottom-left":
+			return { x: margin, y: screenH - panelH - margin };
+		case "bottom-center":
+			return { x: cx, y: screenH - panelH - margin };
+		case "bottom-right":
+			return {
+				x: screenW - panelW - margin,
+				y: screenH - panelH - margin,
+			};
+		default:
+			return { x: margin, y: margin };
+	}
+}
+
+function notifStackDirection(slot) {
+	return slot.startsWith("bottom") ? "up" : "down";
+}
+
 class OverlayRenderer {
 	constructor() {
 		this._measureCtx = null;
@@ -121,12 +158,15 @@ class OverlayRenderer {
 		this._layerSocket = null;
 		this._layerSocketReady = false;
 		this._fontCache = {};
+		this._layout = { ...DEFAULT_LAYOUT };
 	}
 
-	async init(width = 1920, height = 1080, assetsDir = null) {
+	async init(width = 1920, height = 1080, assetsDir = null, layout = null) {
 		if (process.platform !== "linux") return false;
 
 		this._assetsDir = assetsDir;
+		if (layout) this._layout = { ...DEFAULT_LAYOUT, ...layout };
+
 		initFonts(assetsDir);
 		this._loadIconSvgs();
 		this._connectLayerSocket();
@@ -154,6 +194,17 @@ class OverlayRenderer {
 		this._scheduleRender();
 
 		return true;
+	}
+
+	setLayout(layout) {
+		this._layout = { ...DEFAULT_LAYOUT, ...layout };
+		this._invalidateVoicePanel();
+
+		for (const n of this._notifications) {
+			delete n._animY;
+			delete n._velY;
+		}
+		this._markDirty();
 	}
 
 	async _waitForGameResolution(attempts = 20, intervalMs = 100) {
@@ -780,6 +831,7 @@ class OverlayRenderer {
 			this._invalidateVoicePanel();
 		}
 	}
+
 	voiceMuted({ uid }) {
 		const user = this._voiceUsers.find((u) => u.id === uid);
 		if (user) {
@@ -1141,12 +1193,13 @@ class OverlayRenderer {
 	_drawNotifications(ctx, W, H) {
 		if (this._notifications.length === 0) return;
 
+		const slot = this._layout.notifications || "top-left";
+		const stackDir = notifStackDirection(slot);
 		const margin = this._px(24);
-		const cornerRadius = this._px(12);
 		const spacing = this._px(12);
-		const maxWidth = Math.min(W * 0.35, this._px(450));
 		const fontSize = 18;
 		const lineHeight = this._px(fontSize * 1.15);
+		const maxWidth = Math.min(W * 0.35, this._px(450));
 
 		const padX_sender = this._px(14);
 		const avatarRadius_n = this._px(20);
@@ -1162,7 +1215,6 @@ class OverlayRenderer {
 			boxW_sender - padX_sender - textStart_n - padX_sender;
 
 		const visible = [];
-		let runningY = margin;
 		for (const notif of this._notifications) {
 			if (visible.length >= 4) break;
 			const alpha = this._getNotifAlpha(notif);
@@ -1202,13 +1254,31 @@ class OverlayRenderer {
 				notif._boxH = boxH;
 			}
 
-			visible.push({ notif, targetY: runningY, boxH, alpha });
-			runningY += boxH + spacing;
+			visible.push({ notif, boxH, alpha });
 		}
+
+		const totalW = Math.max(boxW_sender, this._px(260));
+
+		if (stackDir === "down") {
+			let runningY = margin;
+			for (const item of visible) {
+				item.targetY = runningY;
+				runningY += item.boxH + spacing;
+			}
+		} else {
+			let runningY = H - margin;
+			for (const item of visible) {
+				runningY -= item.boxH;
+				item.targetY = runningY;
+				runningY -= spacing;
+			}
+		}
+
+		const slotOriginX = resolveSlotOrigin(slot, totalW, 0, W, H, margin).x;
 
 		for (const { notif, targetY, boxH, alpha } of visible) {
 			if (notif._animY === undefined) {
-				notif._animY = -boxH;
+				notif._animY = stackDir === "down" ? -boxH : H + boxH;
 				notif._velY = 0;
 			}
 
@@ -1226,15 +1296,13 @@ class OverlayRenderer {
 				Math.abs(notif._velY) < 1.0;
 			if (!settled) this._markDirty();
 
-			const currentY = notif._animY;
-
 			ctx.save();
 			ctx.globalAlpha = alpha;
 			if (notif._canvas) {
 				ctx.drawImage(
 					notif._canvas,
-					margin - notif._extraPad,
-					currentY - notif._extraPad
+					slotOriginX - notif._extraPad,
+					notif._animY - notif._extraPad
 				);
 			} else {
 				this._prebakeNotification(notif);
@@ -1249,9 +1317,8 @@ class OverlayRenderer {
 	}
 
 	_getMeasureCtx() {
-		if (!this._measureCtx) {
+		if (!this._measureCtx)
 			this._measureCtx = createCanvas(1, 1).getContext("2d");
-		}
 		return this._measureCtx;
 	}
 
@@ -1417,11 +1484,7 @@ class OverlayRenderer {
 			rowY += rowHeight + rowGap;
 		}
 
-		return {
-			canvas: offscreen,
-			x: margin,
-			y: this._height - panelH - margin,
-		};
+		return { canvas: offscreen, panelW, panelH };
 	}
 
 	_drawVoicePanel(ctx, W, H) {
@@ -1430,11 +1493,14 @@ class OverlayRenderer {
 			this._voicePanelCanvas = this._buildVoicePanelCanvas();
 		}
 		if (!this._voicePanelCanvas) return;
-		ctx.drawImage(
-			this._voicePanelCanvas.canvas,
-			this._voicePanelCanvas.x,
-			this._voicePanelCanvas.y
-		);
+
+		const { canvas, panelW, panelH } = this._voicePanelCanvas;
+		const slot = this._layout.voicePanel || "bottom-left";
+		const margin = this._px(20);
+
+		const { x, y } = resolveSlotOrigin(slot, panelW, panelH, W, H, margin);
+
+		ctx.drawImage(canvas, x, y);
 	}
 }
 
@@ -1442,13 +1508,18 @@ const renderer = new OverlayRenderer();
 
 parentPort.on("message", async (msg) => {
 	switch (msg.type) {
-		case "INIT":
+		case "INIT": {
 			const success = await renderer.init(
 				msg.payload.width,
 				msg.payload.height,
-				msg.payload.assetsDir
+				msg.payload.assetsDir,
+				msg.payload.layout ?? null
 			);
 			parentPort.postMessage({ type: "INIT_DONE", success });
+			break;
+		}
+		case "LAYOUT_UPDATE":
+			renderer.setLayout(msg.payload);
 			break;
 		case "DESTROY":
 			renderer.destroy();

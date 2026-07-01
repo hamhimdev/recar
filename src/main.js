@@ -257,6 +257,19 @@ let settings = {
 	useDiscordTitleBar: false,
 	autoStart: false,
 	enableOverlay: true,
+
+	//  notifications:  "top-left" "top-center" "top-right"
+	//                  "bottom-left" "bottom-center" "bottom-right"
+	//
+	//  voicePanel:     "top-left" "top-right"
+	//                  "middle-left" "middle-right"
+	//                  "bottom-left" "bottom-right"
+	//
+
+	overlayLayout: {
+		notifications: "top-left",
+		voicePanel: "bottom-left",
+	},
 };
 let isFirstLaunch = false;
 let discordCSS = null;
@@ -729,6 +742,14 @@ ipcMain.handle("save-settings", (event, newSettings) => {
 	settings = { ...settings, ...newSettings };
 	saveSettings();
 	isFirstLaunch = false; // Once saved, it's no longer first launch
+
+	if (settings.enableOverlay && settings.overlayLayout) {
+		OvRn.postMessage({
+			type: "LAYOUT_UPDATE",
+			payload: settings.overlayLayout,
+		});
+	}
+
 	return true;
 });
 
@@ -1217,9 +1238,12 @@ async function sendDesktopNotification(parsed, iconUrl) {
 						});
 						break;
 					case "quick-react":
-						mainWindow.webContents.send("notification-quick-react", {
-							parsed,
-						});
+						mainWindow.webContents.send(
+							"notification-quick-react",
+							{
+								parsed,
+							}
+						);
 						break;
 				}
 			}
@@ -1636,7 +1660,12 @@ app.whenReady().then(async () => {
 
 	OvRn.postMessage({
 		type: "INIT",
-		payload: { width, height, assetsDir },
+		payload: {
+			width,
+			height,
+			assetsDir,
+			layout: settings.overlayLayout ?? null,
+		},
 	});
 
 	registerDiscordProtocol();
