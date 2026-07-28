@@ -6,7 +6,7 @@
 	url = https://github.com/Equicord/Equicord
 [submodule "roverpp"]
 	path = roverpp
-	url = https://codeberg.org/TheUnium/roverpp.git
+	url = https://git.unium.in/roverpp
 [submodule "dpprpc"]
 	path = dpprpc
-	url = https://codeberg.org/TheUnium/dpprpc.git
+	url = https://git.unium.in/dpprpc
