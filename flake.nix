@@ -13,11 +13,11 @@
 			flake = false;
 		};
 		roverpp-src = {
-			url = "git+https://codeberg.org/TheUnium/roverpp";
+			url = "git+https://git.unium.in/roverpp";
 			flake = false;
 		};
 		dpprpc-src = {
-			url = "git+https://codeberg.org/TheUnium/dpprpc";
+			url = "git+https://git.unium.in/dpprpc";
 			flake = false;
 		};
 	};
