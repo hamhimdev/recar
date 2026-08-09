@@ -21,7 +21,7 @@ https://recar.loxodrome.app/
 - Switch between Vencord & Equicord
 - Wayland Streaming
 - Superior Desktop Notifications
-- Recar exclusive plugins
+- Recar exclusive plugins ("CatboxUpload" and "ControllerSupport(Experimental)" for now)
 
 ## Installing Recar
 
@@ -29,8 +29,8 @@ https://recar.loxodrome.app/docs/info/install/
 
 ## License
 
-**recar, [dppRPC](https://codeberg.org/TheUnium/dpprpc) & [roverpp](https://codeberg.org/TheUnium/roverpp) (overlay)**  
+**recar, [dppRPC](https://git.unium.in/dpprpc/file/README.md.html) & [roverpp](https://git.unium.in/roverpp/file/README.md.html) (overlay)**  
 MIT License  
 [recar License](./LICENSE)  
-[roverpp License](https://codeberg.org/TheUnium/roverpp/src/branch/main/LICENSE)
-[dppRPC](https://codeberg.org/TheUnium/dpprpc/src/branch/main/LICENSE)
+[roverpp License](https://git.unium.in/roverpp/file/LICENSE.html)
+[dppRPC License](https://git.unium.in/dpprpc/file/LICENSE.html)
