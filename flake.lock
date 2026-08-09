@@ -3,32 +3,32 @@
     "dpprpc-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1773093221,
-        "narHash": "sha256-zNPE6DkbKF4IzUKWHTIGygITn+aVsDXRHExXg65jH0w=",
+        "lastModified": 1773044331,
+        "narHash": "sha256-5O0mypNweyu6nKwjn5nPFCLYuVCWkHWmjN0aeHAr064=",
         "ref": "refs/heads/main",
-        "rev": "194498db6e36a604a6f3350354b5d92aae26f358",
-        "revCount": 5,
+        "rev": "2a8d4a8ff10b81618b2deb13e4ee4edcfc26e38e",
+        "revCount": 1,
         "type": "git",
-        "url": "https://codeberg.org/TheUnium/dpprpc"
+        "url": "https://git.unium.in/dpprpc"
       },
       "original": {
         "type": "git",
-        "url": "https://codeberg.org/TheUnium/dpprpc"
+        "url": "https://git.unium.in/dpprpc"
       }
     },
     "equicord-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1778256540,
-        "narHash": "sha256-F+aT0XEgxi8lpNqYM9dCdImGg8NJ5h0i0XhGw37GNsM=",
+        "lastModified": 1786076904,
+        "narHash": "sha256-QkynX9vierWyPW8C9GmfejWYN5KQERIuY/FZJ8zawkg=",
         "owner": "Equicord",
         "repo": "Equicord",
-        "rev": "d8bbdc8674007a46dc96fc3a8731d98504e86fc9",
+        "rev": "12ae66762149bb7e6e50e0bbaebb60ca7673b66b",
         "type": "github"
       },
       "original": {
         "owner": "Equicord",
-        "ref": "refs/tags/v1.14.13.0",
+        "ref": "refs/tags/v1.15.0.4",
         "repo": "Equicord",
         "type": "github"
       }
@@ -86,11 +86,11 @@
         "rev": "41f925ecbb5f8f00b43aebe01279826981f2ec7a",
         "revCount": 8,
         "type": "git",
-        "url": "https://codeberg.org/TheUnium/roverpp"
+        "url": "https://git.unium.in/roverpp"
       },
       "original": {
         "type": "git",
-        "url": "https://codeberg.org/TheUnium/roverpp"
+        "url": "https://git.unium.in/roverpp"
       }
     },
     "systems": {
@@ -111,16 +111,16 @@
     "vencord-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1778255439,
-        "narHash": "sha256-Xqk/akTa/NcHjSm6h77y6Fkvq7ayBcR0w0HG0Hwfkf8=",
+        "lastModified": 1785094017,
+        "narHash": "sha256-z3EY/nc9pHPjuMteY8ubYM3sqgjASznEG6B1U4mNCU4=",
         "owner": "Vendicated",
         "repo": "Vencord",
-        "rev": "909df8b8c22e377aacbab6587db10e952bf1a461",
+        "rev": "83b74e2305cb4718b3d55af5fbd93ade50d2bb50",
         "type": "github"
       },
       "original": {
         "owner": "Vendicated",
-        "ref": "refs/tags/v1.14.13",
+        "ref": "refs/tags/v1.15.0",
         "repo": "Vencord",
         "type": "github"
       }

@@ -1,11 +1,11 @@
---- a/src/plugins/webContextMenus.web/index.ts
-+++ b/src/plugins/webContextMenus.web/index.ts
-@@ -81,7 +81,7 @@ export default definePlugin({
-     tags: ["Utility"],
-     authors: [Devs.Ven],
-     enabledByDefault: true,
--    required: IS_VESKTOP,
-+    required: true,
- 
-     settings,
- 
+--- a/src/components/settings/tabs/plugins/PluginModal.tsx
++++ b/src/components/settings/tabs/plugins/PluginModal.tsx
+@@ -174,7 +174,7 @@ export default function PluginModal({ plugin, onRestartNeeded, onClose, transiti
+             title={
+                 <div className={cl("header")}>
+                     <BaseText tag="h1" weight="semibold" size="lg">{plugin.name}</BaseText>
+-                    {!pluginMeta.userPlugin && (
++                    {!(pluginMeta.userPlugin || pluginMeta.folderName.endsWith("recar")) && (
+                         <div className="vc-settings-modal-links">
+                             <WebsiteButton
+                                 text="View more info"

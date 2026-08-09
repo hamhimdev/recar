@@ -1,0 +1,11 @@
+--- a/src/plugins/webContextMenus.web/index.ts
++++ b/src/plugins/webContextMenus.web/index.ts
+@@ -81,7 +81,7 @@ export default definePlugin({
+     tags: ["Utility"],
+     authors: [Devs.Ven],
+     enabledByDefault: true,
+-    required: IS_VESKTOP,
++    required: true,
+ 
+     settings,
+ 

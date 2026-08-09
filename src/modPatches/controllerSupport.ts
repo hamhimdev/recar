@@ -1,5 +1,5 @@
-,.//PATH=src/plugins/controllerSupport.recar/index.tsx
-const NAME = "ControllerSupport (Experimental)";
+//PATH=src/plugins/controllerSupport.recar/index.ts
+const NAME = "ControllerSupport(Experimental)";
 
 import { definePluginSettings } from "@api/Settings";
 import { Logger } from "@utils/Logger";

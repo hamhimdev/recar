@@ -1,8 +1,9 @@
-//PATH=src/plugins/recarHelper.recar/index.ts
-import definePlugin from "@utils/types";
+//PATH=src/plugins/recarHelper.recar/index.tsx
+import definePlugin, { OptionType } from "@utils/types";
 import { sendMessage } from "@utils/discord";
 import { findByPropsLazy, findStoreLazy } from "@webpack";
 import {
+	Button,
 	ChannelStore,
 	ComponentDispatch,
 	Constants,
@@ -19,6 +20,7 @@ import {
 	UserStore,
 	VoiceStateStore,
 } from "@webpack/common";
+import { definePluginSettings } from "@api/Settings";
 
 const CDN = "https://cdn.discordapp.com";
 
@@ -252,6 +254,18 @@ function RecarSettingsEntry() {
 	return null;
 }
 
+const settings = definePluginSettings({
+	openSettings: {
+		type: OptionType.COMPONENT,
+		description: "Open the Recar settings window",
+		component: () => (
+			<Button onClick={() => (window as any).recarBridge?.openSettings()}>
+				Open Recar Settings
+			</Button>
+		),
+	},
+});
+
 export default definePlugin({
 	name: "RecarHelper",
 	description: "Enables some extra features for Recar",
@@ -266,6 +280,7 @@ export default definePlugin({
 		},
 	],
 	required: true,
+	settings,
 
 	flux: {
 		CONNECTION_OPEN() {
