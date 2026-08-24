@@ -88,17 +88,17 @@
 		</style>
 	</head>
 
-	<body class="h-full bg-base text-primary">
+	<body class="bg-base h-full text-primary">
 		<div class="flex flex-col h-full overflow-hidden">
 			<div
-				class="px-6 pt-5 pb-4 border-b border-border-sub shrink-0 hidden"
+				class="hidden px-6 pt-5 pb-4 border-border-sub border-b shrink-0"
 			>
-				<div class="flex items-center justify-between">
+				<div class="flex justify-between items-center">
 					<div>
-						<div class="text-[18px] font-bold text-primary">
+						<div class="font-bold text-[18px] text-primary">
 							Share Your Screen
 						</div>
-						<div class="text-[13px] text-muted mt-0.5">
+						<div class="mt-0.5 text-[13px] text-muted">
 							Select a window or screen to broadcast
 						</div>
 					</div>
@@ -108,32 +108,38 @@
 			<div class="flex flex-1 min-h-0">
 				<div
 					id="sources-panel"
-					class="flex flex-col flex-1 min-w-0 overflow-hidden p-5"
+					class="flex flex-col flex-1 p-5 min-w-0 overflow-hidden"
 				>
 					<div
-						class="flex gap-1 mb-4 shrink-0 p-1 rounded-lg bg-sidebar"
+						class="flex gap-1 bg-sidebar mb-4 p-1 rounded-lg shrink-0"
 					>
 						<button
 							id="tab-screen"
-							class="tab-btn active-tab flex-1 py-1.5 text-sm font-semibold rounded-md transition-all cursor-pointer"
+							class="flex-1 py-1.5 rounded-md font-semibold text-sm transition-all cursor-pointer tab-btn active-tab"
 						>
 							Screens
 						</button>
 						<button
 							id="tab-window"
-							class="tab-btn flex-1 py-1.5 text-sm font-semibold rounded-md transition-all cursor-pointer"
+							class="flex-1 py-1.5 rounded-md font-semibold text-sm transition-all cursor-pointer tab-btn"
 						>
 							Applications
 						</button>
+						<button
+							id="tab-obs"
+							class="flex-1 py-1.5 rounded-md font-semibold text-sm transition-all cursor-pointer tab-btn"
+						>
+							OBS Virtual Camera
+						</button>
 					</div>
 
-					<div class="flex-1 overflow-y-auto pr-1">
+					<div class="flex-1 pr-1 overflow-y-auto">
 						<div
 							id="grid-container"
-							class="grid grid-cols-2 gap-3 pb-4"
+							class="gap-3 grid grid-cols-2 pb-4"
 						>
 							<div
-								class="text-center col-span-2 py-10 text-sm text-muted"
+								class="col-span-2 py-10 text-muted text-sm text-center"
 							>
 								Loading sources...
 							</div>
@@ -143,23 +149,23 @@
 
 				<div
 					id="panel-divider"
-					class="w-px shrink-0 my-4 bg-border-sub"
+					class="my-4 bg-border-sub w-px shrink-0"
 				></div>
 
 				<div
-					class="w-70 shrink-0 flex flex-col p-5 gap-5 overflow-y-auto"
+					class="flex flex-col gap-5 p-5 w-70 overflow-y-auto shrink-0"
 				>
 					<div class="flex gap-3">
 						<div class="flex-1">
 							<div
-								class="text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+								class="mb-2 font-semibold text-muted text-xs uppercase tracking-wide"
 							>
 								Resolution
 							</div>
 							<div class="select-wrap">
 								<select
 									id="res-select"
-									class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+									class="bg-surface px-3.5 py-2.5 pr-10 border border-border hover:border-accent focus:border-accent rounded-lg outline-none w-full font-sans text-primary text-sm transition-colors cursor-pointer"
 								>
 									<option value="480">480p</option>
 									<option value="720" selected>720p</option>
@@ -168,7 +174,7 @@
 									<option value="2160">2160p (4K)</option>
 								</select>
 								<span
-									class="material-symbols-rounded chevron ml-auto font-normal"
+									class="ml-auto material-symbols-rounded font-normal chevron"
 								>
 									arrow_drop_down
 								</span>
@@ -177,21 +183,21 @@
 
 						<div class="flex-1">
 							<div
-								class="text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+								class="mb-2 font-semibold text-muted text-xs uppercase tracking-wide"
 							>
 								Frame Rate
 							</div>
 							<div class="select-wrap">
 								<select
 									id="fps-select"
-									class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+									class="bg-surface px-3.5 py-2.5 pr-10 border border-border hover:border-accent focus:border-accent rounded-lg outline-none w-full font-sans text-primary text-sm transition-colors cursor-pointer"
 								>
 									<option value="15">15 FPS</option>
 									<option value="30" selected>30 FPS</option>
 									<option value="60">60 FPS</option>
 								</select>
 								<span
-									class="material-symbols-rounded chevron ml-auto font-normal"
+									class="ml-auto material-symbols-rounded font-normal chevron"
 								>
 									arrow_drop_down
 								</span>
@@ -201,14 +207,14 @@
 
 					<div>
 						<div
-							class="text-xs font-semibold uppercase tracking-wide text-muted mb-2"
+							class="mb-2 font-semibold text-muted text-xs uppercase tracking-wide"
 						>
 							Stream Mode
 						</div>
 						<div class="select-wrap">
 							<select
 								id="mode-select"
-								class="w-full bg-surface border border-border text-primary text-sm px-3.5 py-2.5 pr-10 rounded-lg outline-none cursor-pointer transition-colors hover:border-accent focus:border-accent font-sans"
+								class="bg-surface px-3.5 py-2.5 pr-10 border border-border hover:border-accent focus:border-accent rounded-lg outline-none w-full font-sans text-primary text-sm transition-colors cursor-pointer"
 							>
 								<option value="motion">
 									Prefer Smoothness
@@ -216,7 +222,7 @@
 								<option value="detail">Prefer Clarity</option>
 							</select>
 							<span
-								class="material-symbols-rounded chevron ml-auto font-normal"
+								class="ml-auto material-symbols-rounded font-normal chevron"
 							>
 								arrow_drop_down
 							</span>
@@ -225,18 +231,18 @@
 
 					<div>
 						<div
-							class="text-xs font-semibold uppercase tracking-wide text-muted mb-2 flex justify-between"
+							class="flex justify-between mb-2 font-semibold text-muted text-xs uppercase tracking-wide"
 						>
 							<span>Include Audio</span>
-							<span id="inc-count" class="text-accent hidden"
+							<span id="inc-count" class="hidden text-accent"
 								>0</span
 							>
 						</div>
 						<div
 							id="audio-include"
-							class="w-full bg-surface border border-border rounded-lg overflow-y-auto flex flex-col h-full p-1"
+							class="flex flex-col bg-surface p-1 border border-border rounded-lg w-full h-full overflow-y-auto"
 						>
-							<div class="text-center text-sm text-muted mt-5">
+							<div class="mt-5 text-muted text-sm text-center">
 								Loading...
 							</div>
 						</div>
@@ -244,25 +250,25 @@
 
 					<div
 						id="exclude-container"
-						class="opacity-50 pointer-events-none transition-opacity duration-200 hidden"
+						class="hidden opacity-50 transition-opacity duration-200 pointer-events-none"
 					>
 						<div
-							class="text-xs font-semibold uppercase tracking-wide text-muted mb-2 flex justify-between"
+							class="flex justify-between mb-2 font-semibold text-muted text-xs uppercase tracking-wide"
 						>
 							<span>Exclude Audio</span>
-							<span id="exc-count" class="text-accent hidden"
+							<span id="exc-count" class="hidden text-accent"
 								>0</span
 							>
 						</div>
 						<div
 							id="audio-exclude"
-							class="w-full bg-surface border border-border rounded-lg overflow-y-auto flex flex-col h-32 p-1"
+							class="flex flex-col bg-surface p-1 border border-border rounded-lg w-full h-32 overflow-y-auto"
 						>
-							<div class="text-center text-sm text-muted mt-5">
+							<div class="mt-5 text-muted text-sm text-center">
 								Loading...
 							</div>
 						</div>
-						<div class="text-[11px] text-muted mt-1.5 leading-snug">
+						<div class="mt-1.5 text-[11px] text-muted leading-snug">
 							Only applied when sharing Entire System.
 						</div>
 					</div>
@@ -271,7 +277,7 @@
 						<button
 							id="share-btn"
 							disabled
-							class="w-full flex items-center justify-center gap-2 bg-accent text-white text-sm font-semibold py-2 rounded-lg transition-all active:scale-[0.98]"
+							class="flex justify-center items-center gap-2 bg-accent py-2 rounded-lg w-full font-semibold text-white text-sm active:scale-[0.98] transition-all"
 						>
 							<span
 								class="material-symbols-rounded font-thin text-2xl"
@@ -289,6 +295,7 @@
 			let allSources = [];
 			let currentType = "screen";
 			let selectedSourceId = null;
+			let obsSourcesLoaded = false;
 
 			let includeAudioList = [{ "node.name": "entire-system" }];
 			let excludeAudioList = [];
@@ -297,6 +304,7 @@
 			const sourcesPanel = document.getElementById("sources-panel");
 			const tabScreen = document.getElementById("tab-screen");
 			const tabWindow = document.getElementById("tab-window");
+			const tabOBS = document.getElementById("tab-obs");
 			const shareBtn = document.getElementById("share-btn");
 
 			function setTab(type) {
@@ -305,9 +313,107 @@
 				tabScreen.classList.toggle("text-muted", type !== "screen");
 				tabWindow.classList.toggle("active-tab", type === "window");
 				tabWindow.classList.toggle("text-muted", type !== "window");
+				tabOBS.classList.toggle("active-tab", type === "obs");
+				tabOBS.classList.toggle("text-muted", type !== "obs");
 				selectedSourceId = null;
 				shareBtn.disabled = true;
-				renderSources();
+
+				if (type === "obs") {
+					loadObsSources();
+				} else {
+					renderSources();
+				}
+			}
+
+			async function loadObsSources() {
+				sourcesContainer.innerHTML = `<div class="col-span-2 py-10 text-muted text-sm text-center">Looking for OBS Virtual Camera...</div>`;
+
+				try {
+					if (!navigator.mediaDevices?.enumerateDevices) {
+						throw new Error("mediaDevices unavailable");
+					}
+
+					let devices =
+						await navigator.mediaDevices.enumerateDevices();
+					let videoInputs = devices.filter(
+						(d) => d.kind === "videoinput"
+					);
+
+					if (
+						videoInputs.length &&
+						videoInputs.every((d) => !d.label)
+					) {
+						try {
+							const tempStream =
+								await navigator.mediaDevices.getUserMedia({
+									video: true,
+								});
+							tempStream.getTracks().forEach((t) => t.stop());
+							devices =
+								await navigator.mediaDevices.enumerateDevices();
+							videoInputs = devices.filter(
+								(d) => d.kind === "videoinput"
+							);
+						} catch (permErr) {
+							sourcesContainer.innerHTML = `<div class="col-span-2 py-10 text-muted text-sm text-center">Camera permission is needed to detect OBS Virtual Camera</div>`;
+							return;
+						}
+					}
+
+					const obsDevices = videoInputs.filter((d) =>
+						/obs/i.test(d.label)
+					);
+
+					if (obsDevices.length === 0) {
+						sourcesContainer.innerHTML = `<div class="col-span-2 py-10 text-muted text-sm text-center leading-relaxed">OBS Virtual Camera not found.<br>Start it in OBS (Start Virtual Camera) then reopen this tab.</div>`;
+						return;
+					}
+
+					const withThumbs = await Promise.all(
+						obsDevices.map(async (d) => ({
+							id: `obs:${d.deviceId}`,
+							name: d.label || "OBS Virtual Camera",
+							deviceId: d.deviceId,
+							thumbnail: await grabDeviceThumbnail(d.deviceId),
+						}))
+					);
+
+					allSources = allSources
+						.filter((s) => !s.id.startsWith("obs:"))
+						.concat(withThumbs);
+
+					obsSourcesLoaded = true;
+					renderSources();
+				} catch (e) {
+					sourcesContainer.innerHTML = `<div class="col-span-2 py-10 text-sm text-center" style="color: var(--color-danger)">Error loading OBS Virtual Camera</div>`;
+				}
+			}
+
+			async function grabDeviceThumbnail(deviceId) {
+				let stream;
+				try {
+					stream = await navigator.mediaDevices.getUserMedia({
+						video: { deviceId: { exact: deviceId } },
+					});
+					const video = document.createElement("video");
+					video.srcObject = stream;
+					video.muted = true;
+					await video.play();
+					await new Promise((r) => setTimeout(r, 150)); // let a frame land
+
+					const canvas = document.createElement("canvas");
+					canvas.width = video.videoWidth || 320;
+					canvas.height = video.videoHeight || 180;
+					canvas
+						.getContext("2d")
+						.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+					return canvas.toDataURL("image/jpeg", 0.75);
+				} catch (e) {
+					return ""; // renderSources still works fine with a blank thumbnail
+				} finally {
+					stream?.getTracks().forEach((t) => t.stop());
+				}
 			}
 
 			function renderSources() {
@@ -317,7 +423,7 @@
 				);
 
 				if (filtered.length === 0) {
-					sourcesContainer.innerHTML = `<div class="text-center col-span-2 py-10 text-sm text-muted">No ${currentType}s found</div>`;
+					sourcesContainer.innerHTML = `<div class="col-span-2 py-10 text-muted text-sm text-center">No ${currentType === "obs" ? "source" : currentType}s found</div>`;
 					return;
 				}
 
@@ -326,11 +432,11 @@
 					div.className = `source-card rounded-lg overflow-hidden cursor-pointer transition-all duration-300 bg-surface${selectedSourceId === source.id ? " selected" : ""}`;
 					div.onclick = () => selectSource(source.id);
 					div.innerHTML = `
-            <div class="aspect-video bg-black flex items-center justify-center relative border-b border-border">
+            <div class="relative flex justify-center items-center bg-black border-border border-b aspect-video">
                 <img src="${source.thumbnail}" class="max-w-full max-h-full object-contain">
-                ${source.appIcon && currentType === "window" ? `<img src="${source.appIcon}" class="absolute bottom-2 right-2 w-6 h-6 rounded bg-black/50 p-0.5">` : ""}
+                ${source.appIcon && currentType === "window" ? `<img src="${source.appIcon}" class="right-2 bottom-2 absolute bg-black/50 p-0.5 rounded w-6 h-6">` : ""}
             </div>
-            <div class="px-3 py-2 text-sm font-medium text-primary truncate" title="${source.name}">${source.name}</div>
+            <div class="px-3 py-2 font-medium text-primary text-sm truncate" title="${source.name}">${source.name}</div>
         `;
 					sourcesContainer.appendChild(div);
 				});
@@ -472,9 +578,9 @@
 						updateAudioState();
 					};
 					div.innerHTML = `
-    <span class="truncate pr-2">${appName}</span>
-    <span class="audio-check shrink-0 w-4 h-4 rounded border-2 bg-transparent border-current flex items-center justify-center">
-        <span class="material-symbols-rounded text-sm font-semibold hidden text-accent mt-0.5">check</span>
+    <span class="pr-2 truncate">${appName}</span>
+    <span class="flex justify-center items-center bg-transparent border-2 border-current rounded w-4 h-4 audio-check shrink-0">
+        <span class="hidden mt-0.5 material-symbols-rounded font-semibold text-accent text-sm">check</span>
     </span>
 `;
 					div._updateUI();
@@ -499,6 +605,7 @@
 			window.addEventListener("DOMContentLoaded", async () => {
 				tabScreen.onclick = () => setTab("screen");
 				tabWindow.onclick = () => setTab("window");
+				tabOBS.onclick = () => setTab("obs");
 
 				shareBtn.onclick = async () => {
 					if (!selectedSourceId) return;
@@ -532,8 +639,17 @@
 							resolution = { width: 3840, height: 2160 };
 							break;
 					}
+
+					const isVirtualCamera = selectedSourceId.startsWith("obs:");
+
 					window.streamAPI.selectSource({
 						sourceId: selectedSourceId,
+						sourceType: isVirtualCamera
+							? "obs-camera"
+							: currentType,
+						deviceId: isVirtualCamera
+							? selectedSourceId.slice("obs:".length)
+							: undefined,
 						fps: fpsValue,
 						resolution,
 						includeAudio,
@@ -559,13 +675,13 @@
 						);
 						const previewEl = document.createElement("div");
 						previewEl.innerHTML = `
-            <div class="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Selected Source</div>
-            <div id="wayland-preview" class="relative rounded-lg overflow-hidden border border-border bg-black group cursor-pointer" style="aspect-ratio:16/9">
-                <div id="preview-loading" class="absolute inset-0 flex items-center justify-center text-sm text-muted">Waiting for selection...</div>
-                <img id="preview-thumb" class="w-full h-full object-contain hidden">
-                <div id="preview-name" class="absolute bottom-0 left-0 right-0 px-3 py-2 text-xs font-medium text-white bg-black/60 truncate hidden"></div>
-                <div id="preview-change" class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity hidden">
-                    <span class="text-sm font-semibold text-white">Click to change</span>
+            <div class="mb-2 font-semibold text-muted text-xs uppercase tracking-wide">Selected Source</div>
+            <div id="wayland-preview" class="group relative bg-black border border-border rounded-lg overflow-hidden cursor-pointer" style="aspect-ratio:16/9">
+                <div id="preview-loading" class="absolute inset-0 flex justify-center items-center text-muted text-sm">Waiting for selection...</div>
+                <img id="preview-thumb" class="hidden w-full h-full object-contain">
+                <div id="preview-name" class="hidden right-0 bottom-0 left-0 absolute bg-black/60 px-3 py-2 font-medium text-white text-xs truncate"></div>
+                <div id="preview-change" class="hidden absolute inset-0 flex justify-center items-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span class="font-semibold text-white text-sm">Click to change</span>
                 </div>
             </div>
         `;
@@ -629,7 +745,7 @@
 						}
 					}
 				} catch (e) {
-					sourcesContainer.innerHTML = `<div class="text-center col-span-2 py-10 text-sm" style="color: var(--color-danger)">Error loading sources</div>`;
+					sourcesContainer.innerHTML = `<div class="col-span-2 py-10 text-sm text-center" style="color: var(--color-danger)">Error loading sources</div>`;
 				}
 
 				try {
@@ -639,9 +755,9 @@
 						renderAudioLists(audioSources);
 					} else {
 						document.getElementById("audio-include").innerHTML =
-							`<div class="text-center text-xs text-muted mt-5">No apps found</div>`;
+							`<div class="mt-5 text-muted text-xs text-center">No apps found</div>`;
 						document.getElementById("audio-exclude").innerHTML =
-							`<div class="text-center text-xs text-muted mt-5">No apps found</div>`;
+							`<div class="mt-5 text-muted text-xs text-center">No apps found</div>`;
 					}
 				} catch (e) {}
 			});

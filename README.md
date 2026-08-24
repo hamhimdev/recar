@@ -20,6 +20,7 @@ https://recar.loxodrome.app/
 - Custom call popup when ringing
 - Switch between Vencord & Equicord
 - Wayland Streaming
+- Streaming from OBS Studio (no audio at the moment)
 - Superior Desktop Notifications
 - Recar exclusive plugins ("CatboxUpload" and "ControllerSupport(Experimental)" for now)
 

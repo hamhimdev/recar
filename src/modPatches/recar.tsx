@@ -189,6 +189,13 @@ let themeObserver: MutationObserver | null = null;
 let origGetDisplayMedia: any = null;
 let soundboardSpeakingTimers: Record<string, any> = {};
 
+let pendingCameraDeviceRequest: {
+	deviceId: string;
+	fps?: number;
+	resolution?: { width: number; height: number };
+	contentHint?: string;
+} | null = null;
+
 function startThemeObserver() {
 	if (document.documentElement) {
 		themeObserver = new MutationObserver(() => {
@@ -241,6 +248,89 @@ async function getVirtmicDeviceId() {
 	} catch {
 		return null;
 	}
+}
+
+function waitFor<T>(
+	getValue: () => T | null,
+	timeoutMs = 300,
+	intervalMs = 20
+): Promise<T | null> {
+	return new Promise((resolve) => {
+		const start = Date.now();
+		const check = () => {
+			const value = getValue();
+			if (value) return resolve(value);
+			if (Date.now() - start >= timeoutMs) return resolve(null);
+			setTimeout(check, intervalMs);
+		};
+		check();
+	});
+}
+
+async function resolveCameraDeviceId(requestedId: string): Promise<string> {
+	try {
+		const devices = await navigator.mediaDevices.enumerateDevices();
+		const videoInputs = devices.filter((d) => d.kind === "videoinput");
+
+		if (videoInputs.some((d) => d.deviceId === requestedId)) {
+			return requestedId;
+		}
+
+		const obsCam = videoInputs.find((d) =>
+			/obs.*virtual.*cam/i.test(d.label)
+		);
+		if (obsCam) {
+			console.warn(
+				"[Recar] Camera deviceId from the source picker isn't valid in this origin (deviceIds are per-origin); matched OBS Virtual Camera by label instead:",
+				obsCam.label
+			);
+			return obsCam.deviceId;
+		}
+
+		console.warn(
+			"[Recar] Could not find a matching OBS Virtual Camera device by id or label in this origin; falling back to the requested id as-is."
+		);
+	} catch (e) {
+		console.error("[Recar] Failed to enumerate video devices:", e);
+	}
+	return requestedId;
+}
+
+async function buildCameraStream({
+	deviceId,
+	fps,
+	resolution,
+	contentHint,
+}: NonNullable<typeof pendingCameraDeviceRequest>) {
+	const resolvedId = await resolveCameraDeviceId(deviceId);
+
+	const stream = await navigator.mediaDevices.getUserMedia({
+		video: { deviceId: { exact: resolvedId } },
+	});
+
+	const track = stream.getVideoTracks()[0];
+	if (track) {
+		if (contentHint) track.contentHint = contentHint;
+
+		const constraints: MediaTrackConstraints = {};
+		if (resolution?.width) constraints.width = { ideal: resolution.width };
+		if (resolution?.height)
+			constraints.height = { ideal: resolution.height };
+		if (fps) constraints.frameRate = { ideal: fps };
+
+		if (Object.keys(constraints).length) {
+			try {
+				await track.applyConstraints(constraints);
+			} catch (e) {
+				console.warn(
+					"[Recar] OBS Virtual Camera rejected the requested resolution/fps, falling back to its native format:",
+					e
+				);
+			}
+		}
+	}
+
+	return stream;
 }
 
 // Settings entry component - opens Recar settings via the native bridge
@@ -515,6 +605,7 @@ export default definePlugin({
 
 	start() {
 		previousRings = {};
+		pendingCameraDeviceRequest = null;
 
 		syncArRPCSettings();
 		startThemeObserver();
@@ -667,6 +758,17 @@ export default definePlugin({
 		sendUserInfo();
 		(window as any).recarBridge?.onUserInfoRequested(sendUserInfo);
 
+		(window as any).recarBridge?.onUseCameraDevice(
+			(data: {
+				deviceId: string;
+				fps?: number;
+				resolution?: { width: number; height: number };
+				contentHint?: string;
+			}) => {
+				pendingCameraDeviceRequest = data;
+			}
+		);
+
 		// stream stuff
 		try {
 			if (navigator?.mediaDevices) {
@@ -674,9 +776,24 @@ export default definePlugin({
 				navigator.mediaDevices.getDisplayMedia = async function (
 					opts: any
 				) {
-					const stream = await origGetDisplayMedia.call(this, opts);
+					let stream: MediaStream;
+					let isCameraStream = false;
+
+					try {
+						stream = await origGetDisplayMedia.call(this, opts);
+					} catch (e) {
+						const cameraRequest = await waitFor(
+							() => pendingCameraDeviceRequest
+						);
+						pendingCameraDeviceRequest = null;
+						if (!cameraRequest) throw e;
+
+						stream = await buildCameraStream(cameraRequest);
+						isCameraStream = true;
+					}
 
 					if (
+						!isCameraStream &&
 						window.recarInternalBridge &&
 						typeof window.recarInternalBridge
 							.getSyncStreamSettings === "function"
@@ -775,6 +892,7 @@ export default definePlugin({
 
 	stop() {
 		previousRings = {};
+		pendingCameraDeviceRequest = null;
 
 		Object.values(soundboardSpeakingTimers).forEach((timer) =>
 			clearTimeout(timer)

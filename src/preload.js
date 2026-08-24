@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("recarBridge", {
 	// Register a callback that main can invoke to request a fresh user-info snapshot
 	onUserInfoRequested: (cb) =>
 		ipcRenderer.on("request-user-info", () => cb()),
+	onUseCameraDevice: (cb) => ipcRenderer.on("stream-use-camera-device", (_, data) => cb(data))
 });
 
 contextBridge.exposeInMainWorld("statusBridge", {

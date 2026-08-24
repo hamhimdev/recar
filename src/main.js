@@ -789,6 +789,8 @@ ipcMain.on(
 		event,
 		{
 			sourceId,
+			sourceType,
+			deviceId,
 			fps,
 			resolution,
 			includeAudio = [],
@@ -797,7 +799,7 @@ ipcMain.on(
 		}
 	) => {
 		console.log(
-			`[Stream] Selected source ${sourceId} at ${fps} FPS, ${resolution.width}x${resolution.height}`
+			`[Stream] Selected source ${sourceId} (${sourceType ?? "screen/window"}) at ${fps} FPS, ${resolution.width}x${resolution.height}`
 		);
 
 		if (getVenmic()) {
@@ -918,13 +920,35 @@ ipcMain.on(
 			);
 		}
 
+		const isVirtualCamera = sourceType === "obs-camera";
+
 		if (pendingStreamCallback) {
-			const selected =
-				lastSources.find((s) => s.id === sourceId) ?? lastSources[0];
-			if (selected) {
-				pendingStreamCallback({ video: selected });
+			if (isVirtualCamera) {
+				try {
+					pendingStreamCallback({});
+				} catch (e) {
+					console.log(
+						"[Stream] Expected cancel-callback throw:",
+						e.message
+					);
+				}
+
+				if (mainWindow && !mainWindow.isDestroyed()) {
+					mainWindow.webContents.send("stream-use-camera-device", {
+						deviceId,
+						fps,
+						resolution,
+						contentHint: currentStreamSettings.contentHint,
+					});
+				}
 			} else {
-				pendingStreamCallback({});
+				const selected =
+					lastSources.find((s) => s.id === sourceId) ?? lastSources[0];
+				if (selected) {
+					pendingStreamCallback({ video: selected });
+				} else {
+					pendingStreamCallback({});
+				}
 			}
 			pendingStreamCallback = null;
 		}
@@ -1079,7 +1103,7 @@ async function sendDesktopNotification(parsed, iconUrl) {
 						})
 						.on("error", reject);
 				};
-				request(iconUrl);
+				request(iconUrl.includes("://") ? iconUrl : `https://discord.com/${iconUrl}`);
 			});
 			console.log("[Notification] Avatar downloaded to", tmpFile);
 
