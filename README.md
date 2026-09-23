@@ -33,5 +33,5 @@ https://recar.loxodrome.app/docs/info/install/
 **recar, [dppRPC](https://git.unium.in/dpprpc/file/README.md.html) & [roverpp](https://git.unium.in/roverpp/file/README.md.html) (overlay)**  
 MIT License  
 [recar License](./LICENSE)  
-[roverpp License](https://git.unium.in/roverpp/file/LICENSE.html)
-[dppRPC License](https://git.unium.in/dpprpc/file/LICENSE.html)
+[roverpp License](https://git.unium.in/?r=roverpp&a=blob&p=README.md&c=HEAD)
+[dppRPC License](https://git.unium.in/?r=dpprpc&a=blob&p=README.md&c=HEAD)
