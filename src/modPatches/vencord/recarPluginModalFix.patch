@@ -7,5 +7,5 @@
 -                    {!pluginMeta.userPlugin && (
 +                    {!(pluginMeta.userPlugin || pluginMeta.folderName.endsWith("recar")) && (
                          <div className="vc-settings-modal-links">
-                             <WebsiteButton
-                                 text="View more info"
+                             <FavoriteButton
+                                 isFavorite={pluginSettings.isFavorite ?? false}

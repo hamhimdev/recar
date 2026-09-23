@@ -1,11 +1,10 @@
 --- a/src/plugins/webKeybinds.web/index.ts
 +++ b/src/plugins/webKeybinds.web/index.ts
-@@ -29,6 +29,7 @@ export default definePlugin({
-     description: "Re-adds keybinds missing in the web version of Discord: ctrl+t, ctrl+shift+t, ctrl+tab, ctrl+shift+tab, ctrl+1-9, ctrl+,. Only works fully on Vesktop/Legcord, not inside your browser",
+@@ -43,6 +43,7 @@ export default definePlugin({
      tags: ["Shortcuts"],
-     authors: [Devs.Ven],
+     authors: [Devs.Ven, Devs.Davri],
      enabledByDefault: true,
 +    required: true,
  
-     onKey(e: KeyboardEvent) {
-         const hasCtrl = e.ctrlKey || (e.metaKey && IS_MAC);
+     settings,
+ 
