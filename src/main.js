@@ -19,6 +19,13 @@ const RvInst = require("./overlay/installer.js");
 const OvRn = new Worker(path.join(__dirname, "overlay", "renderer.js"));
 const assetsDir = path.join(__dirname, "assets");
 
+const Module = require("module");
+const origRequire = Module.prototype.require;
+Module.prototype.require = function (id) {
+	if (id === "usocket") throw new Error("usocket disabled");
+	return origRequire.apply(this, arguments);
+};
+
 let _venmic;
 const getVenmic = () => {
 	if (_venmic !== undefined) return _venmic;
@@ -739,13 +746,7 @@ ipcMain.handle("save-settings", (event, newSettings) => {
 });
 
 /*
-
-	SO! Turns out exclusion is broken. It's broken on Vesktop too so this is purely an assumption, but it's possible to be venmic, since I referenced Equibop's implementation to do this, which likely has a very close implementation of it to Vesktop's who has it broken. Atleast on Wayland KDE Plasma (don't see how its related though... :/).
-
-	Ignore all of my attempts trying to get exclusion working, keeping for future's sake
-
-	-- hamhim
-
+	Hmm... There was a code comment here...?
 */
 
 let lastSources = [];
