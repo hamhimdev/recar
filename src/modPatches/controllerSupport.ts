@@ -4,7 +4,7 @@ const NAME = "ControllerSupport(Experimental)";
 import { definePluginSettings } from "@api/Settings";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
-import { showToast, Toasts } from "@webpack/common";
+import { showToast } from "@webpack/common";
 
 const logger = new Logger("ControllerSupport");
 
@@ -756,17 +756,17 @@ function pollGamepads() {
 function onConnected(e: GamepadEvent) {
 	logger.info(`Controller connected: ${e.gamepad.id}`);
 	if (settings.store.showConnectToasts)
-		showToast(`Controller connected: ${e.gamepad.id}`, Toasts.Type.SUCCESS);
+		showToast({ text: `Controller connected: ${e.gamepad.id}`, variant: "success" });
 	if (rafId === null) rafId = requestAnimationFrame(pollGamepads);
 }
 
 function onDisconnected(e: GamepadEvent) {
 	logger.info(`Controller disconnected: ${e.gamepad.id}`);
 	if (settings.store.showConnectToasts)
-		showToast(
-			`Controller disconnected: ${e.gamepad.id}`,
-			Toasts.Type.FAILURE
-		);
+		showToast({
+			text: `Controller disconnected: ${e.gamepad.id}`,
+			variant: "critical",
+		});
 	const remaining = navigator.getGamepads().filter((g) => g?.connected);
 	if (!remaining.length && rafId !== null) {
 		cancelAnimationFrame(rafId);

@@ -6,7 +6,7 @@ import { definePluginSettings } from "@api/Settings";
 import { insertTextIntoChatInputBox } from "@utils/discord";
 import { Logger } from "@utils/Logger";
 import definePlugin, { OptionType } from "@utils/types";
-import { Menu, showToast, Toasts } from "@webpack/common";
+import { Menu, showToast } from "@webpack/common";
 import { CloudUploadIcon } from "@components/Icons";
 
 const logger = new Logger("CatboxUpload");
@@ -49,10 +49,10 @@ async function pickAndUpload() {
 		const files = Array.from(input.files ?? []);
 		if (!files.length) return;
 
-		showToast(
-			`Uploading ${files.length} file${files.length > 1 ? "s" : ""} to Catbox...`,
-			Toasts.Type.MESSAGE
-		);
+		showToast({
+			text: `Uploading ${files.length} file${files.length > 1 ? "s" : ""} to Catbox...`,
+			variant: "default",
+		});
 
 		const urls: string[] = [];
 		for (const file of files) {
@@ -60,16 +60,16 @@ async function pickAndUpload() {
 				urls.push(await uploadToCatbox(file));
 			} catch (e) {
 				logger.error("Upload failed for", file.name, e);
-				showToast(`Failed to upload ${file.name}`, Toasts.Type.FAILURE);
+				showToast({ text: `Failed to upload ${file.name}`, variant: "critical" });
 			}
 		}
 
 		if (!urls.length) return;
 		insertTextIntoChatInputBox(urls.join("\n"));
-		showToast(
-			`Uploaded ${urls.length} file${urls.length > 1 ? "s" : ""} to Catbox`,
-			Toasts.Type.SUCCESS
-		);
+		showToast({
+			text: `Uploaded ${urls.length} file${urls.length > 1 ? "s" : ""} to Catbox`,
+			variant: "success",
+		});
 	};
 
 	input.click();
