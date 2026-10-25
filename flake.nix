@@ -178,9 +178,11 @@
 
 					buildInputs = runtimeLibs;
 
+                    autoPatchelfIgnoreMissingDeps = [ "libc.musl-x86_64.so.1" ];
+
 					pnpmDeps = pkgs.fetchPnpmDeps {
 						inherit pname version src;
-						hash = "sha256-yoQSvEGA/2htSmJXC8dkff08EXPWIJjoyRPA0Eeaqy0=";
+						hash = "sha256-ea36zZKOnj68QjceoKoaqMHq2m27w23XmqyUkQWWXNY=";
 						fetcherVersion = 3;
 					};
 
